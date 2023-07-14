@@ -1,0 +1,20 @@
+{
+    "Lua.diagnostics.globals": [
+        "CreateFrame",
+        "UnitName",
+        "UnitClass",
+        "CopyTable",
+        "GetRealZoneText",
+        "GetNumSavedInstances",
+        "GetSavedInstanceInfo",
+        "GetSavedInstanceEncounterInfo",
+        "GetRealmName",
+        "GetCurrencyInfo",
+        "GetFactionInfoByID",
+        "C_QuestLog",
+        "GetAchievementInfo",
+        "GetServerTime",
+        "C_DateAndTime",
+        "UnitLevel"
+    ]
+}

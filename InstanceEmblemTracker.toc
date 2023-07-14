@@ -1,0 +1,12 @@
+## Interface: 50250
+## Version: 1.0.0
+## Title: InstanceEmblemTracker
+## Author: spags
+## SavedVariables: InstanceEmblemDB
+
+quests.lua
+player.lua
+utils.lua
+instances.lua
+main.lua
+InstanceEmblemTracker.lua
