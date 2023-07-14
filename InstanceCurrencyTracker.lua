@@ -1,11 +1,11 @@
 print("Hello World!")
 local db
 local function OnEvent(self, event, addOnName)
-	if addOnName == "InstanceEmblemTracker" then -- name as used in the folder name and TOC file name
-		InstanceEmblemDB = InstanceEmblemDB or {} -- initialize it to a table if this is the first time
-		InstanceEmblemDB.sessions = (InstanceEmblemDB.sessions or 0) + 1
-		print("You loaded this addon "..InstanceEmblemDB.sessions.." times")	
-        db = InstanceEmblemDB
+	if addOnName == "InstanceCurrencyTracker" then -- name as used in the folder name and TOC file name
+		InstanceCurrencyDB = InstanceCurrencyDB or {} -- initialize it to a table if this is the first time
+		InstanceCurrencyDB.sessions = (InstanceCurrencyDB.sessions or 0) + 1
+		print("You loaded this addon "..InstanceCurrencyDB.sessions.." times")	
+        db = InstanceCurrencyDB
 	end
 end
 
@@ -81,7 +81,7 @@ local function foobar()
     local i = 0
     content:SetScript("OnEnter", BagBuddy_Button_OnEnter)
     content:SetScript("OnLeave", BagBuddy_Button_OnLeave)
-    for k, v in pairs(InstanceEmblemDB.players) do
+    for k, v in pairs(db.players) do
         i = i + 1
 
         local availableEmblemsOfConquest = v.availableEmblemsOfConquest + (v.availableDungeonEmblems or 0)
@@ -124,8 +124,8 @@ function BagBuddy_Button_OnLeave(self, motion)
     print("test left", self:GetName())
 end
 
-SLASH_InstanceEmblemTracker1 = "/ict"; -- new slash command for showing framestack tool
-SlashCmdList.InstanceEmblemTracker = function()
+SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool
+SlashCmdList.InstanceCurrencyTracker = function()
     db.players = db.players or {}
     local p = Emblems:Update(db)
 

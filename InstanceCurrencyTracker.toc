@@ -1,12 +1,12 @@
 ## Interface: 50250
 ## Version: 1.0.0
-## Title: InstanceEmblemTracker
+## Title: InstanceCurrencyTracker
 ## Author: spags
-## SavedVariables: InstanceEmblemDB
+## SavedVariables: InstanceCurrencyDB
 
 quests.lua
 player.lua
 utils.lua
 instances.lua
 main.lua
-InstanceEmblemTracker.lua
+InstanceCurrencyTracker.lua
