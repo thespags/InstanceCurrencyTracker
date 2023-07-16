@@ -1,5 +1,31 @@
 Instances = {}
 
+-- There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
+-- We could overload the id and max player for some formula, such as concatenating the two.
+-- For readability of tables we will use English names instead of ids.
+local idToName = {
+    [574] = "Utgarde Keep",
+    [575] = "Utgarde Pinnacle",
+    [595] = "The Culling of Stratholme",
+    [600] = "Drak'Tharon Keep",
+    [604] = "Gundrak",
+    [576] = "The Nexus",
+    [578] = "The Oculus",
+    [608] = "The Violet Hold",
+    [602] = "Halls of Lightning",
+    [599] = "Halls of Stone",
+    [601] = "Azjol-Nerub",
+    [619] = "Ahn'kahet: The Old Kingdom",
+    [650] = "Trial of the Champion",
+    [624] = "Vault of Archavon",
+    [533] = "Naxxramas",
+    [615] = "The Obsidian Sanctum",
+    [616] = "The Eye of Eternity",
+    [603] = "Ulduar",
+    [249] = "Onyxia's Lair",
+    [649] = "Trial of the Crusader",
+    [309] = "Zul'Gurub"
+}
 Instances.dungeons = {
     ["Utgarde Keep"] = { id = 574, numEncounters = 3 },
     ["Utgarde Pinnacle"] = { id = 575, numEncounters = 4 },
@@ -84,11 +110,12 @@ function Instances:Update(player)
     -- Get all saved instance information and lock the respective instance for the player.
     local numSavedInstances = GetNumSavedInstances()
     for i=1, numSavedInstances do
-        local name, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, _ = GetSavedInstanceInfo(i)
+        local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
 
-        if locked then   
+        if locked then
+            local name = idToName[instanceId]
             self:Lock(player.dungeons[name], reset, encounterProgress, i)
-            local raidName = Utils:ToRaidName(name, maxPlayers)
+            local raidName = name and Utils:ToRaidName(name, maxPlayers)
             self:Lock(player.raids[raidName], reset, encounterProgress, i)
             self:Lock(player.oldRaids[name], reset, encounterProgress, i)
         end
@@ -103,11 +130,11 @@ end
 -- Checks if the last boss in the instance is killed,
 -- using the number of encounters as the last boss index.
 local isLastBossKilled = function(instance)
-    return isBossKilled(instance, instance.numOfEncounters)
+    return isBossKilled(instance, instance.numEncounters)
 end
 
-local sameEmblemsPerBoss = function(k)
-    return function(v) return k * (v.numEncounters - v.encounterProgress) end
+local sameEmblemsPerBoss = function(v)
+    return (v.encounterEmblems or 1) * (v.numEncounters - v.encounterProgress)
 end
 
 local addOneLastBossAlive = function(v)
@@ -118,8 +145,18 @@ local tokenFilter = function(id)
      return function(v) return v.tokenId == id end
 end
 
+-- Sums all the emblems for the instances, and stores each instances into the instance's table.
+local function sumEmblems(instances, op, filter)
+    local emblems = 0
+    for k, v in Utils:fpairs(instances, filter) do
+        v.availableEmblems = op(v)
+        emblems = emblems + v.availableEmblems
+    end
+    return emblems
+end
+
 function Instances:CalculateDungeonEmblems(instances)
-    return Utils:sum(instances, sameEmblemsPerBoss(1))
+    return sumEmblems(instances, sameEmblemsPerBoss, Utils.True)
 end
 
 function Instances:CalculateSiderealEssences(instances)
@@ -127,21 +164,16 @@ function Instances:CalculateSiderealEssences(instances)
 end
 
 function Instances:CalculateVoaEmblems(raids, index)
-    local voa10 = raids["Vault of Archavon (10)"]
-    local voa25 = raids["Vault of Archavon (25)"]
+    local voa10 = raids[Utils:ToRaidName(idToName[624], 10)]
+    local voa25 = raids[Utils:ToRaidName(idToName[624], 25)]
     return (isBossKilled(voa10, index) and 0 or voa10.encounterEmblems)
     + (isBossKilled(voa25, index) and 0 or voa25.encounterEmblems)
 end
 
 function Instances:CalculateEmblemsOfValor(raids)
-    local emblems = self:CalculateVoaEmblems(raids, 1)
-    for _, v in Utils:fpairs(raids, tokenFilter(Utils.Valor)) do
-        emblems = emblems
-        + sameEmblemsPerBoss(v.encounterEmblems)(v)
-        -- Last boss of eoe/os/naxx give an extra token
-        + addOneLastBossAlive(v)
-    end
-    return emblems
+    return self:CalculateVoaEmblems(raids, 1)
+    -- Last boss of eoe/os/naxx give an extra token
+    + sumEmblems(raids, Utils:add(sameEmblemsPerBoss, addOneLastBossAlive), tokenFilter(Utils.Valor))
 end
 
 function Instances:CalculateEmblemsOfConquest(raids)
@@ -157,19 +189,17 @@ function Instances:CalculateEmblemsOfConquest(raids)
         else
             emblems = emblems + maxUlduarEmblems
         end
+        v.availableEmblems = emblems
     end
     return emblems
 end
 
 function Instances:CalculateEmblemsOfTriumph(raids)
-    local emblems = self:CalculateVoaEmblems(raids, 3)
-    for _, v in Utils:fpairs(raids, tokenFilter(Utils.Triumph)) do
-        emblems = emblems + sameEmblemsPerBoss(v.encounterEmblems)(v)
-    end
-    return emblems
+    return self:CalculateVoaEmblems(raids, 3)
+    + sumEmblems(raids, sameEmblemsPerBoss, tokenFilter(Utils.Triumph))
 end
 
 -- Trial of the Champion drops 1 Champion's Seals per encounter.
 function Instances:CalculateChampionsSeals(instances)
-    return sameEmblemsPerBoss(1)(instances["Trial of the Champion"])
+    return sameEmblemsPerBoss(instances[idToName[650]])
 end

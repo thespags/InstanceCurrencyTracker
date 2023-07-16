@@ -45,7 +45,7 @@ end
 
 function Player:WeeklyReset(player)
     Instances:ResetAll(player.raids)
-    player.dailyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
+    player.weeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
 
 function Player:OldRaidReset(player)

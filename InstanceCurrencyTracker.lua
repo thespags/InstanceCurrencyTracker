@@ -15,13 +15,6 @@ f:SetScript("OnEvent", OnEvent)
 
 local options = {}
 
--- we'll use an ordered table of arbitrary data: {{fruit,number,alphabet},{fruit,number,alphabet},etc}
-local fruits = {"apple","banana","orange","pear","tomato","pineapple"}
-local numbers = {"one","two","three","four","five","six"}
-local alphabet = {"abc","def","ghij","klmn","op","qrstuv","wx","yz"}
-local data = {}
-
-
 local CELL_WIDTH = 160
 local CELL_HEIGHT = 10
 local NUM_CELLS = 5 -- cells per row
@@ -32,8 +25,8 @@ f:SetSize(CELL_WIDTH * NUM_CELLS + 40,300)
 f:SetPoint("CENTER")
 f:Hide()
 f:SetMovable(true)
--- f:SetScript("OnMouseDown" ,f.StartMoving)
--- f:SetScript("OnMouseUp", f.StopMovingOrSizing)
+f:SetScript("OnMouseDown" ,f.StartMoving)
+f:SetScript("OnMouseUp", f.StopMovingOrSizing)
  
 -- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
 f.scrollFrame = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
@@ -52,43 +45,59 @@ local content = f.scrollFrame.scrollChild
 
 content.rows = {} -- each row of data is one wide button stored here
 content.columns = {}
+GameTooltip:SetOwner(f, "ANCHOR_TOPRIGHT")
+GameTooltip:SetText("TEST")
+GameTooltip:Show()
+content.cells = {}
 
-local function getRow(i)
-    if not content.rows[i] then
+local function getCell(x, y)
+    local name = string.format("cell(%s, %s)", x, y)
+    if not content.cells[name] then
         local button = CreateFrame("Button", nil, content)
         button:SetSize(CELL_WIDTH, CELL_HEIGHT)
-        button:SetPoint("TOPLEFT", 0, -(i-1) * CELL_HEIGHT)
-        button.columns = {}
-        content.rows[i] = button
-        content.rows[i]:Show()
+        button:SetPoint("TOPLEFT", (x - 1) * CELL_WIDTH, -(y - 1) * CELL_HEIGHT)
+        content.cells[name] = button
     end
-    return content.rows[i]
+    return content.cells[name]
 end
 
 local function printSection(text, offset, i)
     for j=1, #text do
         --print((j + offset).. " " .. text[j])
-        local button = getRow(j + offset)
-        button.columns[i] = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        button.columns[i]:SetPoint("LEFT", CELL_WIDTH * (i - 1), 0)
-        button.columns[i]:SetText(text[j])
+        local cell = getCell(i, j + offset)
+        local value = cell:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        value:SetPoint("LEFT")
+        value:SetText(text[j])
+        cell:SetScript("OnEnter", InstanceTooltipOnEnter(text[j]))
+        cell:SetScript("OnLeave", InstanceTooltipOnLeave)
     end
     return offset + #text + 1
+end
+
+function InstanceTooltipOnEnter(v)
+    return function(self, motion)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:AddLine(v)
+        GameTooltip:Show()
+
+    end
+end
+
+function InstanceTooltipOnLeave(self, motion)
+    GameTooltip:Hide()
 end
 
 local nameColor = "|cFF00FF00"
 local function foobar()
     local i = 0
-    content:SetScript("OnEnter", BagBuddy_Button_OnEnter)
-    content:SetScript("OnLeave", BagBuddy_Button_OnLeave)
     for k, v in pairs(db.players) do
         i = i + 1
 
         local availableEmblemsOfConquest = v.availableEmblemsOfConquest + (v.availableDungeonEmblems or 0)
         local availableEmblemsOfTriumph = v.availableEmblemsOfTriumph + (v.availableHeroicDungeonEmblems or 0)
         local printCurrency = true and Player.PrintCurrencyVerbose or Player.PrintCurrencyShort
-        local text = { ""}
-        local offset = printSection({ nameColor .. v.name .. "|r" }, 0, i)
+        local text = { "" }
+        local offset = printSection({ nameColor .. v.name .. "|r" }, 0, i) - 1
         text = Player:PrintInstances("Dungeons", v.dungeons, true, true)
         offset = printSection(text, offset, i)
         text = Player:PrintInstances("Raids", v.raids, true, true)
@@ -105,23 +114,7 @@ local function foobar()
         offset = printSection(text, offset, i)
         text = printCurrency("Emblem of Heroism", v.currentEmblemsOfHeroism, v.availableEmblemsOfHeroism, true)
         offset = printSection(text, offset, i)
-
-        for j=1, #text do
-            local row = getRow(j)
-            local column = row:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-            row.columns[i] = column
-            row.columns[i]:SetPoint("LEFT", CELL_WIDTH * (i - 1), 0)
-            row.columns[i]:SetText(text[j])
-        end
     end
-end
-
-function BagBuddy_Button_OnEnter(self, motion)
-    print("Test entered", self:GetName())
-end
-
-function BagBuddy_Button_OnLeave(self, motion)
-    print("test left", self:GetName())
 end
 
 SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool

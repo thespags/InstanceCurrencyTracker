@@ -15,6 +15,7 @@
         "GetAchievementInfo",
         "GetServerTime",
         "C_DateAndTime",
-        "UnitLevel"
+        "UnitLevel",
+        "GameTooltip"
     ]
 }

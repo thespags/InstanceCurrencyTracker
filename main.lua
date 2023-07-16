@@ -61,11 +61,11 @@ end
 
 function Emblems:ResetInstances(player)
     local timestamp = GetServerTime()
-    if player.dailyReset and player.dailyReset < timestamp then
+    if not player.dailyReset or player.dailyReset < timestamp then
         Player:DailyReset(player)
         print(waName .. " - daily reset - wiping " .. player.fullName)
     end
-    if player.weeklyReset and player.weeklyReset < timestamp then
+    if not player.weeklyReset or player.weeklyReset < timestamp then
         Player:WeeklyReset(player)
         print(waName .. " - weekly reset - wiping " .. player.fullName)
     end
@@ -89,16 +89,3 @@ function Emblems:ViewablePlayers(db, options)
     end
     return players
 end
-
-function Emblems:Display(player, options)
-    local name = options.showRealmName and player.fullName or player.name
-    -- Add dungeon emblems to conquest in phase 3
-    local availableEmblemsOfConquest = player.availableEmblemsOfConquest + (player.availableDungeonEmblems or 0)
-    local availableEmblemsOfTriumph = player.availableEmblemsOfTriumph + (player.availableHeroicDungeonEmblems or 0)
-    local text = nameColor .. name .. "\n"
-    -- .. self:PrintInstances("Dungeons", player.dungeons, options.showLockedDungeons, options.showAvailableDungeons)
-    -- .. self:PrintInstances("Raids", player.raids, options.showLockedRaids, options.showAvailableRaids)
-    -- .. self:PrintInstances("Old Raids", player.oldRaids, options.showLockedOldRaids, options.showAvailableOldRaids)
-    return text
-end
-

@@ -38,30 +38,32 @@ function Utils:spairs(t)
     end
 end
 
--- Filtered pairs iterator determined bythe table value with the given function.
+-- Filtered pairs iterator determined by the table value with the given function.
 function Utils:fpairs(t, f)
-    -- collect the keys
-    local keys = {}
-
-    for k, v in pairs(t) do
-        if f(v) then
-            table.insert(keys, k)
-        end
-    end
-
-    -- return the iterator function
-    local i = 0
+    local k, v
     return function()
-        i = i + 1
-        return keys[i], t[keys[i]]
+        repeat
+            k, v = next(t, k)
+        until not k or f(v)
+        return k, v
     end
 end
 
+function Utils:True()
+    return true 
+end
+
 -- Sums a list by the values or a function mapping the values to a number.
-function Utils:sum(t, f)
+function Utils:sum(t, op, f)
     local total = 0
-    for k, v in pairs(t) do
-        total = total + (f and f(v) or v)
+    for _, v in pairs(t) do
+        if not f or f(v) then
+            total = total + (op and op(v) or v)
+        end
     end
     return total
+end
+
+function Utils:add(left, right)
+    return function(v) return left(v) + right(v) end
 end
