@@ -44,10 +44,6 @@ Instances.dungeons = {
     --["The Forge of Souls"] = { id = ?, numEncounters = 3 },
     --["Halls of Reflection"] = { id = ?, numEncounters = 3 }
 }
--- 1 Emblem per boss in dungeons + 2 for daily normal quest
-Instances.maxDungeonEmblems = Utils:sum(Instances.dungeons, function(v) return v.numEncounters end) + Quests.DailyNormalEmblems
--- 1 Sidereal Essence per dungeon
-Instances.maxSiderealEssence = Utils:sum(Instances.dungeons, function(_) return 1 end)
 Instances.raids = {
     -- Vault of Archavon doesn't have a specific token, each boss is different.
     ["Vault of Archavon (10)"] = { id = 624, maxPlayers = 10, numEncounters = 3, encounterEmblems = 2 },
@@ -115,7 +111,7 @@ function Instances:Update(player)
         if locked then
             local name = idToName[instanceId]
             self:Lock(player.dungeons[name], reset, encounterProgress, i)
-            local raidName = name and Utils:ToRaidName(name, maxPlayers)
+            local raidName = name and Utils:GetInstanceName(name, maxPlayers)
             self:Lock(player.raids[raidName], reset, encounterProgress, i)
             self:Lock(player.oldRaids[name], reset, encounterProgress, i)
         end
@@ -164,8 +160,8 @@ function Instances:CalculateSiderealEssences(instances)
 end
 
 function Instances:CalculateVoaEmblems(raids, index)
-    local voa10 = raids[Utils:ToRaidName(idToName[624], 10)]
-    local voa25 = raids[Utils:ToRaidName(idToName[624], 25)]
+    local voa10 = raids[Utils:GetInstanceName(idToName[624], 10)]
+    local voa25 = raids[Utils:GetInstanceName(idToName[624], 25)]
     return (isBossKilled(voa10, index) and 0 or voa10.encounterEmblems)
     + (isBossKilled(voa25, index) and 0 or voa25.encounterEmblems)
 end
@@ -183,13 +179,13 @@ function Instances:CalculateEmblemsOfConquest(raids)
         if v.instanceIndex > 0 then
             for i, ulduarEmblem in pairs(ulduarEmblems) do
                 if not isBossKilled(v, i) then
-                    emblems = emblems + ulduarEmblem
+                    v.availableEmblems  = v.availableEmblems  + ulduarEmblem
                 end
             end
         else
-            emblems = emblems + maxUlduarEmblems
+            v.availableEmblems = maxUlduarEmblems
         end
-        v.availableEmblems = emblems
+        emblems = v.availableEmblems
     end
     return emblems
 end

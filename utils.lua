@@ -7,7 +7,7 @@ Utils.Triumph = 301
 Utils.SiderealEssence = 2589
 Utils.ChampionsSeal = 241
 
-function Utils:ToRaidName(name, size)
+function Utils:GetInstanceName(name, size)
     return string.format("%s (%s)", name, size)
 end
 
@@ -15,9 +15,19 @@ function Utils:GetFullName()
     return string.format("[%s] %s", UnitName("Player"), GetRealmName())
 end
 
--- Returns the amount field of the currency provided.
-function Utils:GetCurrency(id)
+-- Returns the amount of currency the player has for the currency provided.
+function Utils:GetCurrencyAmount(id)
     return select(2, GetCurrencyInfo(id))
+end
+
+-- Returns the localized name of the currency provided.
+function Utils:GetCurrencyName(id)
+    return select(1, GetCurrencyInfo(id))
+end
+
+function Utils:GetLocalizedInstanceName(v)
+    local name = GetRealZoneText(v.id)
+    return v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
 end
 
 -- Sorted pairs iterator determined by the table key.
@@ -66,4 +76,8 @@ end
 
 function Utils:add(left, right)
     return function(v) return left(v) + right(v) end
+end
+
+function Utils:hex2rgb(hex)
+    return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
 end

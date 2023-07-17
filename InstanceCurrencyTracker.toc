@@ -4,9 +4,9 @@
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB
 
-quests.lua
-player.lua
 utils.lua
 instances.lua
+quests.lua
+player.lua
 main.lua
 InstanceCurrencyTracker.lua

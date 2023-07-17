@@ -1,6 +1,5 @@
 Emblems = {}
-local nameColor = "|cFF00FF00"
-local waName = "Instance and Emblem Tracker"
+WaName = "Instance and Emblem Tracker"
 local classIcons = {
     ["WARRIOR"] = 626008,
     ["PALADIN"] = 626003,
@@ -16,7 +15,7 @@ local classIcons = {
 
 function Emblems:Update(db)
     for _, player in pairs(db.players) do
-        self:ResetInstances(player)
+        Player:ResetInstances(player)
     end
     local player = self:GetPlayer(db)
     Instances:Update(player)
@@ -34,19 +33,19 @@ end
 function Emblems:WipePlayer(db, playerName)
     local realmData = self:GetRealmData(db)
     realmData[playerName] = Player:Create()
-    print(waName .. " - wiping player - " .. playerName)
+    print(WaName .. " - wiping player - " .. playerName)
 end
 
 function Emblems:WipeRealm(db, realmName)
     for name, _ in Utils.pairs(db.players, function(v) return v.realm == realmName end) do
         db.players[name] = {}
     end
-    print(waName .. " - wiping players on realm - " .. realmName)
+    print(WaName .. " - wiping players on realm - " .. realmName)
 end
 
 function Emblems:WipeAllPlayers(db)
     db.players = {}
-    print(waName .. " - wiping all players")
+    print(WaName .. " - wiping all players")
 end
 
 function Emblems:EnablePlayer(db, playerName)
@@ -57,19 +56,6 @@ end
 function Emblems:DisablePlayer(db, playerName)
     local player = self:GetPlayer(db, playerName)
     player.isDisabled = true
-end
-
-function Emblems:ResetInstances(player)
-    local timestamp = GetServerTime()
-    if not player.dailyReset or player.dailyReset < timestamp then
-        Player:DailyReset(player)
-        print(waName .. " - daily reset - wiping " .. player.fullName)
-    end
-    if not player.weeklyReset or player.weeklyReset < timestamp then
-        Player:WeeklyReset(player)
-        print(waName .. " - weekly reset - wiping " .. player.fullName)
-    end
-    Player:OldRaidReset(player)
 end
 
 function Emblems:ViewablePlayers(db, options)

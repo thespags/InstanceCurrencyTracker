@@ -61,25 +61,46 @@ local function getCell(x, y)
     return content.cells[name]
 end
 
-local function printSection(text, offset, i)
-    for j=1, #text do
-        --print((j + offset).. " " .. text[j])
-        local cell = getCell(i, j + offset)
-        local value = cell:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        value:SetPoint("LEFT")
-        value:SetText(text[j])
-        cell:SetScript("OnEnter", InstanceTooltipOnEnter(text[j]))
+local availableColor = "FFFFFFFF"
+local titleColor = "FFFFFF00"
+local lockedColor = "FFFF00FF"
+local nameColor = "FF00FF00"
+
+
+local function printCell(x, y, color, text)
+    local cell = getCell(x, y)
+    local value = cell:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    value:SetPoint("LEFT")
+    value:SetText(string.format("|c%s%s|r", color, text))
+    return cell
+end
+
+local function printInstances(title, instances, offset, i)
+    local names = {}
+    for _, v in pairs(instances) do
+        names[Utils:GetLocalizedInstanceName(v)] = v
+    end
+    offset = offset + 1
+    printCell(i, offset, titleColor, title)
+    for _, v in Utils:spairs(names) do
+        offset = offset + 1
+        local color = v.locked and lockedColor or availableColor
+        local cell = printCell(i, offset, color, Utils:GetLocalizedInstanceName(v))
+        cell:SetScript("OnEnter", InstanceTooltipOnEnter(v))
         cell:SetScript("OnLeave", InstanceTooltipOnLeave)
     end
-    return offset + #text + 1
+    return offset + 1
 end
 
 function InstanceTooltipOnEnter(v)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(v)
+        local color = v.locked and lockedColor or availableColor
+        GameTooltip:AddLine(Utils:GetLocalizedInstanceName(v), Utils:hex2rgb(color))
+        GameTooltip:AddLine((v.tokenId and Utils:GetCurrencyName(v.tokenId) or "n/a"), Utils:hex2rgb(availableColor))
+        GameTooltip:AddLine(string.format("Currency Available: %s" , v.availableEmblems or 0), Utils:hex2rgb(availableColor))
+        GameTooltip:AddLine(string.format("Encounters (%s/%s)", (v.encounterProgress or 0), v.numEncounters), Utils:hex2rgb(availableColor))
         GameTooltip:Show()
-
     end
 end
 
@@ -87,33 +108,41 @@ function InstanceTooltipOnLeave(self, motion)
     GameTooltip:Hide()
 end
 
-local nameColor = "|cFF00FF00"
+local function printCurrencyVerbose(player, tokenId, offset, i)
+    offset = offset + 1
+    local currency = Utils:GetCurrencyName(tokenId)
+    printCell(i, offset, titleColor, currency)
+    offset = offset + 1
+    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
+    printCell(i, offset, availableColor, "Available  " .. available)
+    offset = offset + 1
+    local current = player.currency.wallet[tokenId] or "n/a"
+    printCell(i, offset, availableColor, "Current     " .. current)
+    return offset + 1
+end
+
+local function printCurrencyShort(player, tokenId, offset, i)
+    offset = offset + 1
+    local currency = Utils:GetCurrencyName(tokenId)
+    local current = player.currency.wallet[tokenId] or "n/a"
+    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
+    local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
+    printCell(i, offset, text)
+    return offset + 1
+end
+
 local function foobar()
     local i = 0
     for k, v in pairs(db.players) do
         i = i + 1
-
-        local availableEmblemsOfConquest = v.availableEmblemsOfConquest + (v.availableDungeonEmblems or 0)
-        local availableEmblemsOfTriumph = v.availableEmblemsOfTriumph + (v.availableHeroicDungeonEmblems or 0)
-        local printCurrency = true and Player.PrintCurrencyVerbose or Player.PrintCurrencyShort
-        local text = { "" }
-        local offset = printSection({ nameColor .. v.name .. "|r" }, 0, i) - 1
-        text = Player:PrintInstances("Dungeons", v.dungeons, true, true)
-        offset = printSection(text, offset, i)
-        text = Player:PrintInstances("Raids", v.raids, true, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Emblem of Triumph", v.currentEmblemsOfTriumph, availableEmblemsOfTriumph, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Sidereal Essence", v.currentSiderealEssences, v.availableSiderealEssences, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Champion's Seal", v.currentChampionsSeals, v.availableChampionsSeals, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Emblem of Conquest", v.currentEmblemsOfConquest, availableEmblemsOfConquest, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Emblem of Valor", v.currentEmblemsOfValor, v.availableEmblemsOfValor, true)
-        offset = printSection(text, offset, i)
-        text = printCurrency("Emblem of Heroism", v.currentEmblemsOfHeroism, v.availableEmblemsOfHeroism, true)
-        offset = printSection(text, offset, i)
+        local offset = 1
+        printCell(offset, i, nameColor, v.name)
+        offset = printInstances("Dungeons", v.dungeons, offset, i)
+        offset = printInstances("Raids", v.raids, offset, i)
+        local printCurrency = true and printCurrencyVerbose or printCurrencyShort
+        for tokenId, _ in pairs(Currency) do
+            offset = printCurrency(v, tokenId, offset, i)
+        end
     end
 end
 
@@ -129,4 +158,3 @@ SlashCmdList.InstanceCurrencyTracker = function()
     foobar()
     f:Show()
 end
--- From the guide ---
