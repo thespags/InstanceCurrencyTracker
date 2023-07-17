@@ -81,3 +81,15 @@ end
 function Utils:hex2rgb(hex)
     return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
 end
+
+function Utils:returnX(x)
+    return function() return x end
+end
+
+function Utils:set(...)
+    local t = {}
+    for _, v in pairs({...}) do
+        t[v] = true
+    end
+    return t
+end

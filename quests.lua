@@ -57,7 +57,7 @@ end
 -- Return the available champions seals based on quests, reputation, and achievements for the current player.
 function Quests:CalculateChampionsSeals()
     -- Count available champion's seal total if the prereq is met.
-    local countChampionsSeals = function(v) 
+    local countChampionsSeals = function(v)
         return v.prereq() and not self:IsDailyCompleted(v.ids) and v.seals or 0
     end
     return Utils:sum(dailyChampionsSeals, countChampionsSeals)

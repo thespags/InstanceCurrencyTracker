@@ -1,34 +1,11 @@
 Instances = {}
 
--- There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
--- We could overload the id and max player for some formula, such as concatenating the two.
--- For readability of tables we will use English names instead of ids.
-local idToName = {
-    [574] = "Utgarde Keep",
-    [575] = "Utgarde Pinnacle",
-    [595] = "The Culling of Stratholme",
-    [600] = "Drak'Tharon Keep",
-    [604] = "Gundrak",
-    [576] = "The Nexus",
-    [578] = "The Oculus",
-    [608] = "The Violet Hold",
-    [602] = "Halls of Lightning",
-    [599] = "Halls of Stone",
-    [601] = "Azjol-Nerub",
-    [619] = "Ahn'kahet: The Old Kingdom",
-    [650] = "Trial of the Champion",
-    [624] = "Vault of Archavon",
-    [533] = "Naxxramas",
-    [615] = "The Obsidian Sanctum",
-    [616] = "The Eye of Eternity",
-    [603] = "Ulduar",
-    [249] = "Onyxia's Lair",
-    [649] = "Trial of the Crusader",
-    [309] = "Zul'Gurub"
-}
-
 local sameEmblemsPerBoss = function(emblemsPerEncounter)
     return function(instance) return emblemsPerEncounter * (instance.numEncounters - instance.encounterProgress) end
+end
+
+local sameEmblemsPerBossPerSize = function(emblems10, emblems25)
+    return function(instance) return (instance.maxPlayers == 10 and emblems10 or emblems25) * (instance.numEncounters - instance.encounterProgress) end
 end
 
 -- If we have an instance lock index then check if the boss is killed.
@@ -74,20 +51,36 @@ local voaEmblems = function(instance, tokenId)
     return (isBossKilled(instance, voaIndex[tokenId]) and 0 or 2)
 end
 
-local tokenFilter = function(id)
-    return function(checkedId) return checkedId == id end
+local maxEmblemsPerSize = function(max10, max25)
+    return function(v) return v.maxPlayers == 10 and max10 or max25 end
 end
 
-local valorFilter = tokenFilter(Utils.Valor)
-
-local conquestFilter = tokenFilter(Utils.Conquest)
-
-local triumphFilter = tokenFilter(Utils.Triumph)
-
-local voaFilter = function(checkedId)
-    return checkedId == Utils.Valor or checkedId == Utils.Conquest or checkedId == Utils.Triumph
-end
-
+-- There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
+-- We could overload the id and max player for some formula, such as concatenating the two.
+-- For readability of tables we will use English names instead of ids.
+StaticInstances = {
+    [574] = { name = "Utgarde Keep" },
+    [575] = { name = "Utgarde Pinnacle" },
+    [595] = { name = "The Culling of Stratholme" },
+    [600] = { name = "Drak'Tharon Keep" },
+    [604] = { name = "Gundrak" },
+    [576] = { name = "The Nexus" },
+    [578] = { name = "The Oculus" },
+    [608] = { name = "The Violet Hold" },
+    [602] = { name = "Halls of Lightning" },
+    [599] = { name = "Halls of Stone" },
+    [601] = { name = "Azjol-Nerub" },
+    [619] = { name = "Ahn'kahet: The Old Kingdom" },
+    [650] = { name = "Trial of the Champion" },
+    [624] = { name = "Vault of Archavon", tokenIds = Utils:set(Utils.Triumph, Utils.Conquest, Utils.Valor), emblems = voaEmblems, maxEmblems = Utils:returnX(2) },
+    [533] = { name = "Naxxramas", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(16) },
+    [615] = { name = "The Obsidian Sanctum", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(5) },
+    [616] = { name = "The Eye of Eternity", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(2) },
+    [603] = { name = "Ulduar", tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = Utils:returnX(maxUlduarEmblems) },
+    [249] = { name = "Onyxia's Lair", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [649] = { name = "Trial of the Crusader", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(20, 25) },
+    [309] = { name = "Zul'Gurub" }
+}
 Instances.dungeons = {
     ["Utgarde Keep"] = { id = 574, numEncounters = 3 },
     ["Utgarde Pinnacle"] = { id = 575, numEncounters = 4 },
@@ -107,20 +100,20 @@ Instances.dungeons = {
     --["Halls of Reflection"] = { id = ?, numEncounters = 3 }
 }
 Instances.raids = {
-    ["Vault of Archavon (10)"] = { id = 624, maxPlayers = 10, numEncounters = 3, filter = voaFilter, emblems = voaEmblems },
-    ["Vault of Archavon (25)"] = { id = 624, maxPlayers = 25, numEncounters = 3, filter = voaFilter, emblems = voaEmblems },
-    ["Naxxramas (10)"] = { id = 533, maxPlayers = 10, numEncounters = 15, filter = valorFilter, emblems = onePerBossPlusOneLastBoss },
-    ["Naxxramas (25)"] = { id = 533, maxPlayers = 25, numEncounters = 15, filter = valorFilter, emblems = onePerBossPlusOneLastBoss},
-    ["The Obsidian Sanctum (10)"] = { id = 615, maxPlayers = 10, numEncounters = 4, filter = valorFilter, emblems = onePerBossPlusOneLastBoss },
-    ["The Obsidian Sanctum (25)"] = { id = 615, maxPlayers = 25, numEncounters = 4, filter = valorFilter, emblems = onePerBossPlusOneLastBoss },
-    ["The Eye of Eternity (10)"] = { id = 616, maxPlayers = 10, numEncounters = 1, filter = valorFilter, emblems = onePerBossPlusOneLastBoss },
-    ["The Eye of Eternity (25)"] = { id = 616, maxPlayers = 25, numEncounters = 1, filter = valorFilter, emblems = onePerBossPlusOneLastBoss },
-    ["Ulduar (10)"] = { id = 603, maxPlayers = 10, numEncounters = 14, filter = conquestFilter, emblems = ulduarEmblems },
-    ["Ulduar (25)"] = { id = 603, maxPlayers = 25, numEncounters = 14, filter = conquestFilter, emblems = ulduarEmblems },
-    ["Onyxia's Lair (10)"] = { id = 249, maxPlayers = 10, numEncounters = 1, filter = triumphFilter, emblems = sameEmblemsPerBoss(4) },
-    ["Onyxia's Lair (25)"] = { id = 249, maxPlayers = 25, numEncounters = 1, filter = triumphFilter, emblems = sameEmblemsPerBoss(5) },
-    ["Trial of the Crusader (10)"] = { id = 649, maxPlayers = 10, numEncounters = 5, filter = triumphFilter, emblems = sameEmblemsPerBoss(4) },
-    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25, numEncounters = 5, filter = triumphFilter, emblems = sameEmblemsPerBoss(5) }
+    ["Vault of Archavon (10)"] = { id = 624, maxPlayers = 10, numEncounters = 3 },
+    ["Vault of Archavon (25)"] = { id = 624, maxPlayers = 25, numEncounters = 3},
+    ["Naxxramas (10)"] = { id = 533, maxPlayers = 10, numEncounters = 15},
+    ["Naxxramas (25)"] = { id = 533, maxPlayers = 25, numEncounters = 15},
+    ["The Obsidian Sanctum (10)"] = { id = 615, maxPlayers = 10, numEncounters = 4},
+    ["The Obsidian Sanctum (25)"] = { id = 615, maxPlayers = 25, numEncounters = 4},
+    ["The Eye of Eternity (10)"] = { id = 616, maxPlayers = 10, numEncounters = 1},
+    ["The Eye of Eternity (25)"] = { id = 616, maxPlayers = 25, numEncounters = 1},
+    ["Ulduar (10)"] = { id = 603, maxPlayers = 10, numEncounters = 14},
+    ["Ulduar (25)"] = { id = 603, maxPlayers = 25, numEncounters = 14},
+    ["Onyxia's Lair (10)"] = { id = 249, maxPlayers = 10, numEncounters = 1 },
+    ["Onyxia's Lair (25)"] = { id = 249, maxPlayers = 25, numEncounters = 1},
+    ["Trial of the Crusader (10)"] = { id = 649, maxPlayers = 10, numEncounters = 5 },
+    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25, numEncounters = 5 }
 }
 Instances.oldRaids = {
     ["Zul'Gurub"] = { id = 309, numEncounters = 10 }
@@ -166,7 +159,7 @@ function Instances:Update(player)
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
 
         if locked then
-            local name = idToName[instanceId]
+            local name = StaticInstances[instanceId].name
             self:Lock(player.dungeons[name], reset, encounterProgress, i)
             local raidName = name and Utils:GetInstanceName(name, maxPlayers)
             self:Lock(player.raids[raidName], reset, encounterProgress, i)
@@ -195,5 +188,5 @@ end
 
 -- Trial of the Champion drops 1 Champion's Seals per encounter.
 function Instances:CalculateChampionsSeals(instances)
-    return sameEmblemsPerBoss(1)(instances[idToName[650]])
+    return sameEmblemsPerBoss(1)(instances[StaticInstances[650].name])
 end

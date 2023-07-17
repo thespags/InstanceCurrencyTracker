@@ -20,6 +20,7 @@ function Emblems:Update(db)
     local player = self:GetPlayer(db)
     Instances:Update(player)
     Player:CalculateCurrency(player)
+    -- Update daily max seals
 end
 
 -- Returns the provided player or current player if none provided.

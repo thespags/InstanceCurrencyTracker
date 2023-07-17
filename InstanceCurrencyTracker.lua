@@ -92,14 +92,18 @@ local function printInstances(title, instances, offset, i)
     return offset + 1
 end
 
-function InstanceTooltipOnEnter(v)
+function InstanceTooltipOnEnter(instance)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        local color = v.locked and lockedColor or availableColor
-        GameTooltip:AddLine(Utils:GetLocalizedInstanceName(v), Utils:hex2rgb(color))
-        GameTooltip:AddLine((v.tokenId and Utils:GetCurrencyName(v.tokenId) or "n/a"), Utils:hex2rgb(availableColor))
-        GameTooltip:AddLine(string.format("Currency Available: %s" , v.availableEmblems or 0), Utils:hex2rgb(availableColor))
-        GameTooltip:AddLine(string.format("Encounters (%s/%s)", (v.encounterProgress or 0), v.numEncounters), Utils:hex2rgb(availableColor))
+        local color = instance.locked and lockedColor or availableColor
+        GameTooltip:AddLine(Utils:GetLocalizedInstanceName(instance), Utils:hex2rgb(color))
+        local staticInstance = StaticInstances[instance.id]
+        for k, _ in pairs(staticInstance.tokenIds or {}) do
+            GameTooltip:AddLine(Utils:GetCurrencyName(k)    , Utils:hex2rgb(availableColor))
+        end
+        local max = staticInstance.maxEmblems and staticInstance.maxEmblems(instance) or instance.numEncounters
+        GameTooltip:AddLine(string.format("Currency: (%s/%s)" , instance.availableEmblems or 0, max), Utils:hex2rgb(availableColor))
+        GameTooltip:AddLine(string.format("Encounters: (%s/%s)", (instance.encounterProgress or 0), instance.numEncounters), Utils:hex2rgb(availableColor))
         GameTooltip:Show()
     end
 end
@@ -113,7 +117,6 @@ local function printCurrencyVerbose(player, tokenId, offset, i)
     local currency = Utils:GetCurrencyName(tokenId)
     printCell(i, offset, titleColor, currency)
     offset = offset + 1
-    print(tokenId)
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
     printCell(i, offset, availableColor, "Available  " .. available)
     offset = offset + 1
