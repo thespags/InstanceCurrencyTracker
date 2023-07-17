@@ -1,17 +1,9 @@
 Player = {}
-Currency = {
-    Utils.Triumph,
-    Utils.SiderealEssence,
-    Utils.ChampionsSeal,
-    Utils.Conquest,
-    Utils.Valor,
-    Utils.Heroism,
-}
 local return0 = function(p) return 0 end
 Currency = {
     [Utils.Triumph] = {
         daily = function(p) return  Quests:CalculateDailyHeroic() end,
-        weekly = function(p) return Instances:CalculateEmblemsOfTriumph(p.raids) end,
+        weekly = function(p) return Player:foo(p.raids, Utils.Triumph) end,
         maxDaily = Quests.DailyHeroicEmblems,
     },
     [Utils.SiderealEssence] = {
@@ -21,18 +13,18 @@ Currency = {
         maxDaily = Utils:sum(Instances.dungeons, function(_) return 1 end),
     },
     [Utils.ChampionsSeal] = {
-        daily = return0,
-        weekly = function(p) return Quests:CalculateChampionsSeals() + Instances:CalculateChampionsSeals(p.dungeons) end,
+        daily = function(p) return Quests:CalculateChampionsSeals() end,
+        weekly = function(p) return Instances:CalculateChampionsSeals(p.dungeons) end,
     },
     [Utils.Conquest] = {
         daily = function(p) return Instances:CalculateDungeonEmblems(p.dungeons) + Quests:CalculateDailyNormal() end,
-        weekly = function(p)return Instances:CalculateEmblemsOfConquest(p.raids) end,
+        weekly = function(p) return Player:foo(p.raids, Utils.Conquest) end,
         -- 1 Emblem per boss in dungeons + 2 for daily normal quest
         maxDaily = Utils:sum(Instances.dungeons, function(v) return v.numEncounters end) + Quests.DailyNormalEmblems,
     },
     [Utils.Valor] = {
         daily = return0,
-        weekly = function(p) return Instances:CalculateEmblemsOfValor(p.raids) end,
+        weekly = function(p) return Player:foo(p.raids, Utils.Valor) end,
     },
     -- Always 0 now in Phase 3 from instances and dailys.
     [Utils.Heroism] = {
@@ -51,10 +43,27 @@ function Player:CalculateCurrency(player)
         }
     end
     for k, v in pairs(Currency) do
+
+        print(Utils:GetCurrencyName(k))
         player.currency.wallet[k] = Utils:GetCurrencyAmount(k)
         player.currency.weekly[k] = v.weekly(player)
         player.currency.daily[k] = v.daily(player)
+        print(   player.currency.weekly[k] )
+        print(   player.currency.daily[k] )
     end
+end
+
+function Player:foo(instances, tokenId)
+    local emblems = 0
+    for k, instance in pairs(instances) do
+        if not instance.filter then
+            print(k)
+        end
+        if instance.filter(tokenId) then
+            emblems = emblems + instance.emblems(instance, tokenId)
+        end
+    end
+    return emblems
 end
 
 function Player:Create()

@@ -113,6 +113,7 @@ local function printCurrencyVerbose(player, tokenId, offset, i)
     local currency = Utils:GetCurrencyName(tokenId)
     printCell(i, offset, titleColor, currency)
     offset = offset + 1
+    print(tokenId)
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
     printCell(i, offset, availableColor, "Available  " .. available)
     offset = offset + 1
@@ -125,7 +126,7 @@ local function printCurrencyShort(player, tokenId, offset, i)
     offset = offset + 1
     local currency = Utils:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
+    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
     local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
     printCell(i, offset, text)
     return offset + 1
@@ -147,14 +148,21 @@ local function foobar()
 end
 
 SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool
-SlashCmdList.InstanceCurrencyTracker = function()
-    db.players = db.players or {}
-    local p = Emblems:Update(db)
+SlashCmdList.InstanceCurrencyTracker = function(msg)
+    local command, rest = msg:match("^(%S*)%s*(.-)$")
+    -- Any leading non-whitespace is captured into command
+    -- the rest (minus leading whitespace) is captured into rest.
+    if command == "wipe" and rest ~= "" then
+        Emblems:WipeAllPlayers(db)
+    else
+        db.players = db.players or {}
+        local p = Emblems:Update(db)
 
-    for k, v in pairs(db.players) do
-        print(k)
+        for k, v in pairs(db.players) do
+            print(k)
+        end
+        -- Emblems:Display(Emblems:GetPlayer(db), options)
+        foobar()
+        f:Show()
     end
-    -- Emblems:Display(Emblems:GetPlayer(db), options)
-    foobar()
-    f:Show()
 end
