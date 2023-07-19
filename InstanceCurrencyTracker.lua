@@ -15,157 +15,115 @@ f:SetScript("OnEvent", OnEvent)
 
 local options = {}
 
-local CELL_WIDTH = 160
-local CELL_HEIGHT = 10
-local NUM_CELLS = 5 -- cells per row
--- creating a basic dialog frame (if you name this frame and define basic bits during the load (not after PLAYER_LOGIN), then
--- the client will restore the window position on login to wherever it was last moved by the user)
-local f = CreateFrame("Frame", "SimpleScrollFrameTableDemo", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(CELL_WIDTH * NUM_CELLS + 40,300)
-f:SetPoint("CENTER")
-f:Hide()
-f:SetMovable(true)
-f:SetScript("OnMouseDown" ,f.StartMoving)
-f:SetScript("OnMouseUp", f.StopMovingOrSizing)
- 
--- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
-f.scrollFrame = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
--- Points taken from example online that avoids writing into
-f.scrollFrame:SetPoint("TOPLEFT", 12, -32)
-f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 8)
- 
--- creating a scrollChild to contain the content
-f.scrollFrame.scrollChild = CreateFrame("Frame", nil, f.scrollFrame)
-f.scrollFrame.scrollChild:SetSize(100, 100)
-f.scrollFrame.scrollChild:SetPoint("TOPLEFT", 5, -5)
-f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
- 
--- adding content to the scrollChild
-local content = f.scrollFrame.scrollChild
-
-content.rows = {} -- each row of data is one wide button stored here
-content.columns = {}
-GameTooltip:SetOwner(f, "ANCHOR_TOPRIGHT")
-GameTooltip:SetText("TEST")
-GameTooltip:Show()
-content.cells = {}
-
-local function getCell(x, y)
-    local name = string.format("cell(%s, %s)", x, y)
-    if not content.cells[name] then
-        local button = CreateFrame("Button", nil, content)
-        button:SetSize(CELL_WIDTH, CELL_HEIGHT)
-        button:SetPoint("TOPLEFT", (x - 1) * CELL_WIDTH, -(y - 1) * CELL_HEIGHT)
-        content.cells[name] = button
-    end
-    return content.cells[name]
-end
-
-local availableColor = "FFFFFFFF"
-local titleColor = "FFFFFF00"
-local lockedColor = "FFFF00FF"
-local nameColor = "FF00FF00"
-
-
-local function printCell(x, y, color, text)
-    local cell = getCell(x, y)
-    local value = cell:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-    value:SetPoint("LEFT")
-    value:SetText(string.format("|c%s%s|r", color, text))
-    return cell
-end
-
-local function printInstances(title, instances, offset, i)
-    local names = {}
-    for _, v in pairs(instances) do
-        names[Utils:GetLocalizedInstanceName(v)] = v
-    end
-    offset = offset + 1
-    printCell(i, offset, titleColor, title)
-    for _, v in Utils:spairs(names) do
-        offset = offset + 1
-        local color = v.locked and lockedColor or availableColor
-        local cell = printCell(i, offset, color, Utils:GetLocalizedInstanceName(v))
-        cell:SetScript("OnEnter", InstanceTooltipOnEnter(v))
-        cell:SetScript("OnLeave", InstanceTooltipOnLeave)
-    end
-    return offset + 1
-end
-
-function InstanceTooltipOnEnter(instance)
-    return function(self, motion)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        local color = instance.locked and lockedColor or availableColor
-        GameTooltip:AddLine(Utils:GetLocalizedInstanceName(instance), Utils:hex2rgb(color))
-        local staticInstance = StaticInstances[instance.id]
-        for k, _ in pairs(staticInstance.tokenIds or {}) do
-            GameTooltip:AddLine(Utils:GetCurrencyName(k)    , Utils:hex2rgb(availableColor))
-        end
-        local max = staticInstance.maxEmblems and staticInstance.maxEmblems(instance) or instance.numEncounters
-        GameTooltip:AddLine(string.format("Currency: (%s/%s)" , instance.availableEmblems or 0, max), Utils:hex2rgb(availableColor))
-        GameTooltip:AddLine(string.format("Encounters: (%s/%s)", (instance.encounterProgress or 0), instance.numEncounters), Utils:hex2rgb(availableColor))
-        GameTooltip:Show()
-    end
-end
-
-function InstanceTooltipOnLeave(self, motion)
-    GameTooltip:Hide()
-end
-
-local function printCurrencyVerbose(player, tokenId, offset, i)
-    offset = offset + 1
-    local currency = Utils:GetCurrencyName(tokenId)
-    printCell(i, offset, titleColor, currency)
-    offset = offset + 1
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
-    printCell(i, offset, availableColor, "Available  " .. available)
-    offset = offset + 1
-    local current = player.currency.wallet[tokenId] or "n/a"
-    printCell(i, offset, availableColor, "Current     " .. current)
-    return offset + 1
-end
-
-local function printCurrencyShort(player, tokenId, offset, i)
-    offset = offset + 1
-    local currency = Utils:GetCurrencyName(tokenId)
-    local current = player.currency.wallet[tokenId] or "n/a"
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
-    local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
-    printCell(i, offset, text)
-    return offset + 1
-end
-
-local function foobar()
-    local i = 0
-    for k, v in pairs(db.players) do
-        i = i + 1
-        local offset = 1
-        printCell(offset, i, nameColor, v.name)
-        offset = printInstances("Dungeons", v.dungeons, offset, i)
-        offset = printInstances("Raids", v.raids, offset, i)
-        local printCurrency = true and printCurrencyVerbose or printCurrencyShort
-        for tokenId, _ in pairs(Currency) do
-            offset = printCurrency(v, tokenId, offset, i)
-        end
-    end
-end
-
 SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool
 SlashCmdList.InstanceCurrencyTracker = function(msg)
     local command, rest = msg:match("^(%S*)%s*(.-)$")
     -- Any leading non-whitespace is captured into command
     -- the rest (minus leading whitespace) is captured into rest.
-    if command == "wipe" and rest ~= "" then
-        Emblems:WipeAllPlayers(db)
+    if command == "wipe" then
+        if rest == "" then
+            Player:WipePlayer(db, Utils:GetFullName())
+        elseif rest == "all" then
+            Player:WipeAllPlayers(db)
+        else
+            command, rest = msg:match("^(%S*)%s*(.-)$")
+            if command == "realm" then
+                Player:WipeRealm(db, rest)
+            elseif command == "player" then
+                Player:WipePlayer(db, rest)
+            else
+                print("Invalid command")
+            end
+        end
     else
         db.players = db.players or {}
-        local p = Emblems:Update(db)
-
-        for k, v in pairs(db.players) do
-            print(k)
-        end
-        -- Emblems:Display(Emblems:GetPlayer(db), options)
-        foobar()
-        f:Show()
+        Player:Update(db)
+        print("Hello World")
+        Foobar(db)
     end
 end
+
+local function createPlayerDropdown()
+    local dropdown = CreateFrame("Frame", "test", f, 'UIDropDownMenuTemplate')
+    dropdown:SetPoint("TOPLEFT", f);
+
+    UIDropDownMenu_SetWidth(dropdown, 200)
+    -- current player
+    UIDropDownMenu_SetText(dropdown, default_val)
+    local info = UIDropDownMenu_CreateInfo()
+    for k, v in pairs(db.players) do
+        info.text = v.name
+        UIDropDownMenu_AddButton(info)
+    end
+end
+
+-- TODO add 
+-- "ict wipe" current player
+-- "ict wipe realm name"
+-- "ict wipe player name"
+-- "ict wipe all"
+-- TODO add options
+-- TODO add tabs
+
+-- --- Opts:
+-- ---     name (string): Name of the dropdown (lowercase)
+-- ---     parent (Frame): Parent frame of the dropdown.
+-- ---     items (Table): String table of the dropdown options.
+-- ---     defaultVal (String): String value for the dropdown to default to (empty otherwise).
+-- ---     changeFunc (Function): A custom function to be called, after selecting a dropdown option.
+local function createDropdown(opts)
+    local dropdown_name = '$parent_' .. opts['name'] .. '_dropdown'
+    local menu_items = opts['items'] or {}
+    local title_text = opts['title'] or ''
+    local dropdown_width = 0
+    local default_val = opts['defaultVal'] or ''
+    local change_func = opts['changeFunc'] or function (dropdown_val) end
+
+    local dropdown = CreateFrame("Frame", dropdown_name, opts['parent'], 'UIDropDownMenuTemplate')
+
+    local dd_title = dropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dd_title:SetPoint("TOPLEFT", 20, 10)
+
+    for _, item in pairs(menu_items) do -- Sets the dropdown width to the largest item string width.
+        dd_title:SetText(item)
+        local text_width = dd_title:GetStringWidth() + 20
+        if text_width > dropdown_width then
+            dropdown_width = text_width
+        end
+    end
+
+    UIDropDownMenu_SetWidth(dropdown, dropdown_width)
+    UIDropDownMenu_SetText(dropdown, default_val)
+    dd_title:SetText(title_text)
+
+    UIDropDownMenu_Initialize(dropdown, function(self, level, _)
+        local info = UIDropDownMenu_CreateInfo()
+        for key, val in pairs(menu_items) do
+            info.checked = false
+            info.menuList= key
+            info.hasArrow = false
+            info.func = function(b)
+                UIDropDownMenu_SetSelectedValue(dropdown, b.value, b.value)
+                UIDropDownMenu_SetText(dropdown, b.value)
+                b.checked = true
+                change_func(dropdown, b.value)
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+
+    return dropdown
+end
+
+-- local raid_opts = {
+--     ['name']='raid',
+--     ['parent']=f,
+--     ['title']='Raid',
+--     ['items']= {'Molten Core', 'Blackwing Lair', 'Onyxia\'s' },
+--     ['defaultVal']='', 
+--     ['changeFunc']=function(dropdown_frame, dropdown_val)
+--         print(dropdown_val) -- Custom logic goes here, when you change your dropdown option.
+--     end
+-- }
+-- raidDD = createDropdown(raid_opts)-- Don't forget to set your dropdown's points, we don't do this in the creation method for simplicities sake.
+-- raidDD:SetPoint("TOPLEFT", f);

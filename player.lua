@@ -1,56 +1,4 @@
 Player = {}
-Currency = {
-    [Utils.Triumph] = {
-        daily = function(p) return  Quests:CalculateDailyHeroic() end,
-        weekly = function(p) return Player:foo(p.raids, Utils.Triumph) end,
-        maxDaily = Quests.DailyHeroicEmblems,
-    },
-    [Utils.SiderealEssence] = {
-        daily = function(p) return Instances:CalculateSiderealEssences(p.dungeons) end,
-        weekly = Utils:returnX(0),
-        -- 1 Sidereal Essence per dungeon
-        maxDaily = Utils:sum(Instances.dungeons, function(_) return 1 end),
-    },
-    [Utils.ChampionsSeal] = {
-        daily = function(p) return Quests:CalculateChampionsSeals() + Instances:CalculateChampionsSeals(p.dungeons) end,
-        weekly = Utils:returnX(0),
-    },
-    [Utils.Conquest] = {
-        daily = function(p) return Instances:CalculateDungeonEmblems(p.dungeons) + Quests:CalculateDailyNormal() end,
-        weekly = function(p) return Player:foo(p.raids, Utils.Conquest) end,
-        -- 1 Emblem per boss in dungeons + 2 for daily normal quest
-        maxDaily = Utils:sum(Instances.dungeons, function(v) return v.numEncounters end) + Quests.DailyNormalEmblems,
-    },
-    [Utils.Valor] = {
-        daily = Utils:returnX(0),
-        weekly = function(p) return Player:foo(p.raids, Utils.Valor) end,
-    },
-    -- Always 0 now in Phase 3.
-    [Utils.Heroism] = {
-        daily = Utils:returnX(0),
-        weekly = Utils:returnX(0),
-    },
-}
-
-function Player:CalculateCurrency(player)
-    for k, v in pairs(Currency) do
-        player.currency.wallet[k] = Utils:GetCurrencyAmount(k)
-        player.currency.weekly[k] = v.weekly(player)
-        player.currency.daily[k] = v.daily(player)
-    end
-end
-
-function Player:foo(instances, tokenId)
-    local emblems = 0
-    for _, instance in pairs(instances) do
-        local staticInstance = StaticInstances[instance.id]
-        if staticInstance.tokenIds[tokenId] then
-            instance.availableEmblems = staticInstance.emblems(instance, tokenId)
-            emblems = emblems + instance.availableEmblems
-        end
-    end
-    return emblems
-end
 
 function Player:Create()
     local player = {}
@@ -105,4 +53,75 @@ end
 
 function Player:OldRaidReset(player)
     Instances:ResetIfNecessary(player.oldRaids, GetServerTime())
+end
+
+function Player:CalculateCurrency(player)
+    for k, v in pairs(Currency) do
+        player.currency.wallet[k] = Utils:GetCurrencyAmount(k)
+        player.currency.weekly[k] = v.weekly(player)
+        player.currency.daily[k] = v.daily(player)
+    end
+end
+
+function Player:Update(db)
+    for _, player in pairs(db.players) do
+        Player:ResetInstances(player)
+    end
+    local player = self:GetPlayer(db)
+    Instances:Update(player)
+    Player:CalculateCurrency(player)
+    -- Update daily max seals
+end
+
+-- Returns the provided player or current player if none provided.
+function Player:GetPlayer(db, playerName)
+    playerName = playerName or Utils:GetFullName()
+    local player = db.players[playerName] or Player:Create()
+    db.players[playerName] = player
+    return player
+end
+
+function Player:WipePlayer(db, playerName)
+    db.players[playerName] = Player:Create()
+    print(WaName .. " - wiping player - " .. playerName)
+end
+
+function Player:WipeRealm(db, realmName)
+    for name, _ in Utils.fpairs(db.players, function(v) return v.realm == realmName end) do
+        db.players[name] = {}
+    end
+    print(WaName .. " - wiping players on realm - " .. realmName)
+end
+
+function Player:WipeAllPlayers(db)
+    db.players = {}
+    print(WaName .. " - wiping all players")
+end
+
+function Player:EnablePlayer(db, playerName)
+    local player = self:GetPlayer(db, playerName)
+    player.isDisabled = false
+end
+
+function Player:DisablePlayer(db, playerName)
+    local player = self:GetPlayer(db, playerName)
+    player.isDisabled = true
+end
+
+function Player:ViewablePlayers(db, options)
+    local currentName = Utils:GetFullName()
+    local currentRealm = GetRealmName()
+    local playerFilter = function(v) return
+        -- Show all characters for the realm or specifically the current character.
+        (options.showAllAlts or currentName == v.fullName)
+        -- Show only max level characters if enabled.
+        and (v.level == 80 or not options.onlyMaxLevelCharacters)
+        and (v.realm == currentRealm or options.showAllRealms)
+        and not v.isDisabled
+    end
+    local players = {}
+    for _, player in Utils.fpairs(db.players, playerFilter) do
+        players[player.fullName] = player
+    end
+    return players
 end

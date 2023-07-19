@@ -1,11 +1,15 @@
 Instances = {}
 
 local sameEmblemsPerBoss = function(emblemsPerEncounter)
-    return function(instance) return emblemsPerEncounter * (instance.numEncounters - instance.encounterProgress) end
+    return function(instance)
+        return emblemsPerEncounter * (instance.numEncounters - instance.encounterProgress)
+    end
 end
 
 local sameEmblemsPerBossPerSize = function(emblems10, emblems25)
-    return function(instance) return (instance.maxPlayers == 10 and emblems10 or emblems25) * (instance.numEncounters - instance.encounterProgress) end
+    return function(instance)
+        return (instance.maxPlayers == 10 and emblems10 or emblems25) * (instance.numEncounters - instance.encounterProgress)
+    end
 end
 
 -- If we have an instance lock index then check if the boss is killed.
@@ -28,9 +32,9 @@ local onePerBossPlusOneLastBoss = Utils:add(sameEmblemsPerBoss(1), addOneLastBos
 -- FL(4)/Ignis(1)/Razorscale(1)/XT(2)/IC(2)/Kolo(1)/Auriaya(1)/Thorim(2)/Hodir(2)/Freya(5)/Mim(2)/Vezak(2)/Yogg(2)/Alg(2)
 local ulduarEmblemsPerBoss = { 4, 1, 1, 2, 2, 1, 1, 2, 2, 5, 2, 2, 2, 2 }
 -- Ulduar has a maximum number of emblems of 29
-local maxUlduarEmblems = Utils:sum(ulduarEmblemsPerBoss)
+Instances.MaxUlduarEmblems = Utils:sum(ulduarEmblemsPerBoss)
 local ulduarEmblems = function(instance)
-    local emblems = maxUlduarEmblems
+    local emblems = Instances.MaxUlduarEmblems
     if instance.instanceIndex > 0 then
         for i, ulduarEmblem in pairs(ulduarEmblemsPerBoss) do
             if isBossKilled(instance, i) then
@@ -38,7 +42,7 @@ local ulduarEmblems = function(instance)
             end
         end
     end
-    return maxUlduarEmblems
+    return emblems
 end
 
 -- Vault of Archavon drops a different token per boss
@@ -48,37 +52,47 @@ local voaIndex = {
     [Utils.Triumph] = 3,
 }
 local voaEmblems = function(instance, tokenId)
-    return (isBossKilled(instance, voaIndex[tokenId]) and 0 or 2)
+    return isBossKilled(instance, voaIndex[tokenId]) and 0 or 2
 end
 
-local maxEmblemsPerSize = function(max10, max25)
-    return function(v) return v.maxPlayers == 10 and max10 or max25 end
+local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
+    return function(v)
+        return (v.maxPlayers == 10 and emblemsPer10 or emblemsPer25) * v.numEncounters
+    end
 end
 
--- There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
+local maxNumEncounters = function(v) return v.numEncounters end
+
+local maxNumEncountersPlusOne = function(v) return v.numEncounters + 1 end
+
+-- Static information about each instance.
+--
+-- Notes on key names: There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
 -- We could overload the id and max player for some formula, such as concatenating the two.
 -- For readability of tables we will use English names instead of ids.
+--
+-- Notes on maxEmblems: It may be nice to have the values dynamically created but for simplicity they are static.
 StaticInstances = {
-    [574] = { name = "Utgarde Keep" },
-    [575] = { name = "Utgarde Pinnacle" },
-    [595] = { name = "The Culling of Stratholme" },
-    [600] = { name = "Drak'Tharon Keep" },
-    [604] = { name = "Gundrak" },
-    [576] = { name = "The Nexus" },
-    [578] = { name = "The Oculus" },
-    [608] = { name = "The Violet Hold" },
-    [602] = { name = "Halls of Lightning" },
-    [599] = { name = "Halls of Stone" },
-    [601] = { name = "Azjol-Nerub" },
-    [619] = { name = "Ahn'kahet: The Old Kingdom" },
-    [650] = { name = "Trial of the Champion" },
+    [574] = { name = "Utgarde Keep", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [575] = { name = "Utgarde Pinnacle", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [595] = { name = "The Culling of Stratholme", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [600] = { name = "Drak'Tharon Keep", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [604] = { name = "Gundrak", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [576] = { name = "The Nexus", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [578] = { name = "The Oculus", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [608] = { name = "The Violet Hold", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [602] = { name = "Halls of Lightning", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [599] = { name = "Halls of Stone", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [601] = { name = "Azjol-Nerub", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [619] = { name = "Ahn'kahet: The Old Kingdom" , tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
+    [650] = { name = "Trial of the Champion", tokenIds = Utils:set(Utils.DungeonEmblem, Utils.ChampionsSeal), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
     [624] = { name = "Vault of Archavon", tokenIds = Utils:set(Utils.Triumph, Utils.Conquest, Utils.Valor), emblems = voaEmblems, maxEmblems = Utils:returnX(2) },
-    [533] = { name = "Naxxramas", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(16) },
-    [615] = { name = "The Obsidian Sanctum", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(5) },
-    [616] = { name = "The Eye of Eternity", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = Utils:returnX(2) },
-    [603] = { name = "Ulduar", tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = Utils:returnX(maxUlduarEmblems) },
+    [533] = { name = "Naxxramas", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [615] = { name = "The Obsidian Sanctum", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [616] = { name = "The Eye of Eternity", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [603] = { name = "Ulduar", tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = Utils:returnX(Instances.MaxUlduarEmblems) },
     [249] = { name = "Onyxia's Lair", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [649] = { name = "Trial of the Crusader", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(20, 25) },
+    [649] = { name = "Trial of the Crusader", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
     [309] = { name = "Zul'Gurub" }
 }
 Instances.dungeons = {
@@ -119,14 +133,14 @@ Instances.oldRaids = {
     ["Zul'Gurub"] = { id = 309, numEncounters = 10 }
 }
 
--- Reset all saved instance information.
+-- Force reset all saved instance information.
 function Instances:ResetAll(instances)
     for _, instance in pairs(instances) do
         self:Reset(instance)
     end
 end
 
--- Reset saved instance information.
+-- Reset if the reset timer has elapsed.
 function Instances:ResetIfNecessary(instances, timestamp)
     for _, instance in pairs(instances) do
         if instance.reset and instance.reset < timestamp then
@@ -134,12 +148,13 @@ function Instances:ResetIfNecessary(instances, timestamp)
         end
     end
 end
-
+-- Reset saved instance information.
 function Instances:Reset(instance)
     instance.locked = false
     instance.reset = nil
     instance.encounterProgress = 0
     instance.instanceIndex = 0
+    instance.available = {}
 end
 
 -- Lock the specified instance with the provided information.
@@ -152,8 +167,8 @@ function Instances:Lock(instance, reset, encounterProgress, i)
     end
 end
 
+-- Get all saved instance information and lock the respective instance for the player.
 function Instances:Update(player)
-    -- Get all saved instance information and lock the respective instance for the player.
     local numSavedInstances = GetNumSavedInstances()
     for i=1, numSavedInstances do
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
@@ -168,25 +183,6 @@ function Instances:Update(player)
     end
 end
 
--- Sums all the emblems for the instances, and stores each instances into the instance's table.
-local function sumEmblems(instances, op, filter)
-    local emblems = 0
-    for k, v in Utils:fpairs(instances, filter) do
-        v.availableEmblems = op(v)
-        emblems = emblems + v.availableEmblems
-    end
-    return emblems
-end
-
-function Instances:CalculateDungeonEmblems(instances)
-    return sumEmblems(instances, sameEmblemsPerBoss(1), Utils.True)
-end
-
 function Instances:CalculateSiderealEssences(instances)
     return Utils:sum(instances, addOneLastBossAlive)
-end
-
--- Trial of the Champion drops 1 Champion's Seals per encounter.
-function Instances:CalculateChampionsSeals(instances)
-    return sameEmblemsPerBoss(1)(instances[StaticInstances[650].name])
 end

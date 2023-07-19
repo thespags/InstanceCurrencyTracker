@@ -6,6 +6,8 @@ Utils.Conquest = 221
 Utils.Triumph = 301
 Utils.SiderealEssence = 2589
 Utils.ChampionsSeal = 241
+-- Phase 3 dungeons grant conquest.
+Utils.DungeonEmblem = Utils.Conquest
 
 function Utils:GetInstanceName(name, size)
     return string.format("%s (%s)", name, size)
