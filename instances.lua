@@ -127,10 +127,26 @@ Instances.raids = {
     ["Onyxia's Lair (10)"] = { id = 249, maxPlayers = 10, numEncounters = 1 },
     ["Onyxia's Lair (25)"] = { id = 249, maxPlayers = 25, numEncounters = 1},
     ["Trial of the Crusader (10)"] = { id = 649, maxPlayers = 10, numEncounters = 5 },
-    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25, numEncounters = 5 }
+    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25, numEncounters = 5 },
 }
 Instances.oldRaids = {
-    ["Zul'Gurub"] = { id = 309, numEncounters = 10 }
+    ["Vanilla"] = {
+        ["Molten Core"] = { id = 409, },
+        ["Blackwing Lair"] = { id = 469, },
+        ["Zul'Gurub"] = { id = 309, numEncounters = 10 },
+        ["Ruins of Ahn'Qiraj"] = { id = 509, },
+        ["Temple of Ahn'Qiraj"] = { id = 531, },
+    },
+    ["Burning Crusade"] = {
+        ["Karazhan"] = { id = 532, },
+        ["Gruul's Lair"] = { id = 565 },
+        ["Magtheridon's Lair"] = { id = 544, },
+        ["Serpentshrine Cavern"] = { id = 548, },
+        ["Tempest Keep"] = { id = 550, },
+        ["Black Temple"] = { id = 564, },
+        ["Hyjal Summit"] = { id = 534, },
+        ["Sunwell Plateau"] = { id = 580 },
+    }
 }
 
 -- Force reset all saved instance information.

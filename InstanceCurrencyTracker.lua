@@ -48,10 +48,6 @@ end
 -- "ict wipe player name"
 -- "ict wipe all"
 
--- Drop down
---- Doesn't work with a preselect, first value stays
---- Similar trying to check the selected doesn't work
---- Neither needed looks nice.
 -- Alpha
 --- How do we set the inset opacity but keep the title, and boarder as 1?
 -- Horizontal Scroll
@@ -60,3 +56,5 @@ end
 --- How do we get the adodn to the top level, currently it will sit behind WA's
 -- Anchor
 --- How can I set it up so the addon appears with another menu, e.g. runs when LFG comes up?
+-- Icon
+--- How to display them in text?

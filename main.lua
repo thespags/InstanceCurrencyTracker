@@ -93,10 +93,11 @@ local function instanceTooltipOnEnter(name, instance)
         GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instance.numEncounters), Utils:hex2rgb(availableColor))
         local staticInstance = StaticInstances[instance.id]
         for k, _ in Utils:spairs(staticInstance.tokenIds or {}, CurrencySort) do
-            GameTooltip:AddLine(Utils:GetCurrencyName(k), Utils:hex2rgb(titleColor))
             local max = staticInstance.maxEmblems(instance)
             local available = instance.available[k] or max
-            GameTooltip:AddLine(string.format("Currency: %s/%s", available, max), Utils:hex2rgb(availableColor))
+            local currency = Utils:GetCurrencyName(k)
+            local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
+            GameTooltip:AddLine(text, Utils:hex2rgb(titleColor))
         end
         GameTooltip:Show()
     end
@@ -149,6 +150,7 @@ local function currencyTooltipOnEnter(player, tokenId)
 end
 
 -- Prints currency with multi line information.
+-- TODO unused.
 local function printCurrencyVerbose(player, tokenId, offset, i)
     offset = offset + 1
     local currency = Utils:GetCurrencyName(tokenId)
@@ -169,17 +171,16 @@ local function printCurrencyVerbose(player, tokenId, offset, i)
 end
 
 -- Prints currency single line information.
--- TODO unused.
 local function printCurrencyShort(player, tokenId, offset, i)
     offset = offset + 1
     local currency = Utils:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
     local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
-    local cell = printCell(i, offset, text)
+    local cell = printCell(i, offset, titleColor, text)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
-    return offset + 1
+    return offset
 end
 
 -- Sets the dropdown width to the largest item string width.
@@ -198,26 +199,27 @@ local function maxWidth(db, dropdown)
     return max
 end
 
+local dropdown
 local function createPlayerDropdown(db)
-    local dropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
+    dropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
     dropdown:SetPoint("TOP", f, 0, -30);
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
     UIDropDownMenu_SetWidth(dropdown, maxWidth(db, dropdown))
-    local currentName = Utils:GetFullName()
-    --UIDropDownMenu_SetText(dropdown, currentName, currentName)
+    UIDropDownMenu_SetText(dropdown, player)
 
     UIDropDownMenu_Initialize(
         dropdown,
         function()
             local info = UIDropDownMenu_CreateInfo()
-            for _, v in pairs(db.players) do
+            for _, v in Utils:spairs(db.players) do
                 info.text = v.fullName
+                info.checked = player == v.fullName
                 info.isNotRadio = true
-                info.func = function(b)
-                    UIDropDownMenu_SetText(dropdown, b.value, b.value)
-                    player = b.value
+                info.func = function(self)
+                    player = self.value
+                    UIDropDownMenu_SetText(dropdown, player)
                     Foobar(db)
                 end
                 UIDropDownMenu_AddButton(info)
@@ -236,10 +238,63 @@ function Foobar(db)
     printCell(i, offset, nameColor, v.name)
     offset = printInstances("Dungeons", v.dungeons, offset, i)
     offset = printInstances("Raids", v.raids, offset, i)
-    local printCurrency = true and printCurrencyVerbose or printCurrencyShort
+    local printCurrency = true and printCurrencyShort or printCurrencyVerbose
     for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
         offset = printCurrency(v, tokenId, offset, i)
     end
-    createPlayerDropdown(db)
     f:Show()
+    -- Only create the dropdown once
+    if dropdown then createPlayerDropdown(db) end
 end
+
+
+ -- Create the dropdown, and configure its appearance
+ -- Leaving this for additional option that shouldn't appear.
+ local dropDown = CreateFrame("FRAME", "WPDemoDropDown", UIParent, "UIDropDownMenuTemplate")
+ dropDown:SetPoint("CENTER")
+ dropDown:Hide()
+ UIDropDownMenu_SetWidth(dropDown, 200)
+ UIDropDownMenu_SetText(dropDown, "Old Instance Selection")
+ function continasAll(expansion)
+    for _, instance in pairs(expansion) do
+        if not oldInstances[instance.id] then
+            return false
+        end
+    end
+    return true
+ end
+
+ oldInstances = {}
+
+ -- Create and bind the initialization function to the dropdown menu
+ UIDropDownMenu_Initialize(dropDown, 
+    function(self, level, menuList)
+        local info = UIDropDownMenu_CreateInfo()
+        if (level or 1) == 1 then
+            for k, expansion in pairs(Instances.oldRaids) do
+                info.text = k
+                info.menuList = k
+                info.hasArrow = true
+                info.checked = continasAll(expansion)
+                info.func = function(self)
+                    for _, instance in pairs(expansion) do
+                        oldInstances[instance.id] = not self.checked
+                    end
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        else
+            for k, v in Utils:spairs(Instances.oldRaids[menuList]) do
+                info.text = k
+                info.arg1 = v.id
+                info.checked = oldInstances[v.id] or false
+                info.func = function(self, id)
+                    oldInstances[id] = not self.checked
+                end
+                UIDropDownMenu_AddButton(info, level)
+                -- Close the entire menu with this next call
+                CloseDropDownMenus()
+            end
+        end
+    end
+)
