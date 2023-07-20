@@ -26,11 +26,11 @@ function Player:ResetInstances(player)
     local timestamp = GetServerTime()
     if not player.dailyReset or player.dailyReset < timestamp then
         self:DailyReset(player)
-        print(WaName .. " - daily reset - wiping " .. player.fullName)
+        print(AddOnName .. " - daily reset - wiping " .. player.fullName)
     end
     if not player.weeklyReset or player.weeklyReset < timestamp then
         self:WeeklyReset(player)
-        print(WaName .. " - weekly reset - wiping " .. player.fullName)
+        print(AddOnName .. " - weekly reset - wiping " .. player.fullName)
     end
     Player:OldRaidReset(player)
 end
@@ -83,19 +83,19 @@ end
 
 function Player:WipePlayer(db, playerName)
     db.players[playerName] = Player:Create()
-    print(WaName .. " - wiping player - " .. playerName)
+    print(AddOnName .. " - wiping player - " .. playerName)
 end
 
 function Player:WipeRealm(db, realmName)
     for name, _ in Utils.fpairs(db.players, function(v) return v.realm == realmName end) do
         db.players[name] = {}
     end
-    print(WaName .. " - wiping players on realm - " .. realmName)
+    print(AddOnName .. " - wiping players on realm - " .. realmName)
 end
 
 function Player:WipeAllPlayers(db)
     db.players = {}
-    print(WaName .. " - wiping all players")
+    print(AddOnName .. " - wiping all players")
 end
 
 function Player:EnablePlayer(db, playerName)

@@ -27,20 +27,20 @@ function Utils:GetCurrencyName(id)
     return select(1, GetCurrencyInfo(id))
 end
 
-function Utils:GetLocalizedInstanceName(v)
+function GetLocalizedInstanceName(v)
     local name = GetRealZoneText(v.id)
     return v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
 end
 
 -- Sorted pairs iterator determined by the table key.
-function Utils:spairs(t)
-    -- collect the keys
+function Utils:spairs(t, f)
     local keys = {}
-    for k in pairs(t) do keys[#keys+1] = k end
+    for k in pairs(t) do
+        keys[#keys+1] = k
+    end
 
-    table.sort(keys)
+    table.sort(keys, f)
 
-    -- return the iterator function
     local i = 0
     return function()
         i = i + 1
@@ -48,6 +48,15 @@ function Utils:spairs(t)
             return keys[i], t[keys[i]]
         end
     end
+end
+
+-- Sorted pairs iterator determined by mapping the values.
+function Utils:spairsByValue(t, f)
+    local byF = {}
+    for _, v in pairs(t) do
+        byF[f(v)] = v
+    end
+    return self:spairs(byF)
 end
 
 -- Filtered pairs iterator determined by the table value with the given function.
