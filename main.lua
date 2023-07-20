@@ -30,28 +30,30 @@ f:SetMovable(true)
 f:SetScript("OnMouseDown" ,f.StartMoving)
 f:SetScript("OnMouseUp", f.StopMovingOrSizing)
 f:SetAlpha(.5)
+f:Hide()
 f:SetToplevel(true)
 local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 title:SetText(AddOnName)
+title:SetAlpha(1)
+title:SetIgnoreParentAlpha(true)
 title:SetPoint("TOP", -10, -6)
 
 -- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
-f.scrollFrame = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+f.scrollFrame = CreateFrame("ScrollFrame", "ICTScroll", f, "UIPanelScrollFrameTemplate")
 -- Set alpha to 1 for text.
 f.scrollFrame:SetAlpha(1)
 f.scrollFrame:SetIgnoreParentAlpha(true)
 
--- Points taken from example online that avoids writing into
-f.scrollFrame:SetPoint("TOPLEFT", 12, -32)
+-- Points taken from example online that avoids writing into the frame.
+f.scrollFrame:SetPoint("TOPLEFT", 12, -60)
 f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 8)
 
 -- creating a scrollChild to contain the content
-f.scrollFrame.scrollChild = CreateFrame("Frame", nil, f.scrollFrame)
+f.scrollFrame.scrollChild = CreateFrame("Frame", "ICTContent", f.scrollFrame)
 f.scrollFrame.scrollChild:SetSize(100, 100)
 f.scrollFrame.scrollChild:SetPoint("TOPLEFT", 5, -5)
 f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
 
--- adding content to the scrollChild
 local content = f.scrollFrame.scrollChild
 content.cells = {}
 
@@ -59,7 +61,7 @@ content.cells = {}
 local function getCell(x, y)
     local name = string.format("cell(%s, %s)", x, y)
     if not content.cells[name] then
-        local button = CreateFrame("Button", nil, content)
+        local button = CreateFrame("Button", name, content)
         button:SetSize(CELL_WIDTH, CELL_HEIGHT)
         button:SetPoint("TOPLEFT", (x - 1) * CELL_WIDTH, -(y - 1) * CELL_HEIGHT)
         content.cells[name] = button
@@ -198,13 +200,13 @@ end
 
 local function createPlayerDropdown(db)
     local dropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
-    dropdown:SetPoint("TOPLEFT", f);
+    dropdown:SetPoint("TOP", f, 0, -30);
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
     UIDropDownMenu_SetWidth(dropdown, maxWidth(db, dropdown))
     local currentName = Utils:GetFullName()
-    UIDropDownMenu_SetText(dropdown, currentName, currentName)
+    --UIDropDownMenu_SetText(dropdown, currentName, currentName)
 
     UIDropDownMenu_Initialize(
         dropdown,

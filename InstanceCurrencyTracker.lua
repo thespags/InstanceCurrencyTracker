@@ -47,5 +47,16 @@ end
 -- "ict wipe realm name"
 -- "ict wipe player name"
 -- "ict wipe all"
--- TODO add options
--- TODO add tabs
+
+-- Drop down
+--- Doesn't work with a preselect, first value stays
+--- Similar trying to check the selected doesn't work
+--- Neither needed looks nice.
+-- Alpha
+--- How do we set the inset opacity but keep the title, and boarder as 1?
+-- Horizontal Scroll
+---Do we want horizontal scroll to list all players?
+-- Level
+--- How do we get the adodn to the top level, currently it will sit behind WA's
+-- Anchor
+--- How can I set it up so the addon appears with another menu, e.g. runs when LFG comes up?
