@@ -16,6 +16,7 @@
         "GetServerTime",
         "C_DateAndTime",
         "UnitLevel",
-        "GameTooltip"
+        "GameTooltip",
+        "UIParent"
     ]
 }

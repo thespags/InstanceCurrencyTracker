@@ -14,7 +14,7 @@ function Utils:GetInstanceName(name, size)
 end
 
 function Utils:GetFullName()
-    return string.format("[%s] %s", UnitName("Player"), GetRealmName())
+    return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
 end
 
 -- Returns the amount of currency the player has for the currency provided.
@@ -61,10 +61,6 @@ function Utils:fpairs(t, f)
     end
 end
 
-function Utils:True()
-    return true 
-end
-
 -- Sums a list by the values or a function mapping the values to a number.
 function Utils:sum(t, op, f)
     local total = 0
@@ -88,6 +84,7 @@ function Utils:returnX(x)
     return function() return x end
 end
 
+-- Given a non table arguements will make a set, i.e. a table with values true.
 function Utils:set(...)
     local t = {}
     for _, v in pairs({...}) do
