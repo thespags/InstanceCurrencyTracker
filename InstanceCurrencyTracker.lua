@@ -4,7 +4,7 @@ local function OnEvent(self, event, addOnName)
 	if addOnName == "InstanceCurrencyTracker" then -- name as used in the folder name and TOC file name
 		InstanceCurrencyDB = InstanceCurrencyDB or {} -- initialize it to a table if this is the first time
 		InstanceCurrencyDB.sessions = (InstanceCurrencyDB.sessions or 0) + 1
-		print("You loaded this addon "..InstanceCurrencyDB.sessions.." times")	
+		print("You loaded this addon "..InstanceCurrencyDB.sessions.." times")
         db = InstanceCurrencyDB
 	end
 end
@@ -38,7 +38,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     else
         db.players = db.players or {}
         Player:Update(db)
-        Foobar(db)
+        CreateAddOn(db)
     end
 end
 

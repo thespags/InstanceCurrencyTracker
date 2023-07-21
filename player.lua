@@ -6,6 +6,7 @@ function Player:Create()
     player.realm = GetRealmName()
     player.fullName = Utils:GetFullName()
     player.class = select(2, UnitClass("Player"))
+    player.faction = select(1, UnitFactionGroup("Player"))
     player.level = UnitLevel("Player")
     player.dungeons = CopyTable(Instances.dungeons)
     player.raids = CopyTable(Instances.raids)
@@ -14,6 +15,8 @@ function Player:Create()
         wallet = {},
         weekly = {},
         daily = {},
+        maxDaily = {},
+        -- There's no prereq for weekly currencies so no player based max weekly.
     }
     -- Set transient information after copying main tables.
     self:DailyReset(player)
@@ -37,16 +40,16 @@ end
 
 function Player:DailyReset(player)
     Instances:ResetAll(player.dungeons)
-    for k, v in pairs(Currency) do
-        player.currency.daily[k] = v.maxDaily or 0
+    for k, _ in pairs(Currency) do
+        player.currency.daily[k] = player.currency.maxDaily[k] or 0
     end
     player.dailyReset = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
 end
 
 function Player:WeeklyReset(player)
     Instances:ResetAll(player.raids)
-    for k, v in pairs(Currency) do
-        player.currency.weekly[k] = v.maxWeekly or 0
+    for k, _ in pairs(Currency) do
+        player.currency.weekly[k] = CalculateMaxRaidEmblems(k)(player)
     end
     player.weeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
@@ -56,10 +59,12 @@ function Player:OldRaidReset(player)
 end
 
 function Player:CalculateCurrency(player)
-    for k, v in pairs(Currency) do
+    for k, _ in pairs(Currency) do
         player.currency.wallet[k] = Utils:GetCurrencyAmount(k)
-        player.currency.weekly[k] = v.weekly(player)
-        player.currency.daily[k] = v.daily(player)
+        -- There's no weekly raid quests so just add raid emblems.
+        player.currency.weekly[k] = CalculateRaidEmblems(k)(player)
+        player.currency.daily[k] = Utils:add(CalculateDungeonEmblems(k), Quests:CalculateAvailableDaily(k))(player)
+        player.currency.maxDaily[k] = Utils:add(CalculateMaxDungeonEmblems(k), Quests:CalculateMaxDaily(k))(player)
     end
 end
 

@@ -23,39 +23,49 @@ local CELL_HEIGHT = 10
 local NUM_CELLS = 1 -- cells per row
 local player = Utils:GetFullName()
 
-local f = CreateFrame("Frame", "InstanceCurrencyTracker", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(CELL_WIDTH * NUM_CELLS + 60, 600)
-f:SetPoint("CENTER", 150, 0)
-f:SetMovable(true)
-f:SetScript("OnMouseDown" ,f.StartMoving)
-f:SetScript("OnMouseUp", f.StopMovingOrSizing)
-f:SetAlpha(.5)
-f:Hide()
-f:SetToplevel(true)
-local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-title:SetText(AddOnName)
-title:SetAlpha(1)
-title:SetIgnoreParentAlpha(true)
-title:SetPoint("TOP", -10, -6)
+-- parent frame
+local f
+-- content body
+local content
 
--- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
-f.scrollFrame = CreateFrame("ScrollFrame", "ICTScroll", f, "UIPanelScrollFrameTemplate")
--- Set alpha to 1 for text.
-f.scrollFrame:SetAlpha(1)
-f.scrollFrame:SetIgnoreParentAlpha(true)
+function CreateAddOn(db)
+    local f = CreateFrame("Frame", "InstanceCurrencyTracker", UIParent, "BasicFrameTemplateWithInset")
+    f:SetSize(CELL_WIDTH * NUM_CELLS + 60, 600)
+    f:SetPoint("CENTER", 150, 0)
+    f:SetMovable(true)
+    f:SetScript("OnMouseDown" ,f.StartMoving)
+    f:SetScript("OnMouseUp", f.StopMovingOrSizing)
+    f:SetAlpha(.5)
+    f:SetToplevel(true)
+    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetText(AddOnName)
+    title:SetAlpha(1)
+    title:SetIgnoreParentAlpha(true)
+    title:SetPoint("TOP", -10, -6)
 
--- Points taken from example online that avoids writing into the frame.
-f.scrollFrame:SetPoint("TOPLEFT", 12, -60)
-f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 8)
+    -- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
+    f.scrollFrame = CreateFrame("ScrollFrame", "ICTScroll", f, "UIPanelScrollFrameTemplate")
+    -- Set alpha to 1 for text.
+    f.scrollFrame:SetAlpha(1)
+    f.scrollFrame:SetIgnoreParentAlpha(true)
 
--- creating a scrollChild to contain the content
-f.scrollFrame.scrollChild = CreateFrame("Frame", "ICTContent", f.scrollFrame)
-f.scrollFrame.scrollChild:SetSize(100, 100)
-f.scrollFrame.scrollChild:SetPoint("TOPLEFT", 5, -5)
-f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
+    -- Points taken from example online that avoids writing into the frame.
+    f.scrollFrame:SetPoint("TOPLEFT", 12, -60)
+    f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 8)
 
-local content = f.scrollFrame.scrollChild
-content.cells = {}
+    -- creating a scrollChild to contain the content
+    f.scrollFrame.scrollChild = CreateFrame("Frame", "ICTContent", f.scrollFrame)
+    f.scrollFrame.scrollChild:SetSize(100, 100)
+    f.scrollFrame.scrollChild:SetPoint("TOPLEFT", 5, -5)
+    f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
+
+    content = f.scrollFrame.scrollChild
+    content.cells = {}
+    f:Show()
+    CreatePlayerDropdown(db, f)
+    DisplayPlayer(db)
+end
+
 
 -- Gets the associated cell or create it if it doesn't exist yet.
 local function getCell(x, y)
@@ -89,11 +99,11 @@ local function instanceTooltipOnEnter(name, instance)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         local color = instance.locked and lockedColor or nameColor
         GameTooltip:AddLine(name, Utils:hex2rgb(color))
-        local encountersDone = instance.numEncounters - (instance.encounterProgress or 0)
-        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instance.numEncounters), Utils:hex2rgb(availableColor))
-        local staticInstance = StaticInstances[instance.id]
-        for k, _ in Utils:spairs(staticInstance.tokenIds or {}, CurrencySort) do
-            local max = staticInstance.maxEmblems(instance)
+        local instanceInfo = InstanceInfo[instance.id]
+        local encountersDone = instanceInfo.numEncounters - (instance.encounterProgress or 0)
+        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), Utils:hex2rgb(availableColor))
+        for k, _ in Utils:spairs(instanceInfo.tokenIds or {}, CurrencySort) do
+            local max = instanceInfo.maxEmblems(instance, k)
             local available = instance.available[k] or max
             local currency = Utils:GetCurrencyName(k)
             local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
@@ -125,13 +135,13 @@ local function printInstancesForCurrency(title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     local printTitle = true
     for k, v in Utils:spairsByValue(instances, GetLocalizedInstanceName) do
-        if StaticInstances[v.id].tokenIds[tokenId] then
+        if InstanceInfo[v.id].tokenIds[tokenId] then
             if printTitle then
                 printTitle = false
                 GameTooltip:AddLine(title, Utils:hex2rgb(titleColor))
             end
             local color = v.locked and lockedColor or availableColor
-            local max = StaticInstances[v.id].maxEmblems(v)
+            local max = InstanceInfo[v.id].maxEmblems(v, tokenId)
             local available = v.available[tokenId] or max
             GameTooltip:AddLine(string.format("%s: %s/%s", k, available, max), Utils:hex2rgb(color))
         end
@@ -199,14 +209,13 @@ local function maxWidth(db, dropdown)
     return max
 end
 
-local dropdown
-local function createPlayerDropdown(db)
-    dropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
+function CreatePlayerDropdown(db, f)
+    local dropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
     dropdown:SetPoint("TOP", f, 0, -30);
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
-    UIDropDownMenu_SetWidth(dropdown, maxWidth(db, dropdown))
+    UIDropDownMenu_SetWidth(dropdown, maxWidth(db, dropdown) + 20)
     UIDropDownMenu_SetText(dropdown, player)
 
     UIDropDownMenu_Initialize(
@@ -220,7 +229,7 @@ local function createPlayerDropdown(db)
                 info.func = function(self)
                     player = self.value
                     UIDropDownMenu_SetText(dropdown, player)
-                    Foobar(db)
+                    DisplayPlayer(db)
                 end
                 UIDropDownMenu_AddButton(info)
             end
@@ -228,10 +237,9 @@ local function createPlayerDropdown(db)
     )
 end
 
--- TODO rename this
 -- Prints out selected players with associated instances and currency infromation.
 -- TODO do we want an option to display all users ignoring select field?
-function Foobar(db)
+function DisplayPlayer(db)
     local v = db.players[player]
     local i = 1
     local offset = 1
@@ -242,59 +250,56 @@ function Foobar(db)
     for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
         offset = printCurrency(v, tokenId, offset, i)
     end
-    f:Show()
-    -- Only create the dropdown once
-    if dropdown then createPlayerDropdown(db) end
 end
 
 
- -- Create the dropdown, and configure its appearance
- -- Leaving this for additional option that shouldn't appear.
- local dropDown = CreateFrame("FRAME", "WPDemoDropDown", UIParent, "UIDropDownMenuTemplate")
- dropDown:SetPoint("CENTER")
- dropDown:Hide()
- UIDropDownMenu_SetWidth(dropDown, 200)
- UIDropDownMenu_SetText(dropDown, "Old Instance Selection")
- function continasAll(expansion)
-    for _, instance in pairs(expansion) do
-        if not oldInstances[instance.id] then
-            return false
-        end
-    end
-    return true
- end
+--  -- Create the dropdown, and configure its appearance
+--  -- Leaving this for additional option that shouldn't appear.
+--  local dropDown = CreateFrame("FRAME", "WPDemoDropDown", UIParent, "UIDropDownMenuTemplate")
+--  dropDown:SetPoint("CENTER")
+--  dropDown:Hide()
+--  UIDropDownMenu_SetWidth(dropDown, 200)
+--  UIDropDownMenu_SetText(dropDown, "Old Instance Selection")
+--  function continasAll(expansion)
+--     for _, instance in pairs(expansion) do
+--         if not oldInstances[instance.id] then
+--             return false
+--         end
+--     end
+--     return true
+--  end
 
- oldInstances = {}
+--  oldInstances = {}
 
- -- Create and bind the initialization function to the dropdown menu
- UIDropDownMenu_Initialize(dropDown, 
-    function(self, level, menuList)
-        local info = UIDropDownMenu_CreateInfo()
-        if (level or 1) == 1 then
-            for k, expansion in pairs(Instances.oldRaids) do
-                info.text = k
-                info.menuList = k
-                info.hasArrow = true
-                info.checked = continasAll(expansion)
-                info.func = function(self)
-                    for _, instance in pairs(expansion) do
-                        oldInstances[instance.id] = not self.checked
-                    end
-                end
-                UIDropDownMenu_AddButton(info)
-            end
-        else
-            for k, v in Utils:spairs(Instances.oldRaids[menuList]) do
-                info.text = k
-                info.arg1 = v.id
-                info.checked = oldInstances[v.id] or false
-                info.func = function(self, id)
-                    oldInstances[id] = not self.checked
-                end
-                UIDropDownMenu_AddButton(info, level)
-                -- Close the entire menu with this next call
-                CloseDropDownMenus()
-            end
-        end
-    end
-)
+--  -- Create and bind the initialization function to the dropdown menu
+--  UIDropDownMenu_Initialize(dropDown, 
+--     function(self, level, menuList)
+--         local info = UIDropDownMenu_CreateInfo()
+--         if (level or 1) == 1 then
+--             for k, expansion in pairs(Instances.oldRaids) do
+--                 info.text = k
+--                 info.menuList = k
+--                 info.hasArrow = true
+--                 info.checked = continasAll(expansion)
+--                 info.func = function(self)
+--                     for _, instance in pairs(expansion) do
+--                         oldInstances[instance.id] = not self.checked
+--                     end
+--                 end
+--                 UIDropDownMenu_AddButton(info)
+--             end
+--         else
+--             for k, v in Utils:spairs(Instances.oldRaids[menuList]) do
+--                 info.text = k
+--                 info.arg1 = v.id
+--                 info.checked = oldInstances[v.id] or false
+--                 info.func = function(self, id)
+--                     oldInstances[id] = not self.checked
+--                 end
+--                 UIDropDownMenu_AddButton(info, level)
+--                 -- Close the entire menu with this next call
+--                 CloseDropDownMenus()
+--             end
+--         end
+--     end
+-- )

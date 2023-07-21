@@ -1,14 +1,18 @@
 Instances = {}
 
+local numEncounters = function(instance)
+    return InstanceInfo[instance.id].numEncounters
+end
+
 local sameEmblemsPerBoss = function(emblemsPerEncounter)
     return function(instance)
-        return emblemsPerEncounter * (instance.numEncounters - instance.encounterProgress)
+        return emblemsPerEncounter * (numEncounters(instance) - instance.encounterProgress)
     end
 end
 
 local sameEmblemsPerBossPerSize = function(emblems10, emblems25)
     return function(instance)
-        return (instance.maxPlayers == 10 and emblems10 or emblems25) * (instance.numEncounters - instance.encounterProgress)
+        return (instance.maxPlayers == 10 and emblems10 or emblems25) * (numEncounters(instance) - instance.encounterProgress)
     end
 end
 
@@ -19,7 +23,7 @@ end
 
 -- Checks if the last boss in the instance is killed, using the number of encounters as the last boss index.
 local isLastBossKilled = function(instance)
-    return isBossKilled(instance, instance.numEncounters)
+    return isBossKilled(instance, numEncounters(instance))
 end
 
 local addOneLastBossAlive = function(instance)
@@ -56,84 +60,97 @@ local voaEmblems = function(instance, tokenId)
 end
 
 local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
-    return function(v)
-        return (v.maxPlayers == 10 and emblemsPer10 or emblemsPer25) * v.numEncounters
+    return function(instance)
+        return (instance.maxPlayers == 10 and emblemsPer10 or emblemsPer25) * numEncounters(instance)
     end
 end
 
-local maxNumEncounters = function(v) return v.numEncounters end
+local dungeonEmblems = Utils:set(Utils.DungeonEmblem, Utils.SiderealEssence)
+local totcEmblems = Utils:set(Utils.DungeonEmblem, Utils.SiderealEssence, Utils.ChampionsSeal)
+local availableDungeonEmblems = function(instance, tokenID)
+    if tokenID == Utils.SiderealEssence then
+        return isLastBossKilled(instance) and 0 or 1
+    elseif tokenID == Utils.DungeonEmblem or tokenID == Utils.ChampionsSeal then
+        return sameEmblemsPerBoss(1)(instance)
+    end
+end
+local maxDungeonEmblems = function(instance, tokenID)
+    if tokenID == Utils.SiderealEssence then
+        return 1
+    elseif tokenID == Utils.DungeonEmblem or tokenID == Utils.ChampionsSeal then
+        return numEncounters(instance)
+    end
+end
 
-local maxNumEncountersPlusOne = function(v) return v.numEncounters + 1 end
+local maxNumEncountersPlusOne = function(instance) return numEncounters(instance) + 1 end
 
 -- Static information about each instance.
 --
 -- Notes on key names: There's no clear API on getting the canonical name, and later instances are divided by 10 and 25 lockouts.
 -- We could overload the id and max player for some formula, such as concatenating the two.
 -- For readability of tables we will use English names instead of ids.
---
--- Notes on maxEmblems: It may be nice to have the values dynamically created but for simplicity they are static.
-StaticInstances = {
-    [574] = { name = "Utgarde Keep", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [575] = { name = "Utgarde Pinnacle", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [595] = { name = "The Culling of Stratholme", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [600] = { name = "Drak'Tharon Keep", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [604] = { name = "Gundrak", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [576] = { name = "The Nexus", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [578] = { name = "The Oculus", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [608] = { name = "The Violet Hold", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [602] = { name = "Halls of Lightning", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [599] = { name = "Halls of Stone", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [601] = { name = "Azjol-Nerub", tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [619] = { name = "Ahn'kahet: The Old Kingdom" , tokenIds = Utils:set(Utils.DungeonEmblem), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [650] = { name = "Trial of the Champion", tokenIds = Utils:set(Utils.DungeonEmblem, Utils.ChampionsSeal), emblems = sameEmblemsPerBoss(1), maxEmblems = maxNumEncounters },
-    [624] = { name = "Vault of Archavon", tokenIds = Utils:set(Utils.Triumph, Utils.Conquest, Utils.Valor), emblems = voaEmblems, maxEmblems = Utils:returnX(2) },
-    [533] = { name = "Naxxramas", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [615] = { name = "The Obsidian Sanctum", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [616] = { name = "The Eye of Eternity", tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [603] = { name = "Ulduar", tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = Utils:returnX(Instances.MaxUlduarEmblems) },
-    [249] = { name = "Onyxia's Lair", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [649] = { name = "Trial of the Crusader", tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [309] = { name = "Zul'Gurub" }
+InstanceInfo = {
+    [574] = { name = "Utgarde Keep", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [575] = { name = "Utgarde Pinnacle", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [595] = { name = "The Culling of Stratholme", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [600] = { name = "Drak'Tharon Keep", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [604] = { name = "Gundrak", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [576] = { name = "The Nexus", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [578] = { name = "The Oculus", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [608] = { name = "The Violet Hold", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [602] = { name = "Halls of Lightning", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [599] = { name = "Halls of Stone", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [601] = { name = "Azjol-Nerub", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [619] = { name = "Ahn'kahet: The Old Kingdom", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [650] = { name = "Trial of the Champion", numEncounters = 3, tokenIds = totcEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [624] = { name = "Vault of Archavon", numEncounters = 3, tokenIds = Utils:set(Utils.Triumph, Utils.Conquest, Utils.Valor), emblems = voaEmblems, maxEmblems = ReturnX(2) },
+    [533] = { name = "Naxxramas", numEncounters = 15, tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [615] = { name = "The Obsidian Sanctum", numEncounters = 4, tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [616] = { name = "The Eye of Eternity", numEncounters = 1, tokenIds = Utils:set(Utils.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [603] = { name = "Ulduar", numEncounters = 14, tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = ReturnX(Instances.MaxUlduarEmblems) },
+    [249] = { name = "Onyxia's Lair", numEncounters = 1, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [649] = { name = "Trial of the Crusader", numEncounters = 5, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [309] = { name = "Zul'Gurub", numEncounters = 10, maxEmblems = ReturnX(0) }
 }
 Instances.dungeons = {
-    ["Utgarde Keep"] = { id = 574, numEncounters = 3 },
-    ["Utgarde Pinnacle"] = { id = 575, numEncounters = 4 },
-    ["The Culling of Stratholme"] = { id = 595, numEncounters = 5 },
-    ["Drak'Tharon Keep"] = { id = 600, numEncounters = 4 },
-    ["Gundrak"] = { id = 604, numEncounters = 5 },
-    ["The Nexus"] = { id = 576, numEncounters = 5 },
-    ["The Oculus"] = { id = 578, numEncounters = 4 },
-    ["The Violet Hold"] = { id = 608, numEncounters = 3 },
-    ["Halls of Lightning"] = { id = 602, numEncounters = 4 },
-    ["Halls of Stone"] = { id = 599, numEncounters = 4 },
-    ["Azjol-Nerub"] = { id = 601, numEncounters = 3 },
-    ["Ahn'kahet: The Old Kingdom"] = { id = 619, numEncounters = 5 },
-    ["Trial of the Champion"] = { id = 650, numEncounters = 3 },
+    ["Utgarde Keep"] = { id = 574 },
+    ["Utgarde Pinnacle"] = { id = 575 },
+    ["The Culling of Stratholme"] = { id = 595 },
+    ["Drak'Tharon Keep"] = { id = 600 },
+    ["Gundrak"] = { id = 604 },
+    ["The Nexus"] = { id = 576 },
+    ["The Oculus"] = { id = 578 },
+    ["The Violet Hold"] = { id = 608 },
+    ["Halls of Lightning"] = { id = 602 },
+    ["Halls of Stone"] = { id = 599 },
+    ["Azjol-Nerub"] = { id = 601 },
+    ["Ahn'kahet: The Old Kingdom"] = { id = 619 },
+    ["Trial of the Champion"] = { id = 650 },
     --["Pit of Saron"] = { id = ?, numEncounters = 3 },
     --["The Forge of Souls"] = { id = ?, numEncounters = 3 },
     --["Halls of Reflection"] = { id = ?, numEncounters = 3 }
 }
 Instances.raids = {
-    ["Vault of Archavon (10)"] = { id = 624, maxPlayers = 10, numEncounters = 3 },
-    ["Vault of Archavon (25)"] = { id = 624, maxPlayers = 25, numEncounters = 3},
-    ["Naxxramas (10)"] = { id = 533, maxPlayers = 10, numEncounters = 15},
-    ["Naxxramas (25)"] = { id = 533, maxPlayers = 25, numEncounters = 15},
-    ["The Obsidian Sanctum (10)"] = { id = 615, maxPlayers = 10, numEncounters = 4},
-    ["The Obsidian Sanctum (25)"] = { id = 615, maxPlayers = 25, numEncounters = 4},
-    ["The Eye of Eternity (10)"] = { id = 616, maxPlayers = 10, numEncounters = 1},
-    ["The Eye of Eternity (25)"] = { id = 616, maxPlayers = 25, numEncounters = 1},
-    ["Ulduar (10)"] = { id = 603, maxPlayers = 10, numEncounters = 14},
-    ["Ulduar (25)"] = { id = 603, maxPlayers = 25, numEncounters = 14},
-    ["Onyxia's Lair (10)"] = { id = 249, maxPlayers = 10, numEncounters = 1 },
-    ["Onyxia's Lair (25)"] = { id = 249, maxPlayers = 25, numEncounters = 1},
-    ["Trial of the Crusader (10)"] = { id = 649, maxPlayers = 10, numEncounters = 5 },
-    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25, numEncounters = 5 },
+    ["Vault of Archavon (10)"] = { id = 624, maxPlayers = 10 },
+    ["Vault of Archavon (25)"] = { id = 624, maxPlayers = 25 },
+    ["Naxxramas (10)"] = { id = 533, maxPlayers = 10 },
+    ["Naxxramas (25)"] = { id = 533, maxPlayers = 25 },
+    ["The Obsidian Sanctum (10)"] = { id = 615, maxPlayers = 10 },
+    ["The Obsidian Sanctum (25)"] = { id = 615, maxPlayers = 25 },
+    ["The Eye of Eternity (10)"] = { id = 616, maxPlayers = 10 },
+    ["The Eye of Eternity (25)"] = { id = 616, maxPlayers = 25 },
+    ["Ulduar (10)"] = { id = 603, maxPlayers = 10 },
+    ["Ulduar (25)"] = { id = 603, maxPlayers = 25 },
+    ["Onyxia's Lair (10)"] = { id = 249, maxPlayers = 10 },
+    ["Onyxia's Lair (25)"] = { id = 249, maxPlayers = 25 },
+    ["Trial of the Crusader (10)"] = { id = 649, maxPlayers = 10 },
+    ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25 },
 }
 Instances.oldRaids = {
     ["Vanilla"] = {
         ["Molten Core"] = { id = 409, },
         ["Blackwing Lair"] = { id = 469, },
-        ["Zul'Gurub"] = { id = 309, numEncounters = 10 },
+        ["Zul'Gurub"] = { id = 309 },
         ["Ruins of Ahn'Qiraj"] = { id = 509, },
         ["Temple of Ahn'Qiraj"] = { id = 531, },
     },
@@ -190,7 +207,7 @@ function Instances:Update(player)
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
 
         if locked then
-            local name = StaticInstances[instanceId].name
+            local name = InstanceInfo[instanceId].name
             self:Lock(player.dungeons[name], reset, encounterProgress, i)
             local raidName = name and Utils:GetInstanceName(name, maxPlayers)
             self:Lock(player.raids[raidName], reset, encounterProgress, i)

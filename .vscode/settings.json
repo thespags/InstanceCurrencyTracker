@@ -22,6 +22,8 @@
         "UIDropDownMenu_SetText",
         "UIDropDownMenu_Initialize",
         "UIDropDownMenu_CreateInfo",
-        "UIDropDownMenu_AddButton"
+        "UIDropDownMenu_AddButton",
+        "UnitFactionGroup",
+        "C_TaskQuest"
     ]
 }

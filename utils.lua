@@ -89,7 +89,8 @@ function Utils:hex2rgb(hex)
     return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
 end
 
-function Utils:returnX(x)
+-- Returns a function that simply returns the provided value.
+function ReturnX(x)
     return function() return x end
 end
 
