@@ -51,29 +51,15 @@ function CalculateMaxRaidEmblems(tokenId)
     end
 end
 
--- Currency helpers and how to calculate information
--- index - how we sort the currency, from latest released to earliest (i.e. most relevant)
+-- How to order currency, we sort from highest to lowest (reverse) so adding new currencies is easier.
 Currency = {
-    [Utils.Triumph] = {
-        index = 1
-    },
-    [Utils.SiderealEssence] = {
-        index = 2
-    },
-    [Utils.ChampionsSeal] = {
-        index = 3
-    },
-    [Utils.Conquest] = {
-        index = 4
-    },
-    [Utils.Valor] = {
-        index = 5,
-    },
-    [Utils.Heroism] = {
-        index = 6
-    },
+    [Utils.Triumph] = 6,
+    [Utils.SiderealEssence] = 5,
+    [Utils.ChampionsSeal] = 4,
+    [Utils.Conquest] = 3,
+    [Utils.Valor] = 2,
+    [Utils.Heroism] = 1,
 }
-
 function CurrencySort(a, b)
-    return Currency[a].index <= Currency[b].index
+    return Currency[a] > Currency[b]
 end

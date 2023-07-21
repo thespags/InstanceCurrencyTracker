@@ -25,6 +25,7 @@
         "UIDropDownMenu_AddButton",
         "UnitFactionGroup",
         "C_TaskQuest",
-        "LFGParentFrame"
+        "LFGParentFrame",
+        "CloseDropDownMenus"
     ]
 }

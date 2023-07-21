@@ -110,7 +110,7 @@ InstanceInfo = {
     [603] = { name = "Ulduar", numEncounters = 14, tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = ReturnX(Instances.MaxUlduarEmblems) },
     [249] = { name = "Onyxia's Lair", numEncounters = 1, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
     [649] = { name = "Trial of the Crusader", numEncounters = 5, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [309] = { name = "Zul'Gurub", numEncounters = 10, maxEmblems = ReturnX(0) }
+    [309] = { name = "Zul'Gurub", numEncounters = 10, maxEmblems = ReturnX(0)}
 }
 Instances.dungeons = {
     ["Utgarde Keep"] = { id = 574 },
@@ -147,24 +147,28 @@ Instances.raids = {
     ["Trial of the Crusader (25)"] = { id = 649, maxPlayers = 25 },
 }
 Instances.oldRaids = {
-    ["Vanilla"] = {
-        ["Molten Core"] = { id = 409, },
-        ["Blackwing Lair"] = { id = 469, },
-        ["Zul'Gurub"] = { id = 309 },
-        ["Ruins of Ahn'Qiraj"] = { id = 509, },
-        ["Temple of Ahn'Qiraj"] = { id = 531, },
-    },
-    ["Burning Crusade"] = {
-        ["Karazhan"] = { id = 532, },
-        ["Gruul's Lair"] = { id = 565 },
-        ["Magtheridon's Lair"] = { id = 544, },
-        ["Serpentshrine Cavern"] = { id = 548, },
-        ["Tempest Keep"] = { id = 550, },
-        ["Black Temple"] = { id = 564, },
-        ["Hyjal Summit"] = { id = 534, },
-        ["Sunwell Plateau"] = { id = 580 },
-    }
+    ["Molten Core"] = { id = 409, expansion = "Vanilla" },
+    ["Blackwing Lair"] = { id = 469, expansion = "Vanilla" },
+    ["Zul'Gurub"] = { id = 309, expansion = "Vanilla" },
+    ["Ruins of Ahn'Qiraj"] = { id = 509, expansion = "Vanilla" },
+    ["Temple of Ahn'Qiraj"] = { id = 531, expansion = "Vanilla" },
+    ["Karazhan"] = { id = 532, expansion = "Burning Crusade" },
+    ["Gruul's Lair"] = { id = 565, expansion = "Burning Crusade"  },
+    ["Magtheridon's Lair"] = { id = 544, expansion = "Burning Crusade" },
+    ["Serpentshrine Cavern"] = { id = 548, expansion = "Burning Crusade" },
+    ["Tempest Keep"] = { id = 550, expansion = "Burning Crusade" },
+    ["Black Temple"] = { id = 564, expansion = "Burning Crusade" },
+    ["Hyjal Summit"] = { id = 534, expansion = "Burning Crusade" },
+    ["Sunwell Plateau"] = { id = 580, expansion = "Burning Crusade" },
 }
+-- How to order expansions, we sort from highest to lowest (reverse) so adding new currencies is easier.
+Expansions = {
+    ["Vanilla"] = 1,
+    ["Burning Crusade"] = 2,
+}
+function ExpansionSort(a, b)
+    return Expansions[a] > Expansions[b]
+end
 
 -- Force reset all saved instance information.
 function Instances:ResetAll(instances)

@@ -29,11 +29,11 @@ function Player:ResetInstances(player)
     local timestamp = GetServerTime()
     if not player.dailyReset or player.dailyReset < timestamp then
         self:DailyReset(player)
-        print(AddOnName .. " - daily reset - wiping " .. player.fullName)
+        print(string.format("[%s] Daily reset for player: %s", AddOnName, player.fullName))
     end
     if not player.weeklyReset or player.weeklyReset < timestamp then
         self:WeeklyReset(player)
-        print(AddOnName .. " - weekly reset - wiping " .. player.fullName)
+        print(string.format("[%s] Weekly reset for player: %s", AddOnName, player.fullName))
     end
     Player:OldRaidReset(player)
 end
@@ -69,13 +69,13 @@ function Player:CalculateCurrency(player)
 end
 
 function Player:Update(db)
+    db.players = db.players or {}
     for _, player in pairs(db.players) do
         Player:ResetInstances(player)
     end
     local player = self:GetPlayer(db)
     Instances:Update(player)
     Player:CalculateCurrency(player)
-    -- Update daily max seals
 end
 
 -- Returns the provided player or current player if none provided.
@@ -87,32 +87,46 @@ function Player:GetPlayer(db, playerName)
 end
 
 function Player:WipePlayer(db, playerName)
-    db.players[playerName] = Player:Create()
-    print(AddOnName .. " - wiping player - " .. playerName)
+    if db.players[playerName] then
+        db.players[playerName] = {}
+        print(string.format("[%s] Wiped player: %s", AddOnName, playerName))
+    else   
+        print(string.format("[%s] Unknown player: %s", AddOnName, playerName))
+    end
+    self:Update(db)
 end
 
 function Player:WipeRealm(db, realmName)
+    local count = 0
     for name, _ in Utils.fpairs(db.players, function(v) return v.realm == realmName end) do
+        count = count + 1
         db.players[name] = {}
     end
-    print(AddOnName .. " - wiping players on realm - " .. realmName)
+    print(string.format("[%s] Wiped % players on realm: %s", AddOnName , count, realmName))
+    self:Update(db)
 end
 
 function Player:WipeAllPlayers(db)
+    local count = 0
+    for _, _ in pairs(db.players) do
+        count = count + 1
+    end
     db.players = {}
-    print(AddOnName .. " - wiping all players")
+    print(string.format("[%s] Wiped % players", AddOnName, count))
+    self:Update(db)
 end
 
+-- Remenant from the WeakAura
 function Player:EnablePlayer(db, playerName)
-    local player = self:GetPlayer(db, playerName)
-    player.isDisabled = false
+    if db.players[playerName] then db.players[playerName].isDisabled = false end
 end
 
+-- Remenant from the WeakAura
 function Player:DisablePlayer(db, playerName)
-    local player = self:GetPlayer(db, playerName)
-    player.isDisabled = true
+    if db.players[playerName] then db.players[playerName].isDisabled = true end
 end
 
+-- Remenant from the WeakAura
 function Player:ViewablePlayers(db, options)
     local currentName = Utils:GetFullName()
     local currentRealm = GetRealmName()

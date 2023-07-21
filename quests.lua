@@ -15,13 +15,14 @@ local isExaltedTournamentChampion = function()
     return select(4, GetAchievementInfo(2816)) or select(4, GetAchievementInfo(2817))
 end
 
-function barf(hordeName, allianceName)
+local factionQuestName = function(hordeName, allianceName)
     return function(player)
         return player.faction == "Horde" and hordeName or player.faction == "Alliance" and allianceName or "Unknown"
     end
 end
 
-function foobar(nonDeathKnightAllianceID, deathKnightAllianceID, deathKnightHordeID, nonDeathKnightHordeID)
+-- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
+local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllianceID, deathKnightHordeID, nonDeathKnightHordeID)
     return function(player)
         local questID
         if player.faction == "Horde" then
@@ -35,31 +36,54 @@ function foobar(nonDeathKnightAllianceID, deathKnightAllianceID, deathKnightHord
     end
 end
 
-foobar(13682, 13788, 13809, 13812)
-foobar(13861, 13864, 13862, 13863)
-foobar(13790, 13793, 13811, 13814)
-foobar(13789, 13791, 13810, 13813)
-
 Quests = {
     [Utils.Triumph] = {
-        -- Heroic Daily Dungeon
         -- This counts the quest and bag together, instead of separately.
-        { ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 }, seals = 5, prereq = ReturnX(true) }
+        {
+            name = ReturnX("Heroic Daily Dungeon"),
+            ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
+            seals = 5,
+            prereq = ReturnX(true),
+        }
     },
     [Utils.Conquest] = {
-        -- Normal Daily Dungeon
-        { ids = { 13240, 13241, 13243, 13244 }, seals = 2, prereq = ReturnX(true) }
+        {
+            name = ReturnX("Normal Daily Dungeon"),
+            ids = { 13240, 13241, 13243, 13244 },
+            seals = 2,
+            prereq = ReturnX(true)
+        }
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     [Utils.ChampionsSeal] = {
         -- Threat From Above
-        { ids = { 13682, 13788, 13809, 13812 }, seals = 2, prereq = isTournamentChainCompleted },
+        {
+            name = tournamentQuestName(13682, 13788, 13809, 13812),
+            ids = { 13682, 13788, 13809, 13812 },
+            seals = 2,
+            prereq = isTournamentChainCompleted
+        },
         -- Battle Before The Citadel
-        { ids = { 13861, 13862, 13863, 13864 }, seals = 1, prereq = isTournamentChainCompleted },
+        {
+            name = tournamentQuestName(13861, 13864, 13862, 13863),
+            ids = { 13861, 13862, 13863, 13864 },
+            seals = 1,
+            prereq = isTournamentChainCompleted
+        },
         -- Among the Champions
-        { ids = { 13790, 13793, 13811, 13814 }, seals = 1, prereq = isTournamentChainCompleted },
+        { 
+            name = tournamentQuestName(13790, 13793, 13811, 13814),
+            ids = { 13790, 13793, 13811, 13814 },
+            seals = 1,
+            prereq = isTournamentChainCompleted
+        },
         -- Taking Battle To The Enemy
-        { ids = { 13789, 13791, 13810, 13813 }, seals = 1, prereq = isTournamentChainCompleted },
+        {
+            name = tournamentQuestName(13789, 13791, 13810, 13813),
+            ids = { 13789, 13791, 13810, 13813 },
+            seals = 1,
+            prereq = isTournamentChainCompleted
+        },
         {
             name = ReturnX("High Crusader Adelard"),
             ids = { 14101, 14102, 14104, 14105 },
@@ -72,16 +96,16 @@ Quests = {
             seals = 1,
             prereq = isExaltedTournamentFaction,
         },
-        -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
         {
-            name = barf("Savinia Loresong", "Tylos Dawnrunner"),
+            name = factionQuestName("Savinia Loresong", "Tylos Dawnrunner"),
+            -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
             ids = { 14076, 14092, 14090, 14141, 14112, 14145 },
             seals = 1,
             prereq = isExaltedTournamentChampion,
         },
-        -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
-        { 
-            name = barf("Narasi Snowdawn", " Girana the Blooded"),
+        {
+            name = factionQuestName("Narasi Snowdawn", " Girana the Blooded"),
+            -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
             ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
             seals = 1,
             prereq = isExaltedTournamentChampion,

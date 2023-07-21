@@ -16,14 +16,17 @@ local classIcons = {
 local availableColor = "FFFFFFFF"
 local titleColor = "FFFFFF00"
 local lockedColor = "FFFF00FF"
+local unavailableColor = "FFFF0000"
 local nameColor = "FF00FF00"
 
 local CELL_WIDTH = 160
 local CELL_HEIGHT = 10
 local NUM_CELLS = 1
-local player = Utils:GetFullName()
-
 local content
+
+-- Currently selected player plus the length.
+local selectedPlayer = Utils:GetFullName()
+local displayLength = 0
 
 function CreateAddOn(db)
     local f = CreateFrame("Frame", "InstanceCurrencyTracker", LFGParentFrame, "BasicFrameTemplateWithInset")
@@ -49,7 +52,7 @@ function CreateAddOn(db)
 
     -- Points taken from example online that avoids writing into the frame.
     f.scrollFrame:SetPoint("TOPLEFT", 12, -60)
-    f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 8)
+    f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 32)
 
     -- creating a scrollChild to contain the content
     f.scrollFrame.scrollChild = CreateFrame("Frame", "ICTContent", f.scrollFrame)
@@ -60,6 +63,7 @@ function CreateAddOn(db)
     content = f.scrollFrame.scrollChild
     content.cells = {}
     CreatePlayerDropdown(db, f)
+    CreateOldInstanceDropdown(db, f)
     DisplayPlayer(db)
     return f
 end
@@ -77,7 +81,7 @@ local function getCell(x, y)
 end
 
 -- Prints text in the associated cell.
-local function printCell(x, y, color, text)
+local function printCell(x, y, text, color)
     local cell = getCell(x, y)
     -- Create the string if necessary.
     if not cell.value then
@@ -87,7 +91,12 @@ local function printCell(x, y, color, text)
     -- TODO We could make font and size an option here.
     cell.value:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
     cell.value:SetText(string.format("|c%s%s|r", color, text))
+    cell:Show()
     return cell
+end
+
+local function hideCell(x, y)
+    getCell(x, y):Hide()
 end
 
 -- Tooltip for instance information upon entering the cell.
@@ -97,14 +106,20 @@ local function instanceTooltipOnEnter(name, instance)
         local color = instance.locked and lockedColor or nameColor
         GameTooltip:AddLine(name, Utils:hex2rgb(color))
         local instanceInfo = InstanceInfo[instance.id]
+
+        -- Display the available encounters for the instance.
         local encountersDone = instanceInfo.numEncounters - (instance.encounterProgress or 0)
         GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), Utils:hex2rgb(availableColor))
-        for k, _ in Utils:spairs(instanceInfo.tokenIds or {}, CurrencySort) do
-            local max = instanceInfo.maxEmblems(instance, k)
-            local available = instance.available[k] or max
-            local currency = Utils:GetCurrencyName(k)
-            local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
-            GameTooltip:AddLine(text, Utils:hex2rgb(titleColor))
+
+        -- Display all available currency for the instance.
+        for tokenId, _ in Utils:spairs(instanceInfo.tokenIds or {}, CurrencySort) do
+            if InstanceCurrencyDB.options.currency[tokenId] then
+                local max = instanceInfo.maxEmblems(instance, tokenId)
+                local available = instance.available[tokenId] or max
+                local currency = Utils:GetCurrencyName(tokenId)
+                local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
+                GameTooltip:AddLine(text, Utils:hex2rgb(titleColor))
+            end
         end
         GameTooltip:Show()
     end
@@ -115,17 +130,29 @@ local function hideTooltipOnLeave(self, motion)
 end
 
 -- Prints all the instances with associated tooltips.
-local function printInstances(title, instances, offset, i)
-    offset = offset + 1
-    printCell(i, offset, titleColor, title)
+local function printInstances(db, title, instances, x, offset)
+    -- Only print the title if there exists an instance for this token.
+    local printTitle = true
     for k, v in Utils:spairsByValue(instances, GetLocalizedInstanceName) do
-        offset = offset + 1
-        local color = v.locked and lockedColor or availableColor
-        local cell = printCell(i, offset, color, k)
-        cell:SetScript("OnEnter", instanceTooltipOnEnter(k, v))
-        cell:SetScript("OnLeave", hideTooltipOnLeave)
+        -- WOTLK instances don't have an expansion yet so should always appear.
+        if not v.expansion or db.options.oldInstances[v.id] then
+            if printTitle then
+                printTitle = false
+                offset = offset + 1
+                printCell(x, offset, title, titleColor)
+            end
+            offset = offset + 1
+            local color = v.locked and lockedColor or availableColor
+            local cell = printCell(x, offset, k, color)
+            cell:SetScript("OnEnter", instanceTooltipOnEnter(k, v))
+            cell:SetScript("OnLeave", hideTooltipOnLeave)
+        end
     end
-    return offset + 1
+    if not printTitle then
+        offset = offset + 1
+        hideCell(x, offset)
+    end
+    return offset
 end
 
 local function printInstancesForCurrency(title, instances, tokenId)
@@ -137,6 +164,7 @@ local function printInstancesForCurrency(title, instances, tokenId)
                 printTitle = false
                 GameTooltip:AddLine(title, Utils:hex2rgb(titleColor))
             end
+            -- Displays available currency out of the total currency for this instance.
             local color = v.locked and lockedColor or availableColor
             local max = InstanceInfo[v.id].maxEmblems(v, tokenId)
             local available = v.available[tokenId] or max
@@ -157,37 +185,83 @@ local function currencyTooltipOnEnter(player, tokenId)
 end
 
 -- Prints currency with multi line information.
--- TODO unused.
-local function printCurrencyVerbose(player, tokenId, offset, i)
+local function printCurrencyVerbose(player, tokenId, x, offset)
     offset = offset + 1
     local currency = Utils:GetCurrencyName(tokenId)
-    local cell = printCell(i, offset, titleColor, currency)
+    local cell = printCell(x, offset, currency, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     offset = offset + 1
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
-    cell = printCell(i, offset, availableColor, "Available  " .. available)
+    cell = printCell(x, offset, "Available  " .. available, availableColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     offset = offset + 1
     local current = player.currency.wallet[tokenId] or "n/a"
-    cell = printCell(i, offset, availableColor, "Current     " .. current)
+    cell = printCell(x, offset, "Current     " .. current, availableColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
-    return offset + 1
+    offset = offset + 1
+    hideCell(x, offset)
+    return offset
 end
 
 -- Prints currency single line information.
-local function printCurrencyShort(player, tokenId, offset, i)
+local function printCurrencyShort(player, tokenId, x, offset)
     offset = offset + 1
     local currency = Utils:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
     local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
-    local cell = printCell(i, offset, titleColor, text)
+    local cell = printCell(x, offset, text, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     return offset
+end
+
+local function questTooltipOnEnter(player)
+    GameTooltip:AddLine("Quests", Utils:hex2rgb(titleColor))
+    for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
+        -- See what hapepns if we go against Quests in the spairs
+        if Quests[tokenId] then
+            local quests = Quests[tokenId]
+            GameTooltip:AddLine(Utils:GetCurrencyName(tokenId), Utils:hex2rgb(titleColor))
+            for _, quest in Utils:pairs(quests) do
+                local color = quest.prereq(player) and Quests:IsDailyCompleted(quest.ids) and lockedColor or availableColor or unavailableColor
+                GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), Utils:hex2rgb(color))
+            end
+        end
+    end
+end
+
+-- Todo make this a tooltip or show quests then tooltip displays currency and amount?
+local function printQuest(player, x, offset)
+    offset = offset + 1
+    local cell = printCell(x, offset, "Quest", titleColor)
+    cell:SetScript("OnEnter", questTooltipOnEnter(player))
+    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    return offset
+end
+
+-- Prints out selected players with associated instances and currency infromation.
+function DisplayPlayer(db)
+    local v = db.players[selectedPlayer]
+    local x = 1
+    local offset = 1
+    printCell(x, offset, string.format("|T%s:16|t%s", classIcons[v.class], v.name), nameColor)
+    offset = printInstances(db, "Dungeons", v.dungeons, x, offset)
+    offset = printInstances(db, "Raids", v.raids, x, offset)
+    offset = printInstances(db, "Old Raids", v.oldRaids, x, offset)
+    local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
+    for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
+        if InstanceCurrencyDB.options.currency[tokenId] then
+            offset = printCurrency(v, tokenId, x, offset)
+        end
+    end
+    for i=offset,displayLength do
+        hideCell(x, i)
+    end
+    displayLength = offset
 end
 
 -- Sets the dropdown width to the largest item string width.
@@ -212,8 +286,9 @@ function CreatePlayerDropdown(db, f)
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
-    UIDropDownMenu_SetWidth(dropdown, maxWidth(db, dropdown) + 20)
-    UIDropDownMenu_SetText(dropdown, player)
+    -- Width set to slightly smaller than parent frame.
+    UIDropDownMenu_SetWidth(dropdown, 180)
+    UIDropDownMenu_SetText(dropdown, selectedPlayer)
 
     UIDropDownMenu_Initialize(
         dropdown,
@@ -221,11 +296,11 @@ function CreatePlayerDropdown(db, f)
             local info = UIDropDownMenu_CreateInfo()
             for _, v in Utils:spairs(db.players) do
                 info.text = v.fullName
-                info.checked = player == v.fullName
+                info.checked = selectedPlayer == v.fullName
                 info.isNotRadio = true
                 info.func = function(self)
-                    player = self.value
-                    UIDropDownMenu_SetText(dropdown, player)
+                    selectedPlayer = self.value
+                    UIDropDownMenu_SetText(dropdown, selectedPlayer)
                     DisplayPlayer(db)
                 end
                 UIDropDownMenu_AddButton(info)
@@ -234,68 +309,133 @@ function CreatePlayerDropdown(db, f)
     )
 end
 
--- Prints out selected players with associated instances and currency infromation.
--- TODO do we want an option to display all users ignoring select field?
-function DisplayPlayer(db)
-    local v = db.players[player]
-    local i = 1
-    local offset = 1
-    printCell(i, offset, nameColor, string.format("|T%s:16|t%s", classIcons[v.class], v.name))
-    offset = printInstances("Dungeons", v.dungeons, offset, i)
-    offset = printInstances("Raids", v.raids, offset, i)
-    local printCurrency = true and printCurrencyShort or printCurrencyVerbose
-    for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
-        offset = printCurrency(v, tokenId, offset, i)
+-- Helper to set all the currencies as enabled.
+local function getOrCreateCurrencyOptions(db)
+    if not db.options.currency then
+        print("creating currency")
+        db.options.currency = {}
+        for k, _ in pairs(Currency) do
+            db.options.currency[k] = true
+        end
     end
+    return db.options.currency
 end
 
---  -- Create the dropdown, and configure its appearance
---  -- Leaving this for additional option that shouldn't appear.
---  local dropDown = CreateFrame("FRAME", "WPDemoDropDown", UIParent, "UIDropDownMenuTemplate")
---  dropDown:SetPoint("CENTER")
---  dropDown:Hide()
---  UIDropDownMenu_SetWidth(dropDown, 200)
---  UIDropDownMenu_SetText(dropDown, "Old Instance Selection")
---  function continasAll(expansion)
---     for _, instance in pairs(expansion) do
---         if not oldInstances[instance.id] then
---             return false
---         end
---     end
---     return true
---  end
+local function containsAll(t, filter, contains)
+    for _, v in pairs(t) do
+        if (not filter or filter(v)) and ((contains and not contains(v)) or not v) then
+            return false
+        end
+    end
+    return true
+end
 
---  oldInstances = {}
+local function expansionContainsAll(expansion, oldInstances)
+    local filter = function(v) return v.expansion == expansion end
+    local contains = function(v) return oldInstances[v.id] end
+    return containsAll(Instances.oldRaids, filter, contains)
+end
 
---  -- Create and bind the initialization function to the dropdown menu
---  UIDropDownMenu_Initialize(dropDown, 
---     function(self, level, menuList)
---         local info = UIDropDownMenu_CreateInfo()
---         if (level or 1) == 1 then
---             for k, expansion in pairs(Instances.oldRaids) do
---                 info.text = k
---                 info.menuList = k
---                 info.hasArrow = true
---                 info.checked = continasAll(expansion)
---                 info.func = function(self)
---                     for _, instance in pairs(expansion) do
---                         oldInstances[instance.id] = not self.checked
---                     end
---                 end
---                 UIDropDownMenu_AddButton(info)
---             end
---         else
---             for k, v in Utils:spairs(Instances.oldRaids[menuList]) do
---                 info.text = k
---                 info.arg1 = v.id
---                 info.checked = oldInstances[v.id] or false
---                 info.func = function(self, id)
---                     oldInstances[id] = not self.checked
---                 end
---                 UIDropDownMenu_AddButton(info, level)
---                 -- Close the entire menu with this next call
---                 CloseDropDownMenus()
---             end
---         end
---     end
--- )
+local function oldRaidsContainsAll(oldInstances)
+    local contains = function(v) return oldInstances[v.id] end
+    return containsAll(Instances.oldRaids, ReturnX(true), contains)
+end
+
+function CreateOldInstanceDropdown(db, f)
+    local dropdown = CreateFrame("FRAME", "ICTOptions", f, "UIDropDownMenuTemplate")
+    dropdown:SetPoint("BOTTOM")
+    dropdown:SetAlpha(1)
+    dropdown:SetIgnoreParentAlpha(true)
+
+    -- Width set to slightly smaller than parent frame.
+    UIDropDownMenu_SetWidth(dropdown, 180)
+    UIDropDownMenu_SetText(dropdown, "Options")
+    local oldInstances = db.options.oldInstances or {}
+    db.options.oldInstances = oldInstances
+
+    local currency = getOrCreateCurrencyOptions(db)
+
+    UIDropDownMenu_Initialize(
+        dropdown,
+        function(self, level, menuList)
+            local info = UIDropDownMenu_CreateInfo()
+            if (level or 1) == 1 then
+                -- Create the currency options.
+                info.text = "Currency"
+                info.menuList = info.text
+                info.hasArrow = true
+                info.checked = containsAll(currency)
+                info.func = function(self)
+                    for k, _ in pairs(Currency) do
+                        currency[k] = not self.checked
+                    end
+                    DisplayPlayer(db)
+                end
+                UIDropDownMenu_AddButton(info)
+
+                -- Switches between short and long forms of currency.
+                info.text = "Verbose Currency"
+                info.menuList = nil
+                info.hasArrow = false
+                info.checked = db.options.verboseCurrency or false
+                info.func = function(self)
+                    db.options.verboseCurrency = not self.checked
+                    DisplayPlayer(db)
+                end
+                UIDropDownMenu_AddButton(info)
+
+                -- Create the old instance options.
+                info.text = "Old Instances"
+                info.menuList = info.text
+                info.checked = oldRaidsContainsAll(oldInstances)
+                info.hasArrow = true
+                info.func = function(self)
+                    for _, instance in pairs(Instances.oldRaids) do
+                        oldInstances[instance.id] = not self.checked
+                    end
+                    DisplayPlayer(db)
+                end
+                UIDropDownMenu_AddButton(info)
+            else
+                if menuList == "Currency" then
+                    for k, _ in Utils:spairs(Currency, CurrencySort) do
+                        info.text = Utils:GetCurrencyName(k)
+                        info.checked = currency[k]
+                        info.func = function(self)
+                            currency[k] = not currency[k]
+                            DisplayPlayer(db)
+                        end
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                elseif menuList == "Instances" then
+                    -- Create a level for the expansions, then the specific instances.
+                    for expansion, _ in Utils:spairs(Expansions, ExpansionSort) do
+                        info.text = expansion
+                        info.menuList = expansion
+                        info.hasArrow = true
+                        info.checked = expansionContainsAll(expansion, oldInstances)
+                        info.func = function(self)
+                            for _, instance in Utils:fpairs(Instances.oldRaids, function(v) return v.expansion == expansion end) do
+                                oldInstances[instance.id] = not self.checked
+                            end
+                            DisplayPlayer(db)
+                        end
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                else
+                    -- Now create a level for all the instances of that expansion.
+                    for k, v in Utils:fpairs(Instances.oldRaids, function(v) return v.expansion == menuList end) do
+                        info.text = k
+                        info.arg1 = v.id
+                        info.checked = oldInstances[v.id] or false
+                        info.func = function(self, id)
+                            oldInstances[id] = not self.checked
+                            DisplayPlayer(db)
+                        end
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                end
+            end
+        end
+    )
+end
