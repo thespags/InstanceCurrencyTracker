@@ -215,7 +215,3 @@ function Instances:Update(player)
         end
     end
 end
-
-function Instances:CalculateSiderealEssences(instances)
-    return Utils:sum(instances, addOneLastBossAlive)
-end

@@ -1,5 +1,3 @@
-Currency = {}
-
 local function calculateEmblems(instances, tokenId)
     local emblems = 0
     for _, instance in pairs(instances) do

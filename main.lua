@@ -240,7 +240,7 @@ function DisplayPlayer(db)
     local v = db.players[player]
     local i = 1
     local offset = 1
-    printCell(i, offset, nameColor, v.name)
+    printCell(i, offset, nameColor, string.format("|T%s:16|t%s", classIcons[v.class], v.name))
     offset = printInstances("Dungeons", v.dungeons, offset, i)
     offset = printInstances("Raids", v.raids, offset, i)
     local printCurrency = true and printCurrencyShort or printCurrencyVerbose
@@ -248,7 +248,6 @@ function DisplayPlayer(db)
         offset = printCurrency(v, tokenId, offset, i)
     end
 end
-
 
 --  -- Create the dropdown, and configure its appearance
 --  -- Leaving this for additional option that shouldn't appear.

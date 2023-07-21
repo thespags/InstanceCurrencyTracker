@@ -1,16 +1,12 @@
-print("Hello World!")
-local db
 local function OnEvent(self, event, addOnName)
-    print(addOnName)
 	if addOnName == "InstanceCurrencyTracker" then -- name as used in the folder name and TOC file name
 		InstanceCurrencyDB = InstanceCurrencyDB or {} -- initialize it to a table if this is the first time
 		InstanceCurrencyDB.sessions = (InstanceCurrencyDB.sessions or 0) + 1
 		print("You loaded this addon "..InstanceCurrencyDB.sessions.." times")
-        db = InstanceCurrencyDB
 	end
     -- After the LFG addon is loaded, attach our frame.
     if addOnName == "Blizzard_LookingForGroupUI" then
-        local f = CreateAddOn(db)
+        local f = CreateAddOn(InstanceCurrencyDB)
         LFGParentFrame:HookScript("OnShow", function() f:Show() end)
         LFGParentFrame:HookScript("OnHide", function() f:Hide() end)
     end
@@ -20,11 +16,10 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", OnEvent)
 
-local options = {}
-
 SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool
 SlashCmdList.InstanceCurrencyTracker = function(msg)
     local command, rest = msg:match("^(%S*)%s*(.-)$")
+    local db = InstanceCurrencyDB
     -- Any leading non-whitespace is captured into command
     -- the rest (minus leading whitespace) is captured into rest.
     if command == "wipe" then
@@ -42,10 +37,6 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
                 print("Invalid command")
             end
         end
-    else
-        db.players = db.players or {}
-        Player:Update(db)
-        CreateAddOn(db)
     end
 end
 
@@ -57,5 +48,3 @@ end
 
 -- Horizontal Scroll
 ---Do we want horizontal scroll to list all players?
--- Icon
---- How to display them in text?
