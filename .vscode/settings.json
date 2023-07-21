@@ -24,6 +24,7 @@
         "UIDropDownMenu_CreateInfo",
         "UIDropDownMenu_AddButton",
         "UnitFactionGroup",
-        "C_TaskQuest"
+        "C_TaskQuest",
+        "LFGParentFrame"
     ]
 }

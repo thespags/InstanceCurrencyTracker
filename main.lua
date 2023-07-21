@@ -20,23 +20,21 @@ local nameColor = "FF00FF00"
 
 local CELL_WIDTH = 160
 local CELL_HEIGHT = 10
-local NUM_CELLS = 1 -- cells per row
+local NUM_CELLS = 1
 local player = Utils:GetFullName()
 
--- parent frame
-local f
--- content body
 local content
 
 function CreateAddOn(db)
-    local f = CreateFrame("Frame", "InstanceCurrencyTracker", UIParent, "BasicFrameTemplateWithInset")
+    local f = CreateFrame("Frame", "InstanceCurrencyTracker", LFGParentFrame, "BasicFrameTemplateWithInset")
     f:SetSize(CELL_WIDTH * NUM_CELLS + 60, 600)
-    f:SetPoint("CENTER", 150, 0)
+    f:SetPoint("CENTER", 300, 0)
     f:SetMovable(true)
-    f:SetScript("OnMouseDown" ,f.StartMoving)
+    f:SetScript("OnMouseDown", f.StartMoving)
     f:SetScript("OnMouseUp", f.StopMovingOrSizing)
     f:SetAlpha(.5)
-    f:SetToplevel(true)
+    f:Hide()
+
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(AddOnName)
     title:SetAlpha(1)
@@ -61,11 +59,10 @@ function CreateAddOn(db)
 
     content = f.scrollFrame.scrollChild
     content.cells = {}
-    f:Show()
     CreatePlayerDropdown(db, f)
     DisplayPlayer(db)
+    return f
 end
-
 
 -- Gets the associated cell or create it if it doesn't exist yet.
 local function getCell(x, y)

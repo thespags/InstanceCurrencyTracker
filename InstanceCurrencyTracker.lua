@@ -1,12 +1,19 @@
 print("Hello World!")
 local db
 local function OnEvent(self, event, addOnName)
+    print(addOnName)
 	if addOnName == "InstanceCurrencyTracker" then -- name as used in the folder name and TOC file name
 		InstanceCurrencyDB = InstanceCurrencyDB or {} -- initialize it to a table if this is the first time
 		InstanceCurrencyDB.sessions = (InstanceCurrencyDB.sessions or 0) + 1
 		print("You loaded this addon "..InstanceCurrencyDB.sessions.." times")
         db = InstanceCurrencyDB
 	end
+    -- After the LFG addon is loaded, attach our frame.
+    if addOnName == "Blizzard_LookingForGroupUI" then
+        local f = CreateAddOn(db)
+        LFGParentFrame:HookScript("OnShow", function() f:Show() end)
+        LFGParentFrame:HookScript("OnHide", function() f:Hide() end)
+    end
 end
 
 local f = CreateFrame("Frame")
@@ -48,13 +55,7 @@ end
 -- "ict wipe player name"
 -- "ict wipe all"
 
--- Alpha
---- How do we set the inset opacity but keep the title, and boarder as 1?
 -- Horizontal Scroll
 ---Do we want horizontal scroll to list all players?
--- Level
---- How do we get the adodn to the top level, currently it will sit behind WA's
--- Anchor
---- How can I set it up so the addon appears with another menu, e.g. runs when LFG comes up?
 -- Icon
 --- How to display them in text?
