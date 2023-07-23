@@ -64,7 +64,7 @@ end
 
 -- Sorted pairs iterator determined by mapping the values.
 function Utils:spairsByValue(t, f)
-    return self:spairs(t, function(a, b) return f(t[a]) < f(t[b]) end)
+    return self:spairs(t, function(a, b) return f(t[a], t[b]) end)
 end
 
 -- Filtered pairs iterator determined by the table value with the given function.
@@ -99,7 +99,7 @@ end
 
 -- Returns a function that simply returns the provided value.
 function ReturnX(x)
-    return function() return x end
+    return function(...) return x end
 end
 
 -- Given a non table arguements will make a set, i.e. a table with values true.
@@ -112,7 +112,7 @@ function Utils:set(...)
 end
 
 -- Returns true if all values or mapped values in the table are true, otherwise false.
-function Utils:containsAll(t, op)
+function Utils:containsAllValue(t, op)
     for _, v in pairs(t) do
         if op and not op(v) or not op and not v then
             return false
@@ -122,9 +122,19 @@ function Utils:containsAll(t, op)
 end
 
 -- Returns true if any value or mapped value in the table are true, otherwise false.
-function Utils:containsAny(t, op)
+function Utils:containsAnyValue(t, op)
     for _, v in pairs(t) do
         if op and op(v) or not op and v then
+            return true
+        end
+    end
+    return false
+end
+
+-- Returns true if any value or mapped value in the table are true, otherwise false.
+function Utils:containsAnyKey(t, op)
+    for k, _ in pairs(t) do
+        if op and op(k) or not op and k then
             return true
         end
     end

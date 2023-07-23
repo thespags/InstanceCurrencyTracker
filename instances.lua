@@ -123,7 +123,6 @@ InstanceInfo = {
     [564] = { name = "Black Temple", numEncounters = 9 },
     [534] = { name = "Hyjal Summit", numEncounters = 5 },
     [580] = { name = "Sunwell Plateau", numEncounters = 6 },
-
 }
 Instances.dungeons = {
     ["Utgarde Keep"] = { id = 574 },
@@ -234,6 +233,6 @@ function Instances:Update(player)
     end
 end
 
-function Instances:GetName()
-    return function(v) return v.name end
+function InstanceSort(a, b)
+    return a.name < b.name
 end

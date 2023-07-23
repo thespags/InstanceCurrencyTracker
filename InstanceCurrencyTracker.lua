@@ -76,8 +76,4 @@ end
 --
 -- print message on dungeon complete for advertisement like "[ICT] Collected x of y currency, etc etc"
 --
--- test wipe commands
---
 -- TODO detach from LFG frame option?
---
--- Cleanup quest tooltip

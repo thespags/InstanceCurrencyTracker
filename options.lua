@@ -13,17 +13,17 @@ end
 
 local function expansionContainsAll(expansion, oldInstances)
     local contains = function(v) return v.expansion ~= expansion or oldInstances[v.id] end
-    return Utils:containsAll(Instances.oldRaids, contains)
+    return Utils:containsAllValue(Instances.oldRaids, contains)
 end
 
 local function oldRaidsContainsAll(oldInstances)
     local contains = function(v) return oldInstances[v.id] end
-    return Utils:containsAll(Instances.oldRaids, contains)
+    return Utils:containsAllValue(Instances.oldRaids, contains)
 end
 
 function Options:showInstances(instances)
     local contains = function(v) return v.expansion == nil or InstanceCurrencyDB.options.oldInstances[v.id] end
-    return Utils:containsAny(instances, contains)
+    return Utils:containsAnyValue(instances, contains)
 end
 
 function Options:CreateOptionDropdown(f)
@@ -46,15 +46,12 @@ function Options:CreateOptionDropdown(f)
         function(self, level, menuList)
             local info = UIDropDownMenu_CreateInfo()
             if (level or 1) == 1 then
-                -- Create the currency options.
-                info.text = "Currency"
-                info.menuList = info.text
-                info.hasArrow = true
-                info.checked = Utils:containsAll(currency)
+                -- Switches between full name with realm or simple name.
+                info.text = "Show Realm Name"
+                info.hasArrow = false
+                info.checked = db.options.verboseName or false
                 info.func = function(self)
-                    for k, _ in pairs(Currency) do
-                        currency[k] = not self.checked
-                    end
+                    db.options.verboseName = not self.checked
                     DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
@@ -65,6 +62,39 @@ function Options:CreateOptionDropdown(f)
                 info.checked = db.options.verboseCurrency or false
                 info.func = function(self)
                     db.options.verboseCurrency = not self.checked
+                    DisplayPlayer()
+                end
+                UIDropDownMenu_AddButton(info)
+
+                -- Turns off instance and quest information in currency.
+                info.text = "Simple Currency Tooltip"
+                info.hasArrow = false
+                info.checked = db.options.simpleCurrencyTooltip or false
+                info.func = function(self)
+                    db.options.simpleCurrencyTooltip = not self.checked
+                    DisplayPlayer()
+                end
+                UIDropDownMenu_AddButton(info)
+
+                -- Switches between all quests or only those available to the player.
+                info.text = "All Quests"
+                info.hasArrow = false
+                info.checked = db.options.allQuests or false
+                info.func = function(self)
+                    db.options.allQuests = not self.checked
+                    DisplayPlayer()
+                end
+                UIDropDownMenu_AddButton(info)
+
+                -- Create the currency options.
+                info.text = "Currency"
+                info.menuList = info.text
+                info.hasArrow = true
+                info.checked = Utils:containsAllValue(currency)
+                info.func = function(self)
+                    for k, _ in pairs(Currency) do
+                        currency[k] = not self.checked
+                    end
                     DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)

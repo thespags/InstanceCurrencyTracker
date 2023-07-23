@@ -36,87 +36,91 @@ local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllian
     end
 end
 
-Quests = {
-    [Utils.Triumph] = {
-        -- This counts the quest and bag together, instead of separately.
-        {
-            name = ReturnX("Heroic Daily Dungeon"),
-            ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
-            seals = 5,
-            prereq = ReturnX(true),
-        }
+QuestInfo = {
+    -- This counts the quest and bag together, instead of separately.
+    ["Heroic Daily Dungeon"] = {
+        name = ReturnX("Heroic Daily Dungeon"),
+        ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
+        seals = 5,
+        tokenId = Utils.Triumph,
+        prereq = ReturnX(true),
     },
-    [Utils.Conquest] = {
-        {
-            name = ReturnX("Normal Daily Dungeon"),
-            ids = { 13240, 13241, 13243, 13244 },
-            seals = 2,
-            prereq = ReturnX(true)
-        }
+    ["Normal Daily Dungeon"] = {
+        name = ReturnX("Normal Daily Dungeon"),
+        ids = { 13240, 13241, 13243, 13244 },
+        seals = 2,
+        tokenId = Utils.Conquest,
+        prereq = ReturnX(true)
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
-    [Utils.ChampionsSeal] = {
-        -- Threat From Above
-        {
-            name = tournamentQuestName(13682, 13788, 13809, 13812),
-            ids = { 13682, 13788, 13809, 13812 },
-            seals = 2,
-            prereq = isTournamentChainCompleted
-        },
-        -- Battle Before The Citadel
-        {
-            name = tournamentQuestName(13861, 13864, 13862, 13863),
-            ids = { 13861, 13862, 13863, 13864 },
-            seals = 1,
-            prereq = isTournamentChainCompleted
-        },
-        -- Among the Champions
-        { 
-            name = tournamentQuestName(13790, 13793, 13811, 13814),
-            ids = { 13790, 13793, 13811, 13814 },
-            seals = 1,
-            prereq = isTournamentChainCompleted
-        },
-        -- Taking Battle To The Enemy
-        {
-            name = tournamentQuestName(13789, 13791, 13810, 13813),
-            ids = { 13789, 13791, 13810, 13813 },
-            seals = 1,
-            prereq = isTournamentChainCompleted
-        },
-        {
-            name = ReturnX("High Crusader Adelard"),
-            ids = { 14101, 14102, 14104, 14105 },
-            seals = 1,
-            prereq = isExaltedTournamentFaction
-        },
-        {
-            name = ReturnX("Crusader Silverdawn"),
-            ids = { 14108, 14107}, 
-            seals = 1,
-            prereq = isExaltedTournamentFaction,
-        },
-        {
-            name = factionQuestName("Savinia Loresong", "Tylos Dawnrunner"),
-            -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
-            ids = { 14076, 14092, 14090, 14141, 14112, 14145 },
-            seals = 1,
-            prereq = isExaltedTournamentChampion,
-        },
-        {
-            name = factionQuestName("Narasi Snowdawn", " Girana the Blooded"),
-            -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
-            ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
-            seals = 1,
-            prereq = isExaltedTournamentChampion,
-        }
+    ["Threat From Above"] = {
+        name = tournamentQuestName(13682, 13788, 13809, 13812),
+        ids = { 13682, 13788, 13809, 13812 },
+        seals = 2,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isTournamentChainCompleted
+    },
+    ["Battle Before The Citadel"] = {
+        name = tournamentQuestName(13861, 13864, 13862, 13863),
+        ids = { 13861, 13862, 13863, 13864 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isTournamentChainCompleted
+    },
+    ["Among the Champions"] = {
+        name = tournamentQuestName(13790, 13793, 13811, 13814),
+        ids = { 13790, 13793, 13811, 13814 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isTournamentChainCompleted
+    },
+    ["Taking Battle To The Enemy"] = {
+        name = tournamentQuestName(13789, 13791, 13810, 13813),
+        ids = { 13789, 13791, 13810, 13813 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isTournamentChainCompleted
+    },
+    ["High Crusader Adelard"] = {
+        name = ReturnX("High Crusader Adelard"),
+        ids = { 14101, 14102, 14104, 14105 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isExaltedTournamentFaction
+    },
+    ["Crusader Silverdawn"] = {
+        name = ReturnX("Crusader Silverdawn"),
+        ids = { 14108, 14107}, 
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isExaltedTournamentFaction,
+    },
+    ["Savinia Loresong"] = {
+        name = factionQuestName("Savinia Loresong", "Tylos Dawnrunner"),
+        -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
+        ids = { 14076, 14092, 14090, 14141, 14112, 14145 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isExaltedTournamentChampion,
+    },
+    ["Narasi Snowdawn"] = {
+        name = factionQuestName("Narasi Snowdawn", " Girana the Blooded"),
+        -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
+        ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
+        seals = 1,
+        tokenId = Utils.ChampionsSeal,
+        prereq = isExaltedTournamentChampion,
     }
 }
+-- Set the key on the value for convenient lookups to other tables, i.e. player infos.
+for k, v in pairs(QuestInfo) do
+    v.key = k
+end
 
 -- As far as I can tell, WOW groups daily quests, i.e. we could check a single quest of the group to check completed.
 -- However, to be overly cautious check all quests in the groups looking for any true value.
-function Quests:IsDailyCompleted(ids)
-    for _, id in pairs(ids) do
+function Quests:IsDailyCompleted(quest)
+    for _, id in pairs(quest.ids) do
         if C_QuestLog.IsQuestFlaggedCompleted(id) then
             return true
         end
@@ -124,11 +128,15 @@ function Quests:IsDailyCompleted(ids)
     return false
 end
 
+function Quests:TokenFilter(tokenId)
+    return function(v) return v.tokenId == tokenId end
+end
+
 function Quests:CalculateAvailableDaily(tokenId)
     return function(player)
         local emblems = 0
-        for _, v in pairs(Quests[tokenId] or {}) do
-            emblems = emblems + (v.prereq and not self:IsDailyCompleted(v.ids) and v.seals or 0)
+        for _, v in Utils:fpairs(QuestInfo, self:TokenFilter(tokenId)) do
+            emblems = emblems + (v.prereq and not self:IsDailyCompleted(v) and v.seals or 0)
         end
         return emblems
     end
@@ -137,9 +145,19 @@ end
 function Quests:CalculateMaxDaily(tokenId)
     return function(player)
         local emblems = 0
-        for _, v in pairs(Quests[tokenId] or {}) do
+        for _, v in Utils:fpairs(QuestInfo, self:TokenFilter(tokenId)) do
             emblems = emblems + (v.prereq and v.seals or 0)
         end
         return emblems
+    end
+end
+
+function QuestSort(player)
+    return function(a, b)
+        if a.tokenId == b.tokenId then
+            return a.name(player) < b.name(player)
+        else
+            return CurrencySort(a.tokenId, b.tokenId)
+        end
     end
 end

@@ -11,6 +11,10 @@ function Player:Create()
     player.dungeons = CopyTable(Instances.dungeons)
     player.raids = CopyTable(Instances.raids)
     player.oldRaids = CopyTable(Instances.oldRaids)
+    player.quests = {
+        prereq = {},
+        completed = {}
+    }
     player.currency = {
         wallet = {},
         weekly = {},
@@ -71,6 +75,9 @@ function Player:DailyReset(player)
     for k, _ in pairs(Currency) do
         player.currency.daily[k] = player.currency.maxDaily[k] or 0
     end
+    for k, _ in pairs(QuestInfo) do
+        player.quests.completed[k] = false
+    end
     player.dailyReset = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
 end
 
@@ -96,6 +103,13 @@ function Player:CalculateCurrency(player)
     end
 end
 
+function Player:CalculateQuest(player)
+    for k, quest in pairs(QuestInfo) do
+        player.quests.prereq[k] = quest.prereq(player)
+        player.quests.completed[k] = Quests:IsDailyCompleted(quest)
+    end
+end
+
 function Player:Update(db)
     db.players = db.players or {}
     for _, player in pairs(db.players) do
@@ -103,7 +117,8 @@ function Player:Update(db)
     end
     local player = self:GetPlayer(db)
     Instances:Update(player)
-    Player:CalculateCurrency(player)
+    self:CalculateCurrency(player)
+    self:CalculateQuest(player)
 end
 
 -- Returns the provided player or current player if none provided.
@@ -116,9 +131,9 @@ end
 
 function Player:WipePlayer(db, playerName)
     if db.players[playerName] then
-        db.players[playerName] = {}
+        db.players[playerName] = nil
         print(string.format("[%s] Wiped player: %s", AddOnName, playerName))
-    else   
+    else
         print(string.format("[%s] Unknown player: %s", AddOnName, playerName))
     end
     self:Update(db)
@@ -126,11 +141,11 @@ end
 
 function Player:WipeRealm(db, realmName)
     local count = 0
-    for name, _ in Utils.fpairs(db.players, function(v) return v.realm == realmName end) do
+    for name, _ in Utils:fpairs(db.players, function(v) return v.realm == realmName end) do
         count = count + 1
-        db.players[name] = {}
+        db.players[name] = nil
     end
-    print(string.format("[%s] Wiped % players on realm: %s", AddOnName , count, realmName))
+    print(string.format("[%s] Wiped %s players on realm: %s", AddOnName , count, realmName))
     self:Update(db)
 end
 
@@ -140,7 +155,7 @@ function Player:WipeAllPlayers(db)
         count = count + 1
     end
     db.players = {}
-    print(string.format("[%s] Wiped % players", AddOnName, count))
+    print(string.format("[%s] Wiped %s players", AddOnName, count))
     self:Update(db)
 end
 
@@ -171,4 +186,12 @@ function Player:ViewablePlayers(db, options)
         players[player.fullName] = player
     end
     return players
+end
+
+function Player:GetName(player)
+    return InstanceCurrencyDB.options.verboseName and player.fullName or player.name
+end
+
+function PlayerSort(a, b)
+    return Player:GetName(a) < Player:GetName(b)
 end
