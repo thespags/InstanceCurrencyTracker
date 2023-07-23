@@ -8,12 +8,13 @@ local nameColor = "FF00FF00"
 local CELL_WIDTH = 160
 local CELL_HEIGHT = 10
 local NUM_CELLS = 1
+local noopFunction = function () end
 local content
+local db
 
 -- Currently selected player plus the length.
 local selectedPlayer = Utils:GetFullName()
 local displayLength = 0
-local db
 
 function CreateAddOn()
     db = InstanceCurrencyDB
@@ -51,7 +52,7 @@ function CreateAddOn()
     content = f.scrollFrame.scrollChild
     content.cells = {}
     CreatePlayerDropdown(f)
-    CreateOptionDropdown(db, f)
+    Options:CreateOptionDropdown(f)
     DisplayPlayer()
     return f
 end
@@ -65,10 +66,11 @@ local function getCell(x, y)
         button:SetPoint("TOPLEFT", (x - 1) * CELL_WIDTH, -(y - 1) * CELL_HEIGHT)
         content.cells[name] = button
     end
-    -- content.cells[name]:SetScript("OnEnter", function() end)
-    -- content.cells[name]:SetScript("OnClick", function() end)
+    local cell = content.cells[name]
+    cell:SetScript("OnEnter", noopFunction)
+    cell:SetScript("OnClick", noopFunction)
 
-    return content.cells[name]
+    return cell
 end
 
 -- Prints text in the associated cell.
@@ -127,34 +129,49 @@ local function hideTooltipOnLeave(self, motion)
     GameTooltip:Hide()
 end
 
+local function updateSectionTitle(x, offset, title)
+    local collapsed = db.options.collasible[title]
+    local icon = collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP:12"
+    local titleText = string.format("|T%s:12|t%s", icon, title)
+    return printCell(x, offset, titleText, titleColor)
+end
+
+local function printSectionTitle(x, offset, title)
+    offset = offset + 1
+    updateSectionTitle(x, offset, title):SetScript(
+        "OnClick",
+        function()
+            db.options.collasible[title] = not db.options.collasible[title]
+            updateSectionTitle(x, offset, title)
+            DisplayPlayer()
+        end
+    )
+    return offset
+end
+
 -- Prints all the instances with associated tooltips.
 local function printInstances(title, instances, x, offset)
-    -- Only print the title if there exists an instance for this token.
-    local printTitle = true
-    for k, v in Utils:spairsByValue(instances, Instances:GetName()) do
-        -- WOTLK instances don't have an expansion yet so should always appear.
-        if not v.expansion or db.options.oldInstances[v.id] then
-            if printTitle then
-                printTitle = false
+    if not Options:showInstances(instances) then
+        return offset
+    end
+
+    offset = printSectionTitle(x, offset, title)
+
+    -- If the section is collasible then short circuit here.
+    if not db.options.collasible[title] then
+        for k, v in Utils:spairsByValue(instances, Instances:GetName()) do
+            -- WOTLK instances don't have an expansion yet so should always appear.
+            if not v.expansion or db.options.oldInstances[v.id] then
                 offset = offset + 1
-                printCell(x, offset, title, titleColor)
-                -- title:SetScript("OnClick", function()
-                --         db.options[title] = not db.options[title]
-                --         print(db.options[title])
-                -- end
-                -- )
+                local color = v.locked and lockedColor or availableColor
+                local cell = printCell(x, offset, v.name, color)
+                cell:SetScript("OnEnter", instanceTooltipOnEnter(k, v))
+                cell:SetScript("OnLeave", hideTooltipOnLeave)
             end
-            offset = offset + 1
-            local color = v.locked and lockedColor or availableColor
-            local cell = printCell(x, offset, v.name, color)
-            cell:SetScript("OnEnter", instanceTooltipOnEnter(k, v))
-            cell:SetScript("OnLeave", hideTooltipOnLeave)
         end
     end
-    if not printTitle then
-        offset = offset + 1
-        hideCell(x, offset)
-    end
+    offset = offset + 1
+    hideCell(x, offset)
     return offset
 end
 
@@ -195,7 +212,7 @@ local function printCurrencyVerbose(player, tokenId, x, offset)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     offset = offset + 1
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId])  or "n/a"
+    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
     cell = printCell(x, offset, "Available  " .. available, availableColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
@@ -259,17 +276,25 @@ function DisplayPlayer()
     local offset = 1
     -- In case the langauge changed, localize again.
     Player:LocalizeInstanceNames(player)
-    printCell(x, offset, string.format("|T%s:16|t%s", CLASS_ICONS[player.class], player.name), nameColor)
+    local name = string.format("|T%s:12|t%s", CLASS_ICONS[player.class], player.name)
+    printCell(x, offset, name, nameColor)
     offset = printInstances("Dungeons", player.dungeons, x, offset)
     offset = printInstances("Raids", player.raids, x, offset)
     offset = printInstances("Old Raids", player.oldRaids, x, offset)
     offset = printQuest(player, x, offset)
-    local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
-    for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
-        if db.options.currency[tokenId] then
-            offset = printCurrency(player, tokenId, x, offset)
+
+    if Utils:containsAny(db.options.currency) then
+        offset = printSectionTitle(x, offset, "Currency")
+    end
+    if not db.options.collasible["Currency"] then
+        local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
+        for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
+            if db.options.currency[tokenId] then
+                offset = printCurrency(player, tokenId, x, offset)
+            end
         end
     end
+    offset = offset + 1
     for i=offset,displayLength do
         hideCell(x, i)
     end

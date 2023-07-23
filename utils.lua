@@ -110,3 +110,23 @@ function Utils:set(...)
     end
     return t
 end
+
+-- Returns true if all values or mapped values in the table are true, otherwise false.
+function Utils:containsAll(t, op)
+    for _, v in pairs(t) do
+        if op and not op(v) or not op and not v then
+            return false
+        end
+    end
+    return true
+end
+
+-- Returns true if any value or mapped value in the table are true, otherwise false.
+function Utils:containsAny(t, op)
+    for _, v in pairs(t) do
+        if op and op(v) or not op and v then
+            return true
+        end
+    end
+    return false
+end

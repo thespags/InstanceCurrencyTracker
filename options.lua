@@ -1,3 +1,5 @@
+Options = {}
+
 -- Helper to set all the currencies as enabled.
 local function getOrCreateCurrencyOptions(db)
     if not db.options.currency then
@@ -9,28 +11,22 @@ local function getOrCreateCurrencyOptions(db)
     return db.options.currency
 end
 
--- Returns true if all values or mapped values in the table are true, otherwise false.
-local function containsAll(t, filter, op)
-    for _, v in pairs(t) do
-        if (not filter or filter(v)) and ((op and not op(v)) or not v) then
-            return false
-        end
-    end
-    return true
-end
-
 local function expansionContainsAll(expansion, oldInstances)
-    local filter = function(v) return v.expansion == expansion end
-    local contains = function(v) return oldInstances[v.id] end
-    return containsAll(Instances.oldRaids, filter, contains)
+    local contains = function(v) return v.expansion ~= expansion or oldInstances[v.id] end
+    return Utils:containsAll(Instances.oldRaids, contains)
 end
 
 local function oldRaidsContainsAll(oldInstances)
     local contains = function(v) return oldInstances[v.id] end
-    return containsAll(Instances.oldRaids, ReturnX(true), contains)
+    return Utils:containsAll(Instances.oldRaids, contains)
 end
 
-function CreateOptionDropdown(db, f)
+function Options:showInstances(instances)
+    local contains = function(v) return v.expansion == nil or InstanceCurrencyDB.options.oldInstances[v.id] end
+    return Utils:containsAny(instances, contains)
+end
+
+function Options:CreateOptionDropdown(f)
     local dropdown = CreateFrame("FRAME", "ICTOptions", f, "UIDropDownMenuTemplate")
     dropdown:SetPoint("BOTTOM")
     dropdown:SetAlpha(1)
@@ -39,6 +35,7 @@ function CreateOptionDropdown(db, f)
     -- Width set to slightly smaller than parent frame.
     UIDropDownMenu_SetWidth(dropdown, 180)
     UIDropDownMenu_SetText(dropdown, "Options")
+    local db = InstanceCurrencyDB
     local oldInstances = db.options.oldInstances or {}
     db.options.oldInstances = oldInstances
 
@@ -53,7 +50,7 @@ function CreateOptionDropdown(db, f)
                 info.text = "Currency"
                 info.menuList = info.text
                 info.hasArrow = true
-                info.checked = containsAll(currency)
+                info.checked = Utils:containsAll(currency)
                 info.func = function(self)
                     for k, _ in pairs(Currency) do
                         currency[k] = not self.checked
@@ -126,4 +123,8 @@ function CreateOptionDropdown(db, f)
             end
         end
     )
+end
+
+function Options:InstanceViewable(instance)
+    return not instance.expansion or db.options.oldInstances[instance.id]
 end
