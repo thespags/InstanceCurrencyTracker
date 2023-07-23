@@ -25,6 +25,34 @@ function Player:Create()
     return player
 end
 
+-- We probably want to merge these three tables so we don't need this funny business.
+-- But then we have to filter the table for each type on certain views.
+function Player:GetInstance(player, name)
+    if player.dungeons[name] then
+        return player.dungeons[name]
+    end
+    if player.raids[name] then
+        return player.raids[name]
+    end
+    if player.oldRaids[name] then
+        return player.oldRaids[name]
+    end
+    print("Unknown instance: " .. name .. " " .. player.fullName)
+    return { locked = false }
+end
+
+function Player:LocalizeInstanceNames(player)
+    for _, v in pairs(player.dungeons) do
+        v.name = GetLocalizedInstanceName(v)
+    end
+    for _, v in pairs(player.raids) do
+        v.name = GetLocalizedInstanceName(v)
+    end
+    for _, v in pairs(player.oldRaids) do
+        v.name = GetLocalizedInstanceName(v)
+    end
+end
+
 function Player:ResetInstances(player)
     local timestamp = GetServerTime()
     if not player.dailyReset or player.dailyReset < timestamp then

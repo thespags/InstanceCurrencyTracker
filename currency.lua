@@ -33,7 +33,7 @@ local function caculateMaxEmblems(instances, tokenId)
     if MaxTokens[tokenId] then
         return MaxTokens[tokenId]
     end
-    local op = function(v) return InstanceInfo[v.id].maxEmblems(v, tokenId) end
+    local op = function(v) return InstanceInfo[v.id] and InstanceInfo[v.id].maxEmblems(v, tokenId) or 0 end
     local filter = function(v) return InstanceInfo[v.id].tokenIds[tokenId] end
     MaxTokens[tokenId] = Utils:sum(instances, op, filter)
     return MaxTokens[tokenId]

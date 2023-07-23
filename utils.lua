@@ -8,6 +8,18 @@ Utils.SiderealEssence = 2589
 Utils.ChampionsSeal = 241
 -- Phase 3 dungeons grant conquest.
 Utils.DungeonEmblem = Utils.Conquest
+CLASS_ICONS = {
+    ["WARRIOR"] = 626008,
+    ["PALADIN"] = 626003,
+    ["HUNTER"] = 626000,
+    ["ROGUE"] = 626005,
+    ["PRIEST"] = 626004,
+    ["DEATHKNIGHT"] = 135771,
+    ["SHAMAN"] = 626006,
+    ["MAGE"] = 626001,
+    ["WARLOCK"] = 626007,
+    ["DRUID"] = 625999
+}
 
 function Utils:GetInstanceName(name, size)
     return string.format("%s (%s)", name, size)
@@ -36,7 +48,7 @@ end
 function Utils:spairs(t, f)
     local keys = {}
     for k in pairs(t) do
-        keys[#keys+1] = k
+        table.insert(keys, k)
     end
 
     table.sort(keys, f)
@@ -52,11 +64,7 @@ end
 
 -- Sorted pairs iterator determined by mapping the values.
 function Utils:spairsByValue(t, f)
-    local byF = {}
-    for _, v in pairs(t) do
-        byF[f(v)] = v
-    end
-    return self:spairs(byF)
+    return self:spairs(t, function(a, b) return f(t[a]) < f(t[b]) end)
 end
 
 -- Filtered pairs iterator determined by the table value with the given function.

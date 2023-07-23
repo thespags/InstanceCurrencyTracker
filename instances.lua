@@ -97,7 +97,7 @@ InstanceInfo = {
     [604] = { name = "Gundrak", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     [576] = { name = "The Nexus", numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     [578] = { name = "The Oculus", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [608] = { name = "The Violet Hold", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [608] = { name = "Violet Hold", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     [602] = { name = "Halls of Lightning", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     [599] = { name = "Halls of Stone", numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     [601] = { name = "Azjol-Nerub", numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
@@ -110,7 +110,20 @@ InstanceInfo = {
     [603] = { name = "Ulduar", numEncounters = 14, tokenIds = Utils:set(Utils.Conquest), emblems = ulduarEmblems, maxEmblems = ReturnX(Instances.MaxUlduarEmblems) },
     [249] = { name = "Onyxia's Lair", numEncounters = 1, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
     [649] = { name = "Trial of the Crusader", numEncounters = 5, tokenIds = Utils:set(Utils.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [309] = { name = "Zul'Gurub", numEncounters = 10, maxEmblems = ReturnX(0)}
+    [409] = { name = "Molten Core", numEncounters = 10 },
+    [309] = { name = "Zul'Gurub", numEncounters = 10},
+    [469] = { name = "Blackwing Lair", numEncounters = 8 },
+    [509] = { name = "Ruins of Ahn'Qiraj", numEncounters = 6 },
+    [531] = { name = "Temple of Ahn'Qiraj", numEncounters = 9 },
+    [532] = { name = "Karazhan", numEncounters = 11 },
+    [565] = { name = "Gruul's Lair", numEncounters = 2 },
+    [544] = { name = "Magtheridon's Lair", numEncounters = 1 },
+    [548] = { name = "Serpentshrine Cavern", numEncounters = 6 },
+    [550] = { name = "Tempest Keep", numEncounters = 4 },
+    [564] = { name = "Black Temple", numEncounters = 9 },
+    [534] = { name = "Hyjal Summit", numEncounters = 5 },
+    [580] = { name = "Sunwell Plateau", numEncounters = 6 },
+
 }
 Instances.dungeons = {
     ["Utgarde Keep"] = { id = 574 },
@@ -120,7 +133,7 @@ Instances.dungeons = {
     ["Gundrak"] = { id = 604 },
     ["The Nexus"] = { id = 576 },
     ["The Oculus"] = { id = 578 },
-    ["The Violet Hold"] = { id = 608 },
+    ["Violet Hold"] = { id = 608 },
     ["Halls of Lightning"] = { id = 602 },
     ["Halls of Stone"] = { id = 599 },
     ["Azjol-Nerub"] = { id = 601 },
@@ -185,6 +198,7 @@ function Instances:ResetIfNecessary(instances, timestamp)
         end
     end
 end
+
 -- Reset saved instance information.
 function Instances:Reset(instance)
     instance.locked = false
@@ -218,4 +232,8 @@ function Instances:Update(player)
             self:Lock(player.oldRaids[name], reset, encounterProgress, i)
         end
     end
+end
+
+function Instances:GetName()
+    return function(v) return v.name end
 end
