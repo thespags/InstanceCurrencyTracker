@@ -1,4 +1,7 @@
-AddOnName = "Instance and Currency Tracker"
+local addOnName, ICT = ...
+
+local Player = ICT.Player
+local Options = ICT.Options
 local availableColor = "FFFFFFFF"
 local titleColor = "FFFFFF00"
 local lockedColor = "FFFF00FF"
@@ -13,7 +16,7 @@ local content
 local db
 
 -- Currently selected player plus the length.
-local selectedPlayer = Utils:GetFullName()
+local selectedPlayer = ICT:GetFullName()
 local playerDropdown
 local displayLength = 0
 
@@ -29,7 +32,7 @@ function CreateAddOn()
     f:Hide()
 
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetText(AddOnName)
+    title:SetText(addOnName)
     title:SetAlpha(1)
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
@@ -99,28 +102,28 @@ local function instanceTooltipOnEnter(key, instance)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         local instanceColor = instance.locked and lockedColor or nameColor
-        GameTooltip:AddLine(instance.name, Utils:hex2rgb(instanceColor))
-        local instanceInfo = InstanceInfo[instance.id]
+        GameTooltip:AddLine(instance.name, ICT:hex2rgb(instanceColor))
+        local instanceInfo = ICT.InstanceInfo[instance.id]
 
         -- Display the available encounters for the instance.
         local encountersDone = instanceInfo.numEncounters - (instance.encounterProgress or 0)
-        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), Utils:hex2rgb(availableColor))
+        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), ICT:hex2rgb(availableColor))
 
         -- Display which players are locked or not for this instance.
-        for _, player in Utils:spairsByValue(db.players, PlayerSort) do
+        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
             local playerInstance = Player:GetInstance(player, key)
             local playerColor = playerInstance.locked and lockedColor or availableColor
-            GameTooltip:AddLine(Player:GetName(player), Utils:hex2rgb(playerColor))
+            GameTooltip:AddLine(Player:GetName(player), ICT:hex2rgb(playerColor))
         end
 
         -- Display all available currency for the instance.
-        for tokenId, _ in Utils:spairs(instanceInfo.tokenIds or {}, CurrencySort) do
+        for tokenId, _ in ICT:spairs(instanceInfo.tokenIds or {}, ICT.CurrencySort) do
             if db.options.currency[tokenId] then
                 local max = instanceInfo.maxEmblems(instance, tokenId)
                 local available = instance.available[tokenId] or max
-                local currency = Utils:GetCurrencyName(tokenId)
+                local currency = ICT:GetCurrencyName(tokenId)
                 local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
-                GameTooltip:AddLine(text, Utils:hex2rgb(titleColor))
+                GameTooltip:AddLine(text, ICT:hex2rgb(titleColor))
             end
         end
         GameTooltip:Show()
@@ -161,7 +164,7 @@ local function printInstances(title, instances, x, offset)
 
     -- If the section is collapsible then short circuit here.
     if not db.options.collapsible[title] then
-        for key, instance in Utils:spairsByValue(instances, InstanceSort) do
+        for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
             if Options.showInstance(instance) then
                 offset = offset + 1
                 local color = instance.locked and lockedColor or availableColor
@@ -179,17 +182,17 @@ end
 local function printInstancesForCurrency(title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     local printTitle = true
-    for _, instance in Utils:spairsByValue(instances, InstanceSort) do
-        if Options.showInstance(instance) and InstanceInfo[instance.id].tokenIds[tokenId] then
+    for _, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
+        if Options.showInstance(instance) and ICT.InstanceInfo[instance.id].tokenIds[tokenId] then
             if printTitle then
                 printTitle = false
-                GameTooltip:AddLine(title, Utils:hex2rgb(titleColor))
+                GameTooltip:AddLine(title, ICT:hex2rgb(titleColor))
             end
             -- Displays available currency out of the total currency for this instance.
             local color = instance.locked and lockedColor or availableColor
-            local max = InstanceInfo[instance.id].maxEmblems(instance, tokenId)
+            local max = ICT.InstanceInfo[instance.id].maxEmblems(instance, tokenId)
             local available = instance.available[tokenId] or max
-            GameTooltip:AddLine(string.format("%s: %s/%s", instance.name, available, max), Utils:hex2rgb(color))
+            GameTooltip:AddLine(string.format("%s: %s/%s", instance.name, available, max), ICT:hex2rgb(color))
         end
     end
 end
@@ -200,14 +203,14 @@ end
 
 local function printQuestsForCurrency(player, tokenId)
     local printTitle = true
-    for _, quest in Utils:spairsByValue(QuestInfo, QuestSort(player)) do
+    for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
         if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or db.options.allQuests) then
             if printTitle then
                 printTitle = false
-                GameTooltip:AddLine("Quests", Utils:hex2rgb(titleColor))
+                GameTooltip:AddLine("Quests", ICT:hex2rgb(titleColor))
             end
             local color = getQuestColor(player, quest)
-            GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), Utils:hex2rgb(color))
+            GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), ICT:hex2rgb(color))
         end
     end
 end
@@ -216,12 +219,12 @@ end
 local function currencyTooltipOnEnter(selectedPlayer, tokenId)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(Utils:GetCurrencyName(tokenId), Utils:hex2rgb(titleColor))
+        GameTooltip:AddLine(ICT:GetCurrencyName(tokenId), ICT:hex2rgb(titleColor))
  
-        for _, player in Utils:spairsByValue(db.players, PlayerSort) do
+        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
             local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
             local text = string.format("%s %s (%s)", Player:GetName(player), player.currency.wallet[tokenId], available)
-            GameTooltip:AddLine(text, Utils:hex2rgb(availableColor))
+            GameTooltip:AddLine(text, ICT:hex2rgb(availableColor))
 
         end
         if not db.options.simpleCurrencyTooltip then
@@ -236,7 +239,7 @@ end
 -- Prints currency with multi line information.
 local function printCurrencyVerbose(player, tokenId, x, offset)
     offset = offset + 1
-    local currency = Utils:GetCurrencyName(tokenId)
+    local currency = ICT:GetCurrencyName(tokenId)
     local cell = printCell(x, offset, currency, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
@@ -258,7 +261,7 @@ end
 -- Prints currency single line information.
 local function printCurrencyShort(player, tokenId, x, offset)
     offset = offset + 1
-    local currency = Utils:GetCurrencyName(tokenId)
+    local currency = ICT:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
     local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
@@ -269,12 +272,12 @@ local function printCurrencyShort(player, tokenId, x, offset)
 end
 
 local function printCurrency(player, x, offset)
-    if Utils:containsAnyValue(db.options.currency) then
+    if ICT:containsAnyValue(db.options.currency) then
         offset = printSectionTitle(x, offset, "Currency")
     end
     if not db.options.collapsible["Currency"] then
         local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
-        for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
+        for tokenId, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
             if db.options.currency[tokenId] then
                 offset = printCurrency(player, tokenId, x, offset)
             end
@@ -286,13 +289,13 @@ end
 local function questTooltipOnEnter(name, quest)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(name, Utils:hex2rgb(nameColor))
-        local currency = Utils:GetCurrencyName(quest.tokenId)
-        GameTooltip:AddLine(string.format("%s: %s", currency, quest.seals), Utils:hex2rgb(availableColor))
+        GameTooltip:AddLine(name, ICT:hex2rgb(nameColor))
+        local currency = ICT:GetCurrencyName(quest.tokenId)
+        GameTooltip:AddLine(string.format("%s: %s", currency, quest.seals), ICT:hex2rgb(availableColor))
 
-        for _, player in Utils:spairsByValue(db.players, PlayerSort) do
+        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
             local color = getQuestColor(player, quest)
-            GameTooltip:AddLine(Player:GetName(player), Utils:hex2rgb(color))
+            GameTooltip:AddLine(Player:GetName(player), ICT:hex2rgb(color))
         end
         GameTooltip:Show()
     end
@@ -305,12 +308,12 @@ local function isQuestAvailable(player)
 end
 
 local function printQuests(player, x, offset)
-    if Utils:containsAnyValue(QuestInfo, isQuestAvailable(player)) then
+    if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
         offset = printSectionTitle(x, offset, "Quests")
     end
     if not db.options.collapsible["Quests"] then
         -- sort by token then name...
-        for _, quest in Utils:spairsByValue(QuestInfo, QuestSort(player)) do
+        for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
             if isQuestAvailable(player)(quest) then
                 local color = getQuestColor(player, quest)
                 offset = offset + 1
@@ -328,10 +331,13 @@ end
 
 -- Prints out selected players with associated instances and currency infromation.
 function DisplayPlayer()
-    local player = db.players[selectedPlayer]
+    local player = (db or InstanceCurrencyDB).players[selectedPlayer]
+    if not player then
+        return
+    end
     local x = 1
     local offset = 1
-    local name = string.format("|T%s:12|t%s", CLASS_ICONS[player.class], Player:GetName(player))
+    local name = string.format("|T%s:12|t%s", ICT.ClassIcons[player.class], Player:GetName(player))
     printCell(x, offset, name, nameColor)
     offset = printInstances("Dungeons", player.dungeons, x, offset)
     offset = printInstances("Raids", player.raids, x, offset)
@@ -358,7 +364,7 @@ function CreatePlayerDropdown(f)
         playerDropdown,
         function()
             local info = UIDropDownMenu_CreateInfo()
-            for _, player in Utils:spairsByValue(db.players, PlayerSort) do
+            for _, player in ICT:spairsByValue(db.players, PlayerSort) do
                 info.text = Player:GetName(player)
                 info.value = player.fullName
                 info.checked = selectedPlayer == player.fullName

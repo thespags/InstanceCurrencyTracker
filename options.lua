@@ -1,11 +1,14 @@
-Options = {}
+local addOnName, ICT = ...
+
+ICT.Options = {}
+local Options = ICT.Options
 
 -- Helper to set all the currencies as enabled.
 local function getOrCreateCurrencyOptions()
     local db = InstanceCurrencyDB
     if not db.options.currency then
         db.options.currency = {}
-        for k, _ in pairs(Currency) do
+        for k, _ in pairs(ICT.CurrencyInfo) do
             db.options.currency[k] = true
         end
     end
@@ -17,8 +20,8 @@ local function getOrCreateDisplayInstances()
     local db = InstanceCurrencyDB
     if not db.options.displayInstances then
         db.options.displayInstances = {}
-        for k, v in pairs(InstanceInfo) do
-            db.options.displayInstances[k] = v.expansion == Expansions[WOTLK]
+        for k, v in pairs(ICT.InstanceInfo) do
+            db.options.displayInstances[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
         end
     end
     return db.options.displayInstances
@@ -26,16 +29,16 @@ end
 
 local function expansionContainsAll(expansion)
     local contains = function(v) return v.expansion ~= expansion or Options.showInstance(v) end
-    return Utils:containsAllValues(InstanceInfo, contains)
+    return ICT:containsAllValues(ICT.InstanceInfo, contains)
 end
 
 local function instanceContainsAll(displayInstances)
     local contains = function(v) return displayInstances[v.id] end
-    return Utils:containsAllValues(InstanceInfo, contains)
+    return ICT:containsAllValues(ICT.InstanceInfo, contains)
 end
 
 function Options:showInstances(instances)
-    return Utils:containsAnyValue(instances, Options.showInstance)
+    return ICT:containsAnyValue(instances, Options.showInstance)
 end
 
 function Options.showInstance(instance)
@@ -104,9 +107,9 @@ function Options:CreateOptionDropdown(f)
                 info.text = "Currency"
                 info.menuList = info.text
                 info.hasArrow = true
-                info.checked = Utils:containsAllValues(currency)
+                info.checked = ICT:containsAllValues(currency)
                 info.func = function(self)
-                    for k, _ in pairs(Currency) do
+                    for k, _ in pairs(ICT.CurrencyInfo) do
                         currency[k] = not self.checked
                     end
                     DisplayPlayer()
@@ -119,7 +122,7 @@ function Options:CreateOptionDropdown(f)
                 info.checked = instanceContainsAll(displayInstances)
                 info.hasArrow = true
                 info.func = function(self)
-                    for _, v in pairs(InstanceInfo) do
+                    for _, v in pairs(ICT.InstanceInfo) do
                         displayInstances[v.id] = not self.checked
                     end
                     DisplayPlayer()
@@ -127,8 +130,8 @@ function Options:CreateOptionDropdown(f)
                 UIDropDownMenu_AddButton(info)
             else
                 if menuList == "Currency" then
-                    for k, _ in Utils:spairs(Currency, CurrencySort) do
-                        info.text = Utils:GetCurrencyName(k)
+                    for k, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
+                        info.text = ICT:GetCurrencyName(k)
                         info.checked = currency[k]
                         info.func = function(self)
                             currency[k] = not currency[k]
@@ -138,13 +141,13 @@ function Options:CreateOptionDropdown(f)
                     end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
-                    for expansion, v in Utils:spairs(Expansions, ExpansionSort) do
+                    for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
                         info.text = expansion
                         info.menuList = expansion
                         info.hasArrow = true
                         info.checked = expansionContainsAll(v)
                         info.func = function(self)
-                            for _, instance in fpairs(InstanceInfo, Options.isExpansion(v)) do
+                            for _, instance in ICT.fpairs(ICT.InstanceInfo, Options.isExpansion(v)) do
                                 displayInstances[instance.id] = not self.checked
                             end
                             DisplayPlayer()
@@ -153,7 +156,7 @@ function Options:CreateOptionDropdown(f)
                     end
                 else
                     -- Now create a level for all the instances of that expansion.
-                    for _, v in Utils:spairsByValue(InstanceInfo, InstanceInfoSort, Options.isExpansion(Expansions[menuList])) do
+                    for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(ICT.Expansions[menuList])) do
                         info.text = GetRealZoneText(v.id)
                         info.arg1 = v.id
                         info.checked = Options.showInstance(v)
@@ -170,5 +173,5 @@ function Options:CreateOptionDropdown(f)
 end
 
 function Options.isExpansion(expansion)
-    return function(id) return InstanceInfo[id].expansion == expansion end
+    return function(id) return ICT.InstanceInfo[id].expansion == expansion end
 end

@@ -1,10 +1,16 @@
-Player = {}
+local addOnName, ICT = ...
+
+ICT.Player = {}
+local Player = ICT.Player
+local Instances = ICT.Instances
+local Quests = ICT.Quests
+local Currency = ICT.Currency
 
 function Player:Create()
     local player = {}
     player.name = UnitName("Player")
     player.realm = GetRealmName()
-    player.fullName = Utils:GetFullName()
+    player.fullName = ICT:GetFullName()
     player.class = select(2, UnitClass("Player"))
     player.faction = select(1, UnitFactionGroup("Player"))
     player.level = UnitLevel("Player")
@@ -32,8 +38,8 @@ function Player:CreateInstances(player)
     player.dungeons = player.dungeons or {}
     player.raids = player.raids or {}
     player.oldRaids = player.oldRaids or {}
-    for _, v in pairs(InstanceInfo) do
-        if v.expansion == Expansions[WOTLK] then
+    for _, v in pairs(ICT.InstanceInfo) do
+        if v.expansion == ICT.Expansions[ICT.WOTLK] then
             if #v.maxPlayers > 1 then
                 for _, size in pairs(v.maxPlayers) do
                     self:addInstance(player.raids, v, size)
@@ -41,17 +47,17 @@ function Player:CreateInstances(player)
             else
                 self:addInstance(player.dungeons, v)
             end
-        elseif v.expansion < Expansions[WOTLK] then
+        elseif v.expansion < ICT.Expansions[ICT.WOTLK] then
             self:addInstance(player.oldRaids, v)
         end
     end
 end
 
 function Player:addInstance(t, info, size)
-    local k = size and Utils:GetInstanceName(info.name, size) or info.name
+    local k = size and ICT:GetInstanceName(info.name, size) or info.name
     if not t[k] then
         local instance = { id = info.id, expansion = info.expansion, maxPlayers = size }
-        Utils:LocalizeInstanceName(instance)
+        ICT:LocalizeInstanceName(instance)
         Instances:Reset(instance)
         t[k] = instance
     end
@@ -75,13 +81,13 @@ end
 
 function Player:LocalizeInstanceNames(player)
     for _, v in pairs(player.dungeons) do
-        Utils:LocalizeInstanceName(v)
+        ICT:LocalizeInstanceName(v)
     end
     for _, v in pairs(player.raids) do
-        Utils:LocalizeInstanceName(v)
+        ICT:LocalizeInstanceName(v)
     end
     for _, v in pairs(player.oldRaids) do
-        Utils:LocalizeInstanceName(v)
+        ICT:LocalizeInstanceName(v)
     end
 end
 
@@ -89,11 +95,11 @@ function Player:ResetInstances(player)
     local timestamp = GetServerTime()
     if not player.dailyReset or player.dailyReset < timestamp then
         self:DailyReset(player)
-        print(string.format("[%s] Daily reset for player: %s", AddOnName, player.fullName))
+        print(string.format("[%s] Daily reset for player: %s", addOnName, player.fullName))
     end
     if not player.weeklyReset or player.weeklyReset < timestamp then
         self:WeeklyReset(player)
-        print(string.format("[%s] Weekly reset for player: %s", AddOnName, player.fullName))
+        print(string.format("[%s] Weekly reset for player: %s", addOnName, player.fullName))
     end
     Player:OldRaidReset(player)
 end
@@ -103,7 +109,7 @@ function Player:DailyReset(player)
     for k, _ in pairs(Currency) do
         player.currency.daily[k] = player.currency.maxDaily[k] or 0
     end
-    for k, _ in pairs(QuestInfo) do
+    for k, _ in pairs(ICT.QuestInfo) do
         player.quests.completed[k] = false
     end
     player.dailyReset = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
@@ -112,7 +118,7 @@ end
 function Player:WeeklyReset(player)
     Instances:ResetAll(player.raids)
     for k, _ in pairs(Currency) do
-        player.currency.weekly[k] = CalculateMaxRaidEmblems(k)(player)
+        player.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(player)
     end
     player.weeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
@@ -123,45 +129,50 @@ end
 
 function Player:CalculateCurrency(player)
     for k, _ in pairs(Currency) do
-        player.currency.wallet[k] = Utils:GetCurrencyAmount(k)
+        player.currency.wallet[k] = ICT:GetCurrencyAmount(k)
         -- There's no weekly raid quests so just add raid emblems.
-        player.currency.weekly[k] = CalculateRaidEmblems(k)(player)
-        player.currency.daily[k] = Utils:add(CalculateDungeonEmblems(k), Quests:CalculateAvailableDaily(k))(player)
-        player.currency.maxDaily[k] = Utils:add(CalculateMaxDungeonEmblems(k), Quests:CalculateMaxDaily(k))(player)
+        player.currency.weekly[k] = Currency:CalculateRaidEmblems(k)(player)
+        player.currency.daily[k] = ICT:add(Currency:CalculateDungeonEmblems(k), Quests:CalculateAvailableDaily(k))(player)
+        player.currency.maxDaily[k] = ICT:add(Currency:CalculateMaxDungeonEmblems(k), Quests:CalculateMaxDaily(k))(player)
     end
 end
 
 function Player:CalculateQuest(player)
-    for k, quest in pairs(QuestInfo) do
+    for k, quest in pairs(ICT.QuestInfo) do
         player.quests.prereq[k] = quest.prereq(player)
         player.quests.completed[k] = Quests:IsDailyCompleted(quest)
     end
 end
 
-function Player:Update(db)
+function Player:Update(db, event)
     for _, player in pairs(db.players) do
         Player:ResetInstances(player)
     end
-    local player = self:GetPlayer(db)
+    local player, exists = self:GetPlayer(db)
+    --local previous = { CopyTable(player.currency.daily), CopyTable(player.currency.weekly) }
     Instances:Update(player)
     self:CalculateCurrency(player)
     self:CalculateQuest(player)
 end
 
+function Player:foobar()
+end
+
 -- Returns the provided player or current player if none provided.
 function Player:GetPlayer(db, playerName)
-    playerName = playerName or Utils:GetFullName()
+    playerName = playerName or ICT:GetFullName()
+    local exists = db.players[playerName] and true or false
     local player = db.players[playerName] or Player:Create()
     db.players[playerName] = player
-    return player
+    return player, exists
 end
 
 function Player:WipePlayer(db, playerName)
     if db.players[playerName] then
         db.players[playerName] = nil
-        print(string.format("[%s] Wiped player: %s", AddOnName, playerName))
+        print(string.format("[%s] Wiped player: %s", addOnName, playerName))
     else
-        print(string.format("[%s] Unknown player: %s", AddOnName, playerName))
+        print(string.format("[%s] Unknown player: %s", addOnName, playerName))
     end
     self:Update(db)
 end
@@ -172,7 +183,7 @@ function Player:WipeRealm(db, realmName)
         count = count + 1
         db.players[name] = nil
     end
-    print(string.format("[%s] Wiped %s players on realm: %s", AddOnName , count, realmName))
+    print(string.format("[%s] Wiped %s players on realm: %s", addOnName , count, realmName))
     self:Update(db)
 end
 
@@ -182,7 +193,7 @@ function Player:WipeAllPlayers(db)
         count = count + 1
     end
     db.players = {}
-    print(string.format("[%s] Wiped %s players", AddOnName, count))
+    print(string.format("[%s] Wiped %s players", addOnName, count))
     self:Update(db)
 end
 
@@ -198,13 +209,13 @@ end
 
 -- Remenant from the WeakAura
 function Player:ViewablePlayers(db, options)
-    local currentName = Utils:GetFullName()
+    local currentName = ICT:GetFullName()
     local currentRealm = GetRealmName()
     local playerFilter = function(v) return
         -- Show all characters for the realm or specifically the current character.
         (options.showAllAlts or currentName == v.fullName)
         -- Show only max level characters if enabled.
-        and (v.level == 80 or not options.onlyMaxLevelCharacters)
+        and (v.level == ICT.MaxLevel or not options.onlyMaxLevelCharacters)
         and (v.realm == currentRealm or options.showAllRealms)
         and not v.isDisabled
     end

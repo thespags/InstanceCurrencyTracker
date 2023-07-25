@@ -1,14 +1,22 @@
-local addOn
+local addOnName, ICT = ...
 
--- There's probably cleaner ways to organize this but wow events don't always behave as you would expect.
-local function onEvent(self, event, addOnName)
-	if addOnName == "InstanceCurrencyTracker" then
-        InstanceCurrencyDB = InstanceCurrencyDB or {}
-        local db = InstanceCurrencyDB
+local Player = ICT.Player
+local addOn
+local function getOrCreateDb()
+    if not InstanceCurrencyDB then
+        local db = {}
         db.players = db.players or {}
         db.options = db.options or {}
         db.options.collapsible = db.options.collapsible or {}
-        Player:Update(InstanceCurrencyDB)
+        InstanceCurrencyDB = db
+    end
+    return InstanceCurrencyDB
+end
+
+-- There's probably cleaner ways to organize this but wow events don't always behave as you would expect.
+local function onEvent(self, event, eventAddOn)
+	if eventAddOn == "InstanceCurrencyTracker" then
+        local db = getOrCreateDb()
         for _, player in pairs(db.players) do
             -- Player may have already been created but we added new instances.
             Player:CreateInstances(player)
@@ -17,9 +25,9 @@ local function onEvent(self, event, addOnName)
         end
 	end
     -- After the LFG addon is loaded, attach our frame.
-    if addOnName == "Blizzard_LookingForGroupUI" then
+    if eventAddOn == "Blizzard_LookingForGroupUI" then
         addOn = addOn or CreateAddOn()
-        print(string.format("[%s] Initialized...", AddOnName))
+        print(string.format("[%s] Initialized...", addOnName))
         LFGParentFrame:HookScript("OnShow", function() addOn:Show() end)
         LFGParentFrame:HookScript("OnHide", function() addOn:Hide() end)
     end
@@ -27,7 +35,7 @@ local function onEvent(self, event, addOnName)
     if event == "CURRENCY_DISPLAY_UPDATE" or event == "ENCOUNTER_END" or event == "PLAYER_LEVEL_UP" or event == "UPDATE_INSTANCE_INFO" then
         -- Don't update if the addon hasn't been initialized yet.
         if addOn and InstanceCurrencyDB then
-            Player:Update(InstanceCurrencyDB)
+            Player:Update(InstanceCurrencyDB, event)
             DisplayPlayer()
         end 
     end
@@ -55,7 +63,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     -- the rest (minus leading whitespace) is captured into rest.
     if command == "wipe" then
         if rest == "" then
-            Player:WipePlayer(db, Utils:GetFullName())
+            Player:WipePlayer(db, ICT:GetFullName())
         elseif rest == "all" then
             Player:WipeAllPlayers(db)
         else
@@ -79,13 +87,13 @@ end
 
 -- message and add option
 function messageResults(player, instance)
-    local info = InstanceInfo[instance.id]
+    local info = ICT.InstanceInfo[instance.id]
     for _, tokenId in pairs(info.tokenIds) do
         local available = instance.available[tokenId]
         local max = info.maxEmblems(instance, tokenId)
         local collected = max - available
         local total = player.currency.wallet[tokenId]
-        local text = string.format("[%s] Collected %s of %s %s, total = %s", AddOnName, collected, max, Utils:GetCurrencyName(tokenId), total)
+        local text = string.format("[%s] Collected %s of %s %s, total = %s", addOnName, collected, max, ICT:GetCurrencyName(tokenId), total)
         -- announce to raid>part>self?
     end
 end

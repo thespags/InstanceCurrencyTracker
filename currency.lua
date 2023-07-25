@@ -1,7 +1,13 @@
+local addOnName, ICT = ...
+
+ICT.Currency = {}
+local Currency = ICT.Currency
+
 local function calculateEmblems(instances, tokenId)
     local emblems = 0
+
     for _, instance in pairs(instances) do
-        local info = InstanceInfo[instance.id]
+        local info = ICT.InstanceInfo[instance.id]
         if info.tokenIds[tokenId] then
             local available = instance.available or {}
             instance.available = available
@@ -12,13 +18,13 @@ local function calculateEmblems(instances, tokenId)
     return emblems
 end
 
-function CalculateDungeonEmblems(tokenId)
+function Currency:CalculateDungeonEmblems(tokenId)
     return function(player)
         return calculateEmblems(player.dungeons, tokenId)
     end
 end
 
-function CalculateRaidEmblems(tokenId)
+function Currency:CalculateRaidEmblems(tokenId)
     return function(player)
         return calculateEmblems(player.raids, tokenId)
     end
@@ -32,33 +38,33 @@ local function caculateMaxEmblems(instances, tokenId)
     if MaxTokens[tokenId] then
         return MaxTokens[tokenId]
     end
-    local op = function(v) return InstanceInfo[v.id] and InstanceInfo[v.id].maxEmblems(v, tokenId) or 0 end
-    local filter = function(v) return InstanceInfo[v.id].tokenIds[tokenId] end
-    MaxTokens[tokenId] = Utils:sum(instances, op, filter)
+    local op = function(v) return ICT.InstanceInfo[v.id] and ICT.InstanceInfo[v.id].maxEmblems(v, tokenId) or 0 end
+    local filter = function(v) return ICT.InstanceInfo[v.id].tokenIds[tokenId] end
+    MaxTokens[tokenId] = ICT:sum(instances, op, filter)
     return MaxTokens[tokenId]
 end
 
-function CalculateMaxDungeonEmblems(tokenId)
+function Currency:CalculateMaxDungeonEmblems(tokenId)
     return function(player)
         return caculateMaxEmblems(player.dungeons, tokenId)
     end
 end
 
-function CalculateMaxRaidEmblems(tokenId)
+function Currency:CalculateMaxRaidEmblems(tokenId)
     return function(player)
         return caculateMaxEmblems(player.raids, tokenId)
     end
 end
 
 -- How to order currency, we sort from highest to lowest (reverse) so adding new currencies is easier.
-Currency = {
-    [Utils.Triumph] = 6,
-    [Utils.SiderealEssence] = 5,
-    [Utils.ChampionsSeal] = 4,
-    [Utils.Conquest] = 3,
-    [Utils.Valor] = 2,
-    [Utils.Heroism] = 1,
+ICT.CurrencyInfo = {
+    [ICT.Triumph] = 6,
+    [ICT.SiderealEssence] = 5,
+    [ICT.ChampionsSeal] = 4,
+    [ICT.Conquest] = 3,
+    [ICT.Valor] = 2,
+    [ICT.Heroism] = 1,
 }
-function CurrencySort(a, b)
-    return Currency[a] > Currency[b]
+function ICT.CurrencySort(a, b)
+    return ICT.CurrencyInfo[a] > ICT.CurrencyInfo[b]
 end

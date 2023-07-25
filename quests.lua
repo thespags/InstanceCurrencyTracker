@@ -1,4 +1,7 @@
-Quests = {}
+local addOnName, ICT = ...
+
+ICT.Quests = {}
+local Quests = ICT.Quests
 
 local isTournamentChainCompleted = function()
     -- Check for Death Knight and non Death Knight prereq quest.
@@ -21,6 +24,12 @@ local factionQuestName = function(hordeName, allianceName)
     end
 end
 
+local level80 = function()
+    return function(player)
+        return UnitLevel("Player") == ICT.MaxLevel
+    end
+end
+
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
 local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllianceID, deathKnightHordeID, nonDeathKnightHordeID)
     return function(player)
@@ -36,63 +45,63 @@ local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllian
     end
 end
 
-QuestInfo = {
+ICT.QuestInfo = {
     -- This counts the quest and bag together, instead of separately.
     ["Heroic Daily Dungeon"] = {
-        name = ReturnX("Heroic Daily Dungeon"),
+        name = ICT:ReturnX("Heroic Daily Dungeon"),
         ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
         seals = 5,
-        tokenId = Utils.Triumph,
-        prereq = ReturnX(true),
+        tokenId = ICT.Triumph,
+        prereq = level80(),
     },
     ["Normal Daily Dungeon"] = {
-        name = ReturnX("Normal Daily Dungeon"),
+        name = ICT:ReturnX("Normal Daily Dungeon"),
         ids = { 13240, 13241, 13243, 13244 },
         seals = 2,
-        tokenId = Utils.Conquest,
-        prereq = ReturnX(true)
+        tokenId = ICT.Conquest,
+        prereq = level80(),
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     ["Threat From Above"] = {
         name = tournamentQuestName(13682, 13788, 13809, 13812),
         ids = { 13682, 13788, 13809, 13812 },
         seals = 2,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isTournamentChainCompleted
     },
     ["Battle Before The Citadel"] = {
         name = tournamentQuestName(13861, 13864, 13862, 13863),
         ids = { 13861, 13862, 13863, 13864 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isTournamentChainCompleted
     },
     ["Among the Champions"] = {
         name = tournamentQuestName(13790, 13793, 13811, 13814),
         ids = { 13790, 13793, 13811, 13814 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isTournamentChainCompleted
     },
     ["Taking Battle To The Enemy"] = {
         name = tournamentQuestName(13789, 13791, 13810, 13813),
         ids = { 13789, 13791, 13810, 13813 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isTournamentChainCompleted
     },
     ["High Crusader Adelard"] = {
-        name = ReturnX("High Crusader Adelard"),
+        name = ICT:ReturnX("High Crusader Adelard"),
         ids = { 14101, 14102, 14104, 14105 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isExaltedTournamentFaction
     },
     ["Crusader Silverdawn"] = {
-        name = ReturnX("Crusader Silverdawn"),
+        name = ICT:ReturnX("Crusader Silverdawn"),
         ids = { 14108, 14107}, 
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isExaltedTournamentFaction,
     },
     ["Savinia Loresong"] = {
@@ -100,7 +109,7 @@ QuestInfo = {
         -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
         ids = { 14076, 14092, 14090, 14141, 14112, 14145 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isExaltedTournamentChampion,
     },
     ["Narasi Snowdawn"] = {
@@ -108,12 +117,12 @@ QuestInfo = {
         -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
         ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
         seals = 1,
-        tokenId = Utils.ChampionsSeal,
+        tokenId = ICT.ChampionsSeal,
         prereq = isExaltedTournamentChampion,
     }
 }
 -- Set the key on the value for convenient lookups to other tables, i.e. player infos.
-for k, v in pairs(QuestInfo) do
+for k, v in pairs(ICT.QuestInfo) do
     v.key = k
 end
 
@@ -135,7 +144,7 @@ end
 function Quests:CalculateAvailableDaily(tokenId)
     return function(player)
         local emblems = 0
-        for _, v in fpairsByValue(QuestInfo, self:TokenFilter(tokenId)) do
+        for _, v in ICT:fpairsByValue(ICT.QuestInfo, self:TokenFilter(tokenId)) do
             emblems = emblems + (v.prereq and not self:IsDailyCompleted(v) and v.seals or 0)
         end
         return emblems
@@ -145,19 +154,19 @@ end
 function Quests:CalculateMaxDaily(tokenId)
     return function(player)
         local emblems = 0
-        for _, v in fpairsByValue(QuestInfo, self:TokenFilter(tokenId)) do
+        for _, v in ICT:fpairsByValue(ICT.QuestInfo, self:TokenFilter(tokenId)) do
             emblems = emblems + (v.prereq and v.seals or 0)
         end
         return emblems
     end
 end
 
-function QuestSort(player)
+function ICT.QuestSort(player)
     return function(a, b)
         if a.tokenId == b.tokenId then
             return a.name(player) < b.name(player)
         else
-            return CurrencySort(a.tokenId, b.tokenId)
+            return ICT.CurrencySort(a.tokenId, b.tokenId)
         end
     end
 end
