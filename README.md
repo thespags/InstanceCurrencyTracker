@@ -15,17 +15,17 @@ Feel free to comment for additional features or suggestions.
 
 ## Options
 + Show Realm Name  
-Enables `[Realm] Player` versus `Player` for name fields.
+_Enables `[Realm] Player` versus `Player` for name fields._
 + Verbose Currency  
-Multi-line currency versus single line currency information
+_Multi-line currency versus single line currency information_
 + Simple Currency Tooltip  
-Shows only current and available currency per player, otherwise includes instances and quests collected.
+_Shows only current and available currency per player, otherwise includes instances and quests collected._
 + All Quests  
-Shows all quests including those you have not met the prerequisite for.
+_Shows all quests including those you have not met the prerequisite for._
 + Currency  
-Select the currency you wish to view defaults to all currencies.
+_Select the currency you wish to view defaults to all currencies._
 + Instances  
-Select the instances you wish to view, defaults to all WOTLK instances.
+_Select the instances you wish to view, defaults to all WOTLK instances._
 
 ## Color Codes
 **Purple** Locked Instances and Completed Dailies  
