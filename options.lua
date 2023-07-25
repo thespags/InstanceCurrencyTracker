@@ -1,7 +1,8 @@
 Options = {}
 
 -- Helper to set all the currencies as enabled.
-local function getOrCreateCurrencyOptions(db)
+local function getOrCreateCurrencyOptions()
+    local db = InstanceCurrencyDB
     if not db.options.currency then
         db.options.currency = {}
         for k, _ in pairs(Currency) do
@@ -11,19 +12,34 @@ local function getOrCreateCurrencyOptions(db)
     return db.options.currency
 end
 
-local function expansionContainsAll(expansion, oldInstances)
-    local contains = function(v) return v.expansion ~= expansion or oldInstances[v.id] end
-    return Utils:containsAllValue(Instances.oldRaids, contains)
+-- Defaults WOTLK instances as shown and old content as off.
+local function getOrCreateDisplayInstances()
+    local db = InstanceCurrencyDB
+    if not db.options.displayInstances then
+        db.options.displayInstances = {}
+        for k, v in pairs(InstanceInfo) do
+            db.options.displayInstances[k] = v.expansion == Expansions[WOTLK]
+        end
+    end
+    return db.options.displayInstances
 end
 
-local function oldRaidsContainsAll(oldInstances)
-    local contains = function(v) return oldInstances[v.id] end
-    return Utils:containsAllValue(Instances.oldRaids, contains)
+local function expansionContainsAll(expansion)
+    local contains = function(v) return v.expansion ~= expansion or Options.showInstance(v) end
+    return Utils:containsAllValues(InstanceInfo, contains)
+end
+
+local function instanceContainsAll(displayInstances)
+    local contains = function(v) return displayInstances[v.id] end
+    return Utils:containsAllValues(InstanceInfo, contains)
 end
 
 function Options:showInstances(instances)
-    local contains = function(v) return v.expansion == nil or InstanceCurrencyDB.options.oldInstances[v.id] end
-    return Utils:containsAnyValue(instances, contains)
+    return Utils:containsAnyValue(instances, Options.showInstance)
+end
+
+function Options.showInstance(instance)
+    return InstanceCurrencyDB.options.displayInstances[instance.id]
 end
 
 function Options:CreateOptionDropdown(f)
@@ -36,10 +52,8 @@ function Options:CreateOptionDropdown(f)
     UIDropDownMenu_SetWidth(dropdown, 180)
     UIDropDownMenu_SetText(dropdown, "Options")
     local db = InstanceCurrencyDB
-    local oldInstances = db.options.oldInstances or {}
-    db.options.oldInstances = oldInstances
-
-    local currency = getOrCreateCurrencyOptions(db)
+    local displayInstances = getOrCreateDisplayInstances()
+    local currency = getOrCreateCurrencyOptions()
 
     UIDropDownMenu_Initialize(
         dropdown,
@@ -90,7 +104,7 @@ function Options:CreateOptionDropdown(f)
                 info.text = "Currency"
                 info.menuList = info.text
                 info.hasArrow = true
-                info.checked = Utils:containsAllValue(currency)
+                info.checked = Utils:containsAllValues(currency)
                 info.func = function(self)
                     for k, _ in pairs(Currency) do
                         currency[k] = not self.checked
@@ -102,11 +116,11 @@ function Options:CreateOptionDropdown(f)
                 -- Create the old instance options.
                 info.text = "Instances"
                 info.menuList = info.text
-                info.checked = oldRaidsContainsAll(oldInstances)
+                info.checked = instanceContainsAll(displayInstances)
                 info.hasArrow = true
                 info.func = function(self)
-                    for _, instance in pairs(Instances.oldRaids) do
-                        oldInstances[instance.id] = not self.checked
+                    for _, v in pairs(InstanceInfo) do
+                        displayInstances[v.id] = not self.checked
                     end
                     DisplayPlayer()
                 end
@@ -124,14 +138,14 @@ function Options:CreateOptionDropdown(f)
                     end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
-                    for expansion, _ in Utils:spairs(Expansions, ExpansionSort) do
+                    for expansion, v in Utils:spairs(Expansions, ExpansionSort) do
                         info.text = expansion
                         info.menuList = expansion
                         info.hasArrow = true
-                        info.checked = expansionContainsAll(expansion, oldInstances)
+                        info.checked = expansionContainsAll(v)
                         info.func = function(self)
-                            for _, instance in Utils:fpairs(Instances.oldRaids, function(v) return v.expansion == expansion end) do
-                                oldInstances[instance.id] = not self.checked
+                            for _, instance in fpairs(InstanceInfo, Options.isExpansion(v)) do
+                                displayInstances[instance.id] = not self.checked
                             end
                             DisplayPlayer()
                         end
@@ -139,12 +153,12 @@ function Options:CreateOptionDropdown(f)
                     end
                 else
                     -- Now create a level for all the instances of that expansion.
-                    for k, v in Utils:fpairs(Instances.oldRaids, function(v) return v.expansion == menuList end) do
-                        info.text = k
+                    for _, v in Utils:spairsByValue(InstanceInfo, InstanceInfoSort, Options.isExpansion(Expansions[menuList])) do
+                        info.text = GetRealZoneText(v.id)
                         info.arg1 = v.id
-                        info.checked = oldInstances[v.id] or false
+                        info.checked = Options.showInstance(v)
                         info.func = function(self, id)
-                            oldInstances[id] = not self.checked
+                            displayInstances[id] = not self.checked
                             DisplayPlayer()
                         end
                         UIDropDownMenu_AddButton(info, level)
@@ -155,6 +169,6 @@ function Options:CreateOptionDropdown(f)
     )
 end
 
-function Options:InstanceViewable(instance)
-    return not instance.expansion or db.options.oldInstances[instance.id]
+function Options.isExpansion(expansion)
+    return function(id) return InstanceInfo[id].expansion == expansion end
 end

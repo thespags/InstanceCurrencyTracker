@@ -1,4 +1,4 @@
-AddOnName = "Instance and Emblem Tracker"
+AddOnName = "Instance and Currency Tracker"
 local availableColor = "FFFFFFFF"
 local titleColor = "FFFFFF00"
 local lockedColor = "FFFF00FF"
@@ -132,7 +132,7 @@ local function hideTooltipOnLeave(self, motion)
 end
 
 local function updateSectionTitle(x, offset, title)
-    local collapsed = db.options.collasible[title]
+    local collapsed = db.options.collapsible[title]
     local icon = collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP:12"
     local titleText = string.format("|T%s:12|t%s", icon, title)
     return printCell(x, offset, titleText, titleColor)
@@ -143,7 +143,7 @@ local function printSectionTitle(x, offset, title)
     updateSectionTitle(x, offset, title):SetScript(
         "OnClick",
         function()
-            db.options.collasible[title] = not db.options.collasible[title]
+            db.options.collapsible[title] = not db.options.collapsible[title]
             updateSectionTitle(x, offset, title)
             DisplayPlayer()
         end
@@ -159,15 +159,14 @@ local function printInstances(title, instances, x, offset)
 
     offset = printSectionTitle(x, offset, title)
 
-    -- If the section is collasible then short circuit here.
-    if not db.options.collasible[title] then
-        for k, v in Utils:spairsByValue(instances, InstanceSort) do
-            -- WOTLK instances don't have an expansion yet so should always appear.
-            if not v.expansion or db.options.oldInstances[v.id] then
+    -- If the section is collapsible then short circuit here.
+    if not db.options.collapsible[title] then
+        for key, instance in Utils:spairsByValue(instances, InstanceSort) do
+            if Options.showInstance(instance) then
                 offset = offset + 1
-                local color = v.locked and lockedColor or availableColor
-                local cell = printCell(x, offset, v.name, color)
-                cell:SetScript("OnEnter", instanceTooltipOnEnter(k, v))
+                local color = instance.locked and lockedColor or availableColor
+                local cell = printCell(x, offset, instance.name, color)
+                cell:SetScript("OnEnter", instanceTooltipOnEnter(key, instance))
                 cell:SetScript("OnLeave", hideTooltipOnLeave)
             end
         end
@@ -181,7 +180,7 @@ local function printInstancesForCurrency(title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     local printTitle = true
     for _, instance in Utils:spairsByValue(instances, InstanceSort) do
-        if InstanceInfo[instance.id].tokenIds[tokenId] then
+        if Options.showInstance(instance) and InstanceInfo[instance.id].tokenIds[tokenId] then
             if printTitle then
                 printTitle = false
                 GameTooltip:AddLine(title, Utils:hex2rgb(titleColor))
@@ -214,7 +213,7 @@ local function printQuestsForCurrency(player, tokenId)
 end
 
 -- Tooltip for currency information upon entering the cell.
-local function currencyTooltipOnEnter(player, tokenId)
+local function currencyTooltipOnEnter(selectedPlayer, tokenId)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine(Utils:GetCurrencyName(tokenId), Utils:hex2rgb(titleColor))
@@ -226,9 +225,9 @@ local function currencyTooltipOnEnter(player, tokenId)
 
         end
         if not db.options.simpleCurrencyTooltip then
-            printInstancesForCurrency("Dungeons", player.dungeons, tokenId)
-            printInstancesForCurrency("Raids", player.raids, tokenId)
-            printQuestsForCurrency(player, tokenId)
+            printInstancesForCurrency("Dungeons", selectedPlayer.dungeons, tokenId)
+            printInstancesForCurrency("Raids", selectedPlayer.raids, tokenId)
+            printQuestsForCurrency(selectedPlayer, tokenId)
         end
         GameTooltip:Show()
     end
@@ -273,7 +272,7 @@ local function printCurrency(player, x, offset)
     if Utils:containsAnyValue(db.options.currency) then
         offset = printSectionTitle(x, offset, "Currency")
     end
-    if not db.options.collasible["Currency"] then
+    if not db.options.collapsible["Currency"] then
         local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
         for tokenId, _ in Utils:spairs(Currency, CurrencySort) do
             if db.options.currency[tokenId] then
@@ -309,7 +308,7 @@ local function printQuests(player, x, offset)
     if Utils:containsAnyValue(QuestInfo, isQuestAvailable(player)) then
         offset = printSectionTitle(x, offset, "Quests")
     end
-    if not db.options.collasible["Quests"] then
+    if not db.options.collapsible["Quests"] then
         -- sort by token then name...
         for _, quest in Utils:spairsByValue(QuestInfo, QuestSort(player)) do
             if isQuestAvailable(player)(quest) then
@@ -332,8 +331,6 @@ function DisplayPlayer()
     local player = db.players[selectedPlayer]
     local x = 1
     local offset = 1
-    -- In case the langauge changed, localize again.
-    Player:LocalizeInstanceNames(player)
     local name = string.format("|T%s:12|t%s", CLASS_ICONS[player.class], Player:GetName(player))
     printCell(x, offset, name, nameColor)
     offset = printInstances("Dungeons", player.dungeons, x, offset)

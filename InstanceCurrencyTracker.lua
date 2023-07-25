@@ -1,13 +1,20 @@
 local addOn
 
+-- There's probably cleaner ways to organize this but wow events don't always behave as you would expect.
 local function onEvent(self, event, addOnName)
 	if addOnName == "InstanceCurrencyTracker" then
         InstanceCurrencyDB = InstanceCurrencyDB or {}
         local db = InstanceCurrencyDB
-        db.sessions = (db.sessions or 0) + 1
-        db.options = (db.options or {})
-        db.options.collasible = (db.options.collasible or {})
-        Player:Update(db)
+        db.players = db.players or {}
+        db.options = db.options or {}
+        db.options.collapsible = db.options.collapsible or {}
+        Player:Update(InstanceCurrencyDB)
+        for _, player in pairs(db.players) do
+            -- Player may have already been created but we added new instances.
+            Player:CreateInstances(player)
+            -- In case the langauge changed, localize again.
+            Player:LocalizeInstanceNames(player)
+        end
 	end
     -- After the LFG addon is loaded, attach our frame.
     if addOnName == "Blizzard_LookingForGroupUI" then
@@ -17,20 +24,27 @@ local function onEvent(self, event, addOnName)
         LFGParentFrame:HookScript("OnHide", function() addOn:Hide() end)
     end
     -- Events that change instance or currency information, refresh the player and frames.
-    if event == "CURRENCY_DISPLAY_UPDATE" or event == "ENCOUNTER_END" or event == "PLAYER_LEVEL_UP" then
+    if event == "CURRENCY_DISPLAY_UPDATE" or event == "ENCOUNTER_END" or event == "PLAYER_LEVEL_UP" or event == "UPDATE_INSTANCE_INFO" then
         -- Don't update if the addon hasn't been initialized yet.
         if addOn and InstanceCurrencyDB then
             Player:Update(InstanceCurrencyDB)
             DisplayPlayer()
-        end
+        end 
     end
 end
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
+-- After the instance info is updated then trigger updates to our representation.
+f:RegisterEvent("UPDATE_INSTANCE_INFO")
+-- After an enounter update information for the instance.
 f:RegisterEvent("ENCOUNTER_END")
-f:RegisterEvent("PLAYER_LEVEL_UP")
+-- After currency changes we need to update the wallet.
 f:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+-- Level 80 characters will appear.
+f:RegisterEvent("PLAYER_LEVEL_UP")
+-- Added for updating prerequisites.
+f:RegisterEvent("QUEST_COMPLETE")
 f:SetScript("OnEvent", onEvent)
 
 SLASH_InstanceCurrencyTracker1 = "/ict"; -- new slash command for showing framestack tool
@@ -48,12 +62,11 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             command, rest = rest:match("^(%S*)%s*(.-)$")
             if command == "realm" then
                 if rest == "" then
-                    print("No realm provided")
+                    Player:WipeRealm(db, GetRealmName())
                 else
                     Player:WipeRealm(db, rest)
                 end
             elseif command == "player" then
-                -- TODO require realm name? 
                 Player:WipePlayer(db, rest)
             else
                 print("Invalid command")
@@ -61,6 +74,19 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
         end
         -- Refresh frame
         DisplayPlayer()
+    end
+end
+
+-- message and add option
+function messageResults(player, instance)
+    local info = InstanceInfo[instance.id]
+    for _, tokenId in pairs(info.tokenIds) do
+        local available = instance.available[tokenId]
+        local max = info.maxEmblems(instance, tokenId)
+        local collected = max - available
+        local total = player.currency.wallet[tokenId]
+        local text = string.format("[%s] Collected %s of %s %s, total = %s", AddOnName, collected, max, Utils:GetCurrencyName(tokenId), total)
+        -- announce to raid>part>self?
     end
 end
 
@@ -72,8 +98,5 @@ end
 --
 -- Share daily quests to addon users
 --
--- Add WOTLK as expansion with instances to filter?
---
--- print message on dungeon complete for advertisement like "[ICT] Collected x of y currency, etc etc"
 --
 -- TODO detach from LFG frame option?
