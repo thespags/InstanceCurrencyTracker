@@ -1,8 +1,10 @@
-## Interface: 50250
+## Interface: 50375
 ## Version: 1.0.0
 ## Title: InstanceCurrencyTracker
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB
+## X-Curse-Project-ID: 892801
+## X-Wago-ID: aNevrM62
 
 utils.lua
 instances.lua
