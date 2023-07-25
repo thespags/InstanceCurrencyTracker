@@ -8,9 +8,6 @@ function Player:Create()
     player.class = select(2, UnitClass("Player"))
     player.faction = select(1, UnitFactionGroup("Player"))
     player.level = UnitLevel("Player")
-    player.dungeons = CopyTable(Instances.dungeons)
-    player.raids = CopyTable(Instances.raids)
-    player.oldRaids = CopyTable(Instances.oldRaids)
     player.quests = {
         prereq = {},
         completed = {}
@@ -22,11 +19,42 @@ function Player:Create()
         maxDaily = {},
         -- There's no prereq for weekly currencies so no player based max weekly.
     }
+    self:CreateInstances(player)
     -- Set transient information after copying main tables.
     self:DailyReset(player)
     self:WeeklyReset(player)
-    Instances:ResetAll(player.oldRaids)
     return player
+end
+
+-- Creates instances in the transient tables if necessary.
+-- The key is the English name with raid size if multiple sizes.
+function Player:CreateInstances(player)
+    player.dungeons = player.dungeons or {}
+    player.raids = player.raids or {}
+    player.oldRaids = player.oldRaids or {}
+    for _, v in pairs(InstanceInfo) do
+        if v.expansion == Expansions[WOTLK] then
+            if #v.maxPlayers > 1 then
+                for _, size in pairs(v.maxPlayers) do
+                    self:addInstance(player.raids, v, size)
+                end
+            else
+                self:addInstance(player.dungeons, v)
+            end
+        elseif v.expansion < Expansions[WOTLK] then
+            self:addInstance(player.oldRaids, v)
+        end
+    end
+end
+
+function Player:addInstance(t, info, size)
+    local k = size and Utils:GetInstanceName(info.name, size) or info.name
+    if not t[k] then
+        local instance = { id = info.id, expansion = info.expansion, maxPlayers = size }
+        Utils:LocalizeInstanceName(instance)
+        Instances:Reset(instance)
+        t[k] = instance
+    end
 end
 
 -- We probably want to merge these three tables so we don't need this funny business.
@@ -47,13 +75,13 @@ end
 
 function Player:LocalizeInstanceNames(player)
     for _, v in pairs(player.dungeons) do
-        v.name = GetLocalizedInstanceName(v)
+        Utils:LocalizeInstanceName(v)
     end
     for _, v in pairs(player.raids) do
-        v.name = GetLocalizedInstanceName(v)
+        Utils:LocalizeInstanceName(v)
     end
     for _, v in pairs(player.oldRaids) do
-        v.name = GetLocalizedInstanceName(v)
+        Utils:LocalizeInstanceName(v)
     end
 end
 
@@ -111,7 +139,6 @@ function Player:CalculateQuest(player)
 end
 
 function Player:Update(db)
-    db.players = db.players or {}
     for _, player in pairs(db.players) do
         Player:ResetInstances(player)
     end
@@ -141,7 +168,7 @@ end
 
 function Player:WipeRealm(db, realmName)
     local count = 0
-    for name, _ in Utils:fpairs(db.players, function(v) return v.realm == realmName end) do
+    for name, _ in fpairsByValue(db.players, function(v) return v.realm == realmName end) do
         count = count + 1
         db.players[name] = nil
     end
@@ -182,7 +209,7 @@ function Player:ViewablePlayers(db, options)
         and not v.isDisabled
     end
     local players = {}
-    for _, player in Utils.fpairs(db.players, playerFilter) do
+    for _, player in fpairsByValue(db.players, playerFilter) do
         players[player.fullName] = player
     end
     return players

@@ -1,11 +1,11 @@
 local function calculateEmblems(instances, tokenId)
     local emblems = 0
     for _, instance in pairs(instances) do
-        local staticInstance = InstanceInfo[instance.id]
-        if staticInstance.tokenIds[tokenId] then
+        local info = InstanceInfo[instance.id]
+        if info.tokenIds[tokenId] then
             local available = instance.available or {}
             instance.available = available
-            instance.available[tokenId] = staticInstance.emblems(instance, tokenId)
+            instance.available[tokenId] = info.emblems(instance, tokenId)
             emblems = emblems + instance.available[tokenId]
         end
     end
@@ -24,7 +24,6 @@ function CalculateRaidEmblems(tokenId)
     end
 end
 
--- Calculate max emblems per player until static information is able to provide results for 10 vs 25 values.
 local MaxTokens = {}
 local function caculateMaxEmblems(instances, tokenId)
     -- Lock the value once we calculated as it doesn't change.
