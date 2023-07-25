@@ -1,4 +1,4 @@
-## Interface: 50375
+## Interface: 30402
 ## Version: 1.0.0
 ## Title: InstanceCurrencyTracker
 ## Author: spags
