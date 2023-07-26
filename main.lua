@@ -11,16 +11,16 @@ local nameColor = "FF00FF00"
 local CELL_WIDTH = 160
 local CELL_HEIGHT = 10
 local NUM_CELLS = 1
-local noopFunction = function () end
-local content
 local db
 
 -- Currently selected player plus the length.
 local selectedPlayer = ICT:GetFullName()
+local content
 local playerDropdown
+local tickers = {}
 local displayLength = 0
 
-function CreateAddOn()
+function ICT:CreateAddOn()
     db = InstanceCurrencyDB
     local f = CreateFrame("Frame", "InstanceCurrencyTracker", LFGParentFrame, "BasicFrameTemplateWithInset")
     f:SetSize(CELL_WIDTH * NUM_CELLS + 60, 600)
@@ -55,9 +55,9 @@ function CreateAddOn()
 
     content = f.scrollFrame.scrollChild
     content.cells = {}
-    CreatePlayerDropdown(f)
+    ICT:CreatePlayerDropdown(f)
     Options:CreateOptionDropdown(f)
-    DisplayPlayer()
+    ICT:DisplayPlayer()
     return f
 end
 
@@ -72,8 +72,8 @@ local function getCell(x, y)
     end
     local cell = content.cells[name]
     -- Remove any cell action so we can reuse the cell.
-    cell:SetScript("OnEnter", noopFunction)
-    cell:SetScript("OnClick", noopFunction)
+    cell:SetScript("OnEnter", nil)
+    cell:SetScript("OnClick", nil)
 
     return cell
 end
@@ -141,17 +141,17 @@ local function updateSectionTitle(x, offset, title)
     return printCell(x, offset, titleText, titleColor)
 end
 
-local function printSectionTitle(x, offset, title)
+local function printSectionTitle(x, offset, title, f)
     offset = offset + 1
     updateSectionTitle(x, offset, title):SetScript(
         "OnClick",
         function()
             db.options.collapsible[title] = not db.options.collapsible[title]
             updateSectionTitle(x, offset, title)
-            DisplayPlayer()
+            ICT:DisplayPlayer()
         end
     )
-    return offset
+    return offset + 1
 end
 
 -- Prints all the instances with associated tooltips.
@@ -166,15 +166,14 @@ local function printInstances(title, instances, x, offset)
     if not db.options.collapsible[title] then
         for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
             if Options.showInstance(instance) then
-                offset = offset + 1
                 local color = instance.locked and lockedColor or availableColor
                 local cell = printCell(x, offset, instance.name, color)
                 cell:SetScript("OnEnter", instanceTooltipOnEnter(key, instance))
                 cell:SetScript("OnLeave", hideTooltipOnLeave)
+                offset = offset + 1
             end
         end
     end
-    offset = offset + 1
     hideCell(x, offset)
     return offset
 end
@@ -220,7 +219,7 @@ local function currencyTooltipOnEnter(selectedPlayer, tokenId)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine(ICT:GetCurrencyName(tokenId), ICT:hex2rgb(titleColor))
- 
+
         for _, player in ICT:spairsByValue(db.players, PlayerSort) do
             local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
             local text = string.format("%s %s (%s)", Player:GetName(player), player.currency.wallet[tokenId], available)
@@ -238,7 +237,6 @@ end
 
 -- Prints currency with multi line information.
 local function printCurrencyVerbose(player, tokenId, x, offset)
-    offset = offset + 1
     local currency = ICT:GetCurrencyName(tokenId)
     local cell = printCell(x, offset, currency, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
@@ -260,7 +258,6 @@ end
 
 -- Prints currency single line information.
 local function printCurrencyShort(player, tokenId, x, offset)
-    offset = offset + 1
     local currency = ICT:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
     local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
@@ -268,7 +265,7 @@ local function printCurrencyShort(player, tokenId, x, offset)
     local cell = printCell(x, offset, text, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
-    return offset
+    return offset + 1
 end
 
 local function printCurrency(player, x, offset)
@@ -283,7 +280,7 @@ local function printCurrency(player, x, offset)
             end
         end
     end
-    return offset + 1
+    return offset
 end
 
 local function questTooltipOnEnter(name, quest)
@@ -308,29 +305,71 @@ local function isQuestAvailable(player)
 end
 
 local function printQuests(player, x, offset)
-    if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
-        offset = printSectionTitle(x, offset, "Quests")
-    end
-    if not db.options.collapsible["Quests"] then
-        -- sort by token then name...
-        for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
-            if isQuestAvailable(player)(quest) then
-                local color = getQuestColor(player, quest)
-                offset = offset + 1
-                local name = quest.name(player)
-                local cell = printCell(x, offset, name, color)
-                cell:SetScript("OnEnter", questTooltipOnEnter(name, quest))
-                cell:SetScript("OnLeave", hideTooltipOnLeave)
+    if not db.options.hideQuests then
+        if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
+            offset = printSectionTitle(x, offset, "Quests")
+        end
+        if not db.options.collapsible["Quests"] then
+            -- sort by token then name...
+            for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
+                if isQuestAvailable(player)(quest) then
+                    local color = getQuestColor(player, quest)
+                    local name = quest.name(player)
+                    local cell = printCell(x, offset, name, color)
+                    cell:SetScript("OnEnter", questTooltipOnEnter(name, quest))
+                    cell:SetScript("OnLeave", hideTooltipOnLeave)
+                    offset = offset + 1
+                end
             end
         end
     end
-    offset = offset + 1
     hideCell(x, offset)
     return offset
 end
 
+
+local function cancelTicker(k)
+    if tickers[k] then
+        tickers[k]:Cancel()
+    end
+end
+
+local function printTimer(x, offset, title, f)
+    printCell(x, offset, title .. "  " .. f(), availableColor)
+    cancelTicker(title)
+    tickers[title] = C_Timer.NewTicker(1, function () printCell(x, offset, title .. "  " .. f(), availableColor) end)
+    return offset + 1
+end
+
+local function getDailyResetTime()
+    return ICT:DisplayTime(C_DateAndTime.GetSecondsUntilDailyReset())
+end
+
+local function getWeeklyResetTime()
+    return ICT:DisplayTime(C_DateAndTime.GetSecondsUntilWeeklyReset())
+end
+
+local function printResetTimers(x, offset)
+    if not db.options.hideResetTimers then
+        offset = printSectionTitle(x, offset, "Reset")
+
+        if db.options.collapsible["Reset"] then
+            cancelTicker("Daily")
+            cancelTicker("Weekly")
+        else
+            offset = printTimer(x, offset, "Daily", getDailyResetTime)
+            offset = printTimer(x, offset, "Weekly", getWeeklyResetTime)
+        end
+        hideCell(x, offset)
+    else
+        cancelTicker("Daily")
+        cancelTicker("Weekly")
+    end
+    return offset
+end
+
 -- Prints out selected players with associated instances and currency infromation.
-function DisplayPlayer()
+function ICT:DisplayPlayer()
     local player = (db or InstanceCurrencyDB).players[selectedPlayer]
     if not player then
         return
@@ -339,6 +378,7 @@ function DisplayPlayer()
     local offset = 1
     local name = string.format("|T%s:12|t%s", ICT.ClassIcons[player.class], Player:GetName(player))
     printCell(x, offset, name, nameColor)
+    offset = printResetTimers(x, offset)
     offset = printInstances("Dungeons", player.dungeons, x, offset)
     offset = printInstances("Raids", player.raids, x, offset)
     offset = printInstances("Old Raids", player.oldRaids, x, offset)
@@ -351,7 +391,7 @@ function DisplayPlayer()
     displayLength = offset
 end
 
-function CreatePlayerDropdown(f)
+function ICT:CreatePlayerDropdown(f)
     playerDropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
     playerDropdown:SetPoint("TOP", f, 0, -30);
     playerDropdown:SetAlpha(1)
@@ -372,7 +412,7 @@ function CreatePlayerDropdown(f)
                 info.func = function(self)
                     selectedPlayer = self.value
                     UIDropDownMenu_SetText(playerDropdown, Player:GetName(db.players[selectedPlayer]))
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
             end

@@ -26,7 +26,7 @@ local function onEvent(self, event, eventAddOn)
 	end
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "Blizzard_LookingForGroupUI" then
-        addOn = addOn or CreateAddOn()
+        addOn = addOn or ICT:CreateAddOn()
         print(string.format("[%s] Initialized...", addOnName))
         LFGParentFrame:HookScript("OnShow", function() addOn:Show() end)
         LFGParentFrame:HookScript("OnHide", function() addOn:Hide() end)
@@ -36,8 +36,8 @@ local function onEvent(self, event, eventAddOn)
         -- Don't update if the addon hasn't been initialized yet.
         if addOn and InstanceCurrencyDB then
             Player:Update(InstanceCurrencyDB, event)
-            DisplayPlayer()
-        end 
+            ICT:DisplayPlayer()
+        end
     end
 end
 
@@ -81,7 +81,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             end
         end
         -- Refresh frame
-        DisplayPlayer()
+        ICT:DisplayPlayer()
     end
 end
 

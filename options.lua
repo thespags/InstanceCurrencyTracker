@@ -69,7 +69,17 @@ function Options:CreateOptionDropdown(f)
                 info.checked = db.options.verboseName or false
                 info.func = function(self)
                     db.options.verboseName = not self.checked
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
+                end
+                UIDropDownMenu_AddButton(info)
+                
+                -- Hides reset timers.
+                info.text = "Hide Reset Timers"
+                info.hasArrow = false
+                info.checked = db.options.hideResetTimers or false
+                info.func = function(self)
+                    db.options.hideResetTimers = not self.checked
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
 
@@ -79,7 +89,7 @@ function Options:CreateOptionDropdown(f)
                 info.checked = db.options.verboseCurrency or false
                 info.func = function(self)
                     db.options.verboseCurrency = not self.checked
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
 
@@ -89,18 +99,14 @@ function Options:CreateOptionDropdown(f)
                 info.checked = db.options.simpleCurrencyTooltip or false
                 info.func = function(self)
                     db.options.simpleCurrencyTooltip = not self.checked
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
 
-                -- Switches between all quests or only those available to the player.
-                info.text = "All Quests"
-                info.hasArrow = false
-                info.checked = db.options.allQuests or false
-                info.func = function(self)
-                    db.options.allQuests = not self.checked
-                    DisplayPlayer()
-                end
+                info.text = "Quests"
+                info.menuList = info.text
+                info.hasArrow = true
+                info.checked = false
                 UIDropDownMenu_AddButton(info)
 
                 -- Create the currency options.
@@ -112,7 +118,7 @@ function Options:CreateOptionDropdown(f)
                     for k, _ in pairs(ICT.CurrencyInfo) do
                         currency[k] = not self.checked
                     end
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
 
@@ -125,17 +131,17 @@ function Options:CreateOptionDropdown(f)
                     for _, v in pairs(ICT.InstanceInfo) do
                         displayInstances[v.id] = not self.checked
                     end
-                    DisplayPlayer()
+                    ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
-            else
+            elseif level == 2 then
                 if menuList == "Currency" then
                     for k, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
                         info.text = ICT:GetCurrencyName(k)
                         info.checked = currency[k]
                         info.func = function(self)
                             currency[k] = not currency[k]
-                            DisplayPlayer()
+                            ICT:DisplayPlayer()
                         end
                         UIDropDownMenu_AddButton(info, level)
                     end
@@ -147,25 +153,43 @@ function Options:CreateOptionDropdown(f)
                         info.hasArrow = true
                         info.checked = expansionContainsAll(v)
                         info.func = function(self)
-                            for _, instance in ICT.fpairs(ICT.InstanceInfo, Options.isExpansion(v)) do
+                            for _, instance in ICT:fpairs(ICT.InstanceInfo, Options.isExpansion(v)) do
                                 displayInstances[instance.id] = not self.checked
                             end
-                            DisplayPlayer()
+                            ICT:DisplayPlayer()
                         end
                         UIDropDownMenu_AddButton(info, level)
                     end
-                else
-                    -- Now create a level for all the instances of that expansion.
-                    for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(ICT.Expansions[menuList])) do
-                        info.text = GetRealZoneText(v.id)
-                        info.arg1 = v.id
-                        info.checked = Options.showInstance(v)
-                        info.func = function(self, id)
-                            displayInstances[id] = not self.checked
-                            DisplayPlayer()
-                        end
-                        UIDropDownMenu_AddButton(info, level)
+                elseif menuList == "Quests" then
+                    -- Switches between all quests or only those available to the player.
+                    info.text = "Show Unavailble Quests"
+                    info.checked = db.options.allQuests or false
+                    info.func = function(self)
+                        db.options.allQuests = not self.checked
+                        ICT:DisplayPlayer()
                     end
+                    UIDropDownMenu_AddButton(info, level)
+
+                    info.text = "Hide Quests"
+                    info.checked = db.options.hideQuests or false
+                    info.func = function(self)
+                        db.options.hideQuests = not self.checked
+                        ICT:DisplayPlayer()
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                end
+            elseif level == 3 then
+                -- If we had another 3rd layer thing we need to check if menuList is an expansion.
+                -- Now create a level for all the instances of that expansion.
+                for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(ICT.Expansions[menuList])) do
+                    info.text = GetRealZoneText(v.id)
+                    info.arg1 = v.id
+                    info.checked = Options.showInstance(v)
+                    info.func = function(self, id)
+                        displayInstances[id] = not self.checked
+                        ICT:DisplayPlayer()
+                    end
+                    UIDropDownMenu_AddButton(info, level)
                 end
             end
         end

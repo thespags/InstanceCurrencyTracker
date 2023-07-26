@@ -181,11 +181,8 @@ function Instances:Lock(instance, reset, encounterProgress, i)
     end
 end
 
-local count = 0
 -- Get all saved instance information and lock the respective instance for the player.
 function Instances:Update(player)
-    print(count .. " " ..  GetNumSavedInstances())
-    count = count + 1
     local numSavedInstances = GetNumSavedInstances()
     for i=1, numSavedInstances do
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
