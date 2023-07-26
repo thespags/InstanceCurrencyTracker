@@ -106,7 +106,7 @@ end
 
 function Player:DailyReset(player)
     Instances:ResetAll(player.dungeons)
-    for k, _ in pairs(Currency) do
+    for k, _ in pairs(ICT.CurrencyInfo) do
         player.currency.daily[k] = player.currency.maxDaily[k] or 0
     end
     for k, _ in pairs(ICT.QuestInfo) do
@@ -117,7 +117,7 @@ end
 
 function Player:WeeklyReset(player)
     Instances:ResetAll(player.raids)
-    for k, _ in pairs(Currency) do
+    for k, _ in pairs(ICT.CurrencyInfo) do
         player.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(player)
     end
     player.weeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
@@ -128,13 +128,20 @@ function Player:OldRaidReset(player)
 end
 
 function Player:CalculateCurrency(player)
-    for k, _ in pairs(Currency) do
+    for k, _ in pairs(ICT.CurrencyInfo) do
         player.currency.wallet[k] = ICT:GetCurrencyAmount(k)
         -- There's no weekly raid quests so just add raid emblems.
         player.currency.weekly[k] = Currency:CalculateRaidEmblems(k)(player)
         player.currency.daily[k] = ICT:add(Currency:CalculateDungeonEmblems(k), Quests:CalculateAvailableDaily(k))(player)
         player.currency.maxDaily[k] = ICT:add(Currency:CalculateMaxDungeonEmblems(k), Quests:CalculateMaxDaily(k))(player)
     end
+end
+
+function Player:AvailableCurrency(player, tokenId)
+    if not player.currency.weekly[tokenId] or not player.currency.daily[tokenId] then
+        return "n/a"
+    end
+    return player.currency.weekly[tokenId] + player.currency.daily[tokenId]
 end
 
 function Player:CalculateQuest(player)

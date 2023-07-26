@@ -221,8 +221,8 @@ local function currencyTooltipOnEnter(selectedPlayer, tokenId)
         GameTooltip:AddLine(ICT:GetCurrencyName(tokenId), ICT:hex2rgb(titleColor))
 
         for _, player in ICT:spairsByValue(db.players, PlayerSort) do
-            local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
-            local text = string.format("%s %s (%s)", Player:GetName(player), player.currency.wallet[tokenId], available)
+            local available = Player:AvailableCurrency(player, tokenId)
+            local text = string.format("%s %s (%s)", Player:GetName(player), player.currency.wallet[tokenId] or "n/a", available)
             GameTooltip:AddLine(text, ICT:hex2rgb(availableColor))
 
         end
@@ -242,7 +242,7 @@ local function printCurrencyVerbose(player, tokenId, x, offset)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     offset = offset + 1
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
+    local available = Player:AvailableCurrency(player, tokenId)
     cell = printCell(x, offset, "Available  " .. available, availableColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
@@ -260,7 +260,7 @@ end
 local function printCurrencyShort(player, tokenId, x, offset)
     local currency = ICT:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
-    local available = (player.currency.weekly[tokenId] + player.currency.daily[tokenId]) or "n/a"
+    local available = Player:AvailableCurrency(player, tokenId)
     local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
     local cell = printCell(x, offset, text, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
