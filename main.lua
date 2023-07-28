@@ -2,34 +2,60 @@ local addOnName, ICT = ...
 
 local Player = ICT.Player
 local Options = ICT.Options
+local Instances = ICT.Instances
 local availableColor = "FFFFFFFF"
 local titleColor = "FFFFFF00"
 local lockedColor = "FFFF00FF"
 local unavailableColor = "FFFF0000"
 local nameColor = "FF00FF00"
+local cellWidth = 160
+local cellHeight = 10
+-- In the future we may want to display mutliple players at once.
+local numCells = 1
 
-local CELL_WIDTH = 160
-local CELL_HEIGHT = 10
-local NUM_CELLS = 1
-local db
-
--- Currently selected player plus the length.
-local selectedPlayer = ICT:GetFullName()
-local content
-local playerDropdown
+local defaultWidth = cellWidth * numCells + 60
+local defaultHeight = 600
+local defaultX = 400
+local defaultY = 800
 local tickers = {}
 local displayLength = 0
 
+local function drawFrame(x, y, width, height)
+    ICT.db.X = x
+	ICT.db.Y = y
+    ICT.db.width = width
+    ICT.db.height = height
+    ICT.frame:ClearAllPoints()
+    ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+    ICT.frame:SetSize(width, height)
+end
+
+local function hideTooltipOnLeave(self, motion)
+    GameTooltip:Hide()
+end
+
+local function enableMoving(frame, callback)
+    frame:SetMovable(true)
+    frame:SetResizable(true)
+	frame:SetScript("OnMouseDown", frame.StartMoving)
+	frame:SetScript("OnMouseUp", function(self)
+        ICT.db.x = ICT.frame:GetLeft()
+        ICT.db.y = ICT.frame:GetTop()
+        frame:StopMovingOrSizing(self)
+    end)
+end
+
 function ICT:CreateAddOn()
-    db = InstanceCurrencyDB
     local f = CreateFrame("Frame", "InstanceCurrencyTracker", LFGParentFrame, "BasicFrameTemplateWithInset")
-    f:SetSize(CELL_WIDTH * NUM_CELLS + 60, 600)
-    f:SetPoint("CENTER", 300, 0)
-    f:SetMovable(true)
-    f:SetScript("OnMouseDown", f.StartMoving)
-    f:SetScript("OnMouseUp", f.StopMovingOrSizing)
+    ICT.frame = f
+    drawFrame(ICT.db.X or defaultX, ICT.db.y or defaultY, ICT.db.width or defaultWidth, ICT.db.height or defaultHeight)
+    enableMoving(f)
     f:SetAlpha(.5)
     f:Hide()
+
+    ICT:ResizeFrameButton()
+    ICT:ResetFrameButton()
+    ICT.selectedPlayer = ICT:GetFullName()
 
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(addOnName)
@@ -38,36 +64,39 @@ function ICT:CreateAddOn()
     title:SetPoint("TOP", -10, -6)
 
     -- adding a scrollframe (includes basic scrollbar thumb/buttons and functionality)
-    f.scrollFrame = CreateFrame("ScrollFrame", "ICTScroll", f, "UIPanelScrollFrameTemplate")
-    -- Set alpha to 1 for text.
-    f.scrollFrame:SetAlpha(1)
-    f.scrollFrame:SetIgnoreParentAlpha(true)
-
+    local scrollFrame = CreateFrame("ScrollFrame", "ICTScroll", f, "UIPanelScrollFrameTemplate")
+    f.scrollFrame = scrollFrame
+    scrollFrame:SetAlpha(1)
+    scrollFrame:SetIgnoreParentAlpha(true)
     -- Points taken from example online that avoids writing into the frame.
-    f.scrollFrame:SetPoint("TOPLEFT", 12, -60)
-    f.scrollFrame:SetPoint("BOTTOMRIGHT", -34, 32)
+    scrollFrame:SetPoint("TOPLEFT", 12, -60)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -34, 36)
 
     -- creating a scrollChild to contain the content
-    f.scrollFrame.scrollChild = CreateFrame("Frame", "ICTContent", f.scrollFrame)
-    f.scrollFrame.scrollChild:SetSize(100, 100)
-    f.scrollFrame.scrollChild:SetPoint("TOPLEFT", 5, -5)
-    f.scrollFrame:SetScrollChild(f.scrollFrame.scrollChild)
+    local scrollChild = CreateFrame("Frame", "ICTContent", scrollFrame)
+    scrollChild:SetSize(100, 100)
+    scrollChild:SetPoint("TOPLEFT", 5, -5)
+    scrollFrame:SetScrollChild(scrollChild)
+    scrollChild.cells = {}
 
-    content = f.scrollFrame.scrollChild
-    content.cells = {}
-    ICT:CreatePlayerDropdown(f)
-    Options:CreateOptionDropdown(f)
+    ICT:CreatePlayerDropdown()
+    Options:CreateOptionDropdown()
     ICT:DisplayPlayer()
     return f
 end
 
+local function getContent()
+    return ICT.frame.scrollFrame:GetScrollChild()
+end
+
 -- Gets the associated cell or create it if it doesn't exist yet.
 local function getCell(x, y)
+    local content = getContent()
     local name = string.format("cell(%s, %s)", x, y)
     if not content.cells[name] then
         local button = CreateFrame("Button", name, content)
-        button:SetSize(CELL_WIDTH, CELL_HEIGHT)
-        button:SetPoint("TOPLEFT", (x - 1) * CELL_WIDTH, -(y - 1) * CELL_HEIGHT)
+        button:SetSize(cellWidth, cellHeight)
+        button:SetPoint("TOPLEFT", (x - 1) * cellWidth, -(y - 1) * cellHeight)
         content.cells[name] = button
     end
     local cell = content.cells[name]
@@ -110,15 +139,15 @@ local function instanceTooltipOnEnter(key, instance)
         GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), ICT:hex2rgb(availableColor))
 
         -- Display which players are locked or not for this instance.
-        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
-            local playerInstance = Player:GetInstance(player, key)
+        for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
+            local playerInstance = Instances:GetInstanceByName(player, key) or { locked = false }
             local playerColor = playerInstance.locked and lockedColor or availableColor
             GameTooltip:AddLine(Player:GetName(player), ICT:hex2rgb(playerColor))
         end
 
         -- Display all available currency for the instance.
         for tokenId, _ in ICT:spairs(instanceInfo.tokenIds or {}, ICT.CurrencySort) do
-            if db.options.currency[tokenId] then
+            if ICT.db.options.currency[tokenId] then
                 local max = instanceInfo.maxEmblems(instance, tokenId)
                 local available = instance.available[tokenId] or max
                 local currency = ICT:GetCurrencyName(tokenId)
@@ -130,12 +159,8 @@ local function instanceTooltipOnEnter(key, instance)
     end
 end
 
-local function hideTooltipOnLeave(self, motion)
-    GameTooltip:Hide()
-end
-
 local function updateSectionTitle(x, offset, title)
-    local collapsed = db.options.collapsible[title]
+    local collapsed = ICT.db.options.collapsible[title]
     local icon = collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP:12"
     local titleText = string.format("|T%s:12|t%s", icon, title)
     return printCell(x, offset, titleText, titleColor)
@@ -146,7 +171,7 @@ local function printSectionTitle(x, offset, title, f)
     updateSectionTitle(x, offset, title):SetScript(
         "OnClick",
         function()
-            db.options.collapsible[title] = not db.options.collapsible[title]
+            ICT.db.options.collapsible[title] = not ICT.db.options.collapsible[title]
             updateSectionTitle(x, offset, title)
             ICT:DisplayPlayer()
         end
@@ -163,7 +188,7 @@ local function printInstances(title, instances, x, offset)
     offset = printSectionTitle(x, offset, title)
 
     -- If the section is collapsible then short circuit here.
-    if not db.options.collapsible[title] then
+    if not ICT.db.options.collapsible[title] then
         for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
             if Options.showInstance(instance) then
                 local color = instance.locked and lockedColor or availableColor
@@ -203,7 +228,7 @@ end
 local function printQuestsForCurrency(player, tokenId)
     local printTitle = true
     for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
-        if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or db.options.allQuests) then
+        if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
             if printTitle then
                 printTitle = false
                 GameTooltip:AddLine("Quests", ICT:hex2rgb(titleColor))
@@ -220,13 +245,13 @@ local function currencyTooltipOnEnter(selectedPlayer, tokenId)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine(ICT:GetCurrencyName(tokenId), ICT:hex2rgb(titleColor))
 
-        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
+        for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
             local available = Player:AvailableCurrency(player, tokenId)
             local text = string.format("%s %s (%s)", Player:GetName(player), player.currency.wallet[tokenId] or "n/a", available)
             GameTooltip:AddLine(text, ICT:hex2rgb(availableColor))
 
         end
-        if not db.options.simpleCurrencyTooltip then
+        if ICT.db.options.verboseCurrencyTooltip then
             printInstancesForCurrency("Dungeons", selectedPlayer.dungeons, tokenId)
             printInstancesForCurrency("Raids", selectedPlayer.raids, tokenId)
             printQuestsForCurrency(selectedPlayer, tokenId)
@@ -269,13 +294,13 @@ local function printCurrencyShort(player, tokenId, x, offset)
 end
 
 local function printCurrency(player, x, offset)
-    if ICT:containsAnyValue(db.options.currency) then
+    if ICT:containsAnyValue(ICT.db.options.currency) then
         offset = printSectionTitle(x, offset, "Currency")
     end
-    if not db.options.collapsible["Currency"] then
-        local printCurrency = db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
+    if not ICT.db.options.collapsible["Currency"] then
+        local printCurrency = ICT.db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
         for tokenId, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
-            if db.options.currency[tokenId] then
+            if ICT.db.options.currency[tokenId] then
                 offset = printCurrency(player, tokenId, x, offset)
             end
         end
@@ -290,7 +315,7 @@ local function questTooltipOnEnter(name, quest)
         local currency = ICT:GetCurrencyName(quest.tokenId)
         GameTooltip:AddLine(string.format("%s: %s", currency, quest.seals), ICT:hex2rgb(availableColor))
 
-        for _, player in ICT:spairsByValue(db.players, PlayerSort) do
+        for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
             local color = getQuestColor(player, quest)
             GameTooltip:AddLine(Player:GetName(player), ICT:hex2rgb(color))
         end
@@ -300,16 +325,16 @@ end
 
 local function isQuestAvailable(player)
     return function(quest)
-        return db.options.currency[quest.tokenId] and (player.quests.prereq[quest.key] or db.options.allQuests)
+        return ICT.db.options.currency[quest.tokenId] and (player.quests.prereq[quest.key] or ICT.db.options.allQuests)
     end
 end
 
 local function printQuests(player, x, offset)
-    if not db.options.hideQuests then
+    if ICT.db.options.showQuests then
         if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
             offset = printSectionTitle(x, offset, "Quests")
         end
-        if not db.options.collapsible["Quests"] then
+        if not ICT.db.options.collapsible["Quests"] then
             -- sort by token then name...
             for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
                 if isQuestAvailable(player)(quest) then
@@ -327,17 +352,16 @@ local function printQuests(player, x, offset)
     return offset
 end
 
-
 local function cancelTicker(k)
     if tickers[k] then
         tickers[k]:Cancel()
     end
 end
 
-local function printTimer(x, offset, title, f)
-    printCell(x, offset, title .. "  " .. f(), availableColor)
+local function printTimer(x, offset, title, time)
+    printCell(x, offset, title .. "  " .. time(), availableColor)
     cancelTicker(title)
-    tickers[title] = C_Timer.NewTicker(1, function () printCell(x, offset, title .. "  " .. f(), availableColor) end)
+    tickers[title] = C_Timer.NewTicker(1, function () printCell(x, offset, title .. "  " .. time(), availableColor) end)
     return offset + 1
 end
 
@@ -350,10 +374,10 @@ local function getWeeklyResetTime()
 end
 
 local function printResetTimers(x, offset)
-    if not db.options.hideResetTimers then
+    if ICT.db.options.showResetTimers then
         offset = printSectionTitle(x, offset, "Reset")
 
-        if db.options.collapsible["Reset"] then
+        if ICT.db.options.collapsible["Reset"] then
             cancelTicker("Daily")
             cancelTicker("Weekly")
         else
@@ -368,12 +392,16 @@ local function printResetTimers(x, offset)
     return offset
 end
 
+local function getSelectedOrDefault()
+    if not ICT.db.players[ICT.selectedPlayer] then
+        ICT.selectedPlayer = ICT:GetFullName()
+    end
+    return ICT.db.players[ICT.selectedPlayer]
+end
+
 -- Prints out selected players with associated instances and currency infromation.
 function ICT:DisplayPlayer()
-    local player = (db or InstanceCurrencyDB).players[selectedPlayer]
-    if not player then
-        return
-    end
+    local player = getSelectedOrDefault()
     local x = 1
     local offset = 1
     local name = string.format("|T%s:12|t%s", ICT.ClassIcons[player.class], Player:GetName(player))
@@ -387,35 +415,63 @@ function ICT:DisplayPlayer()
     for i=offset,displayLength do
         hideCell(x, i)
     end
-    UIDropDownMenu_SetText(playerDropdown, Player:GetName(player))
+    UIDropDownMenu_SetText(ICT.frame.playerDropdown, Player:GetName(player))
     displayLength = offset
 end
 
-function ICT:CreatePlayerDropdown(f)
-    playerDropdown = CreateFrame("Frame", "PlayerSelection", f, 'UIDropDownMenuTemplate')
-    playerDropdown:SetPoint("TOP", f, 0, -30);
+function ICT:CreatePlayerDropdown()
+    local playerDropdown = CreateFrame("Frame", "PlayerSelection", ICT.frame, 'UIDropDownMenuTemplate')
+    ICT.frame.playerDropdown = playerDropdown
+    playerDropdown:SetPoint("TOP", ICT.frame, 0, -30);
     playerDropdown:SetAlpha(1)
     playerDropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    UIDropDownMenu_SetWidth(playerDropdown, 180)
+    UIDropDownMenu_SetWidth(playerDropdown, 160)
 
     UIDropDownMenu_Initialize(
         playerDropdown,
         function()
             local info = UIDropDownMenu_CreateInfo()
-            for _, player in ICT:spairsByValue(db.players, PlayerSort) do
+            for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
                 info.text = Player:GetName(player)
                 info.value = player.fullName
-                info.checked = selectedPlayer == player.fullName
-                info.isNotRadio = true
+                info.checked = ICT.selectedPlayer == player.fullName
                 info.func = function(self)
-                    selectedPlayer = self.value
-                    UIDropDownMenu_SetText(playerDropdown, Player:GetName(db.players[selectedPlayer]))
+                    ICT.selectedPlayer = self.value
+                    UIDropDownMenu_SetText(playerDropdown, Player:GetName(ICT.db.players[ICT.selectedPlayer]))
                     ICT:DisplayPlayer()
                 end
                 UIDropDownMenu_AddButton(info)
             end
         end
     )
+end
+
+function ICT:ResetFrameButton()
+    local button = CreateFrame("Button", "ResetSizeAndPosition", ICT.frame)
+    button:SetSize(15, 15)
+    button:SetAlpha(1)
+    button:SetIgnoreParentAlpha(true)
+    button:SetPoint("TOPLEFT", 2, -4)
+    button:RegisterForClicks("AnyUp")
+    button:SetNormalTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Up")
+    button:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
+    button:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
+    button:SetScript("OnEnter", function(self, motion)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:AddLine("Reset size and position")
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnClick", function() drawFrame(defaultX, defaultY, defaultWidth, defaultHeight) end)
+    button:SetScript("OnLeave", hideTooltipOnLeave)
+end
+
+function ICT:ResizeFrameButton()
+    local button = CreateFrame("BUTTON", "some_cool_name", ICT.frame, "PanelResizeButtonTemplate")
+    button:Init(ICT.frame, 200, defaultHeight - 200, defaultWidth + 200, defaultHeight + 200)
+    button:SetSize(20, 20)
+    button:SetAlpha(1)
+    button:SetIgnoreParentAlpha(true)
+    button:SetPoint("BottomRight", 0, 0)
 end

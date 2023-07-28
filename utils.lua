@@ -157,6 +157,13 @@ function ICT:putIfAbsent(t, key, value)
     end
 end
 
+function ICT:setDefaultValue(t, key, value)
+    if t[key] == nil then
+        print("nil")
+    end
+    t[key] = t[key] == nil and value or t[key]
+end
+
 -- Helper function when debugging.
 function ICT:printKeys(t)
     for k, _ in pairs(t) do

@@ -13,4 +13,4 @@ currency.lua
 player.lua
 options.lua
 main.lua
-InstanceCurrencyTracker.lua
+events.lua

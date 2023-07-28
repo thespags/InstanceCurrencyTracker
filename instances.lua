@@ -181,6 +181,27 @@ function Instances:Lock(instance, reset, encounterProgress, i)
     end
 end
 
+-- We probably want to merge these three tables so we don't need this funny business.
+-- But then we have to filter the table for each type on certain views.
+function Instances:GetInstanceByName(player, name, maxPlayers)
+    if player.dungeons[name] then
+        return player.dungeons[name]
+    end
+    local raidName = name and maxPlayers and ICT:GetInstanceName(name, maxPlayers) or name
+    if player.raids[raidName] then
+        return player.raids[raidName]
+    end
+    if player.oldRaids[name] then
+        return player.oldRaids[name]
+    end
+    return nil
+end
+
+function Instances:GetInstanceById(player, instanceId, maxPlayers)
+    local name = ICT.InstanceInfo[instanceId] and ICT.InstanceInfo[instanceId].name
+    return self:GetInstanceByName(player, name, maxPlayers)
+end
+
 -- Get all saved instance information and lock the respective instance for the player.
 function Instances:Update(player)
     local numSavedInstances = GetNumSavedInstances()
@@ -188,11 +209,8 @@ function Instances:Update(player)
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
 
         if locked then
-            local name = ICT.InstanceInfo[instanceId].name
-            self:Lock(player.dungeons[name], reset, encounterProgress, i)
-            local raidName = name and ICT:GetInstanceName(name, maxPlayers)
-            self:Lock(player.raids[raidName], reset, encounterProgress, i)
-            self:Lock(player.oldRaids[name], reset, encounterProgress, i)
+            local instance = self:GetInstanceById(player, instanceId, maxPlayers)
+            self:Lock(instance, reset, encounterProgress, i)
         end
     end
 end

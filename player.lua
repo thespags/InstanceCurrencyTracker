@@ -63,22 +63,6 @@ function Player:addInstance(t, info, size)
     end
 end
 
--- We probably want to merge these three tables so we don't need this funny business.
--- But then we have to filter the table for each type on certain views.
-function Player:GetInstance(player, name)
-    if player.dungeons[name] then
-        return player.dungeons[name]
-    end
-    if player.raids[name] then
-        return player.raids[name]
-    end
-    if player.oldRaids[name] then
-        return player.oldRaids[name]
-    end
-    print("Unknown instance: " .. name .. " " .. player.fullName)
-    return { locked = false }
-end
-
 function Player:LocalizeInstanceNames(player)
     for _, v in pairs(player.dungeons) do
         ICT:LocalizeInstanceName(v)
@@ -151,71 +135,69 @@ function Player:CalculateQuest(player)
     end
 end
 
-function Player:Update(db, event)
-    for _, player in pairs(db.players) do
+function Player:Update()
+    for _, player in pairs(ICT.db.players) do
         Player:ResetInstances(player)
     end
-    local player, exists = self:GetPlayer(db)
-    --local previous = { CopyTable(player.currency.daily), CopyTable(player.currency.weekly) }
+    local player = self:GetPlayer()
     Instances:Update(player)
     self:CalculateCurrency(player)
     self:CalculateQuest(player)
 end
-
-function Player:foobar()
-end
-
 -- Returns the provided player or current player if none provided.
-function Player:GetPlayer(db, playerName)
+function Player:GetPlayer(playerName)
     playerName = playerName or ICT:GetFullName()
-    local exists = db.players[playerName] and true or false
-    local player = db.players[playerName] or Player:Create()
-    db.players[playerName] = player
-    return player, exists
+    local exists = ICT.db.players[playerName] and true or false
+    if not exists then
+        print(string.format("[%s] Creating player: %s", addOnName, playerName))
+    end
+    local player = ICT.db.players[playerName] or Player:Create()
+    ICT.db.players[playerName] = player
+    return player
 end
 
-function Player:WipePlayer(db, playerName)
-    if db.players[playerName] then
-        db.players[playerName] = nil
+function Player:WipePlayer(playerName)
+    if ICT.db.players[playerName] then
+        ICT.db.players[playerName] = nil
         print(string.format("[%s] Wiped player: %s", addOnName, playerName))
     else
         print(string.format("[%s] Unknown player: %s", addOnName, playerName))
     end
-    self:Update(db)
+    self:Update()
 end
 
-function Player:WipeRealm(db, realmName)
+function Player:WipeRealm(realmName)
     local count = 0
-    for name, _ in fpairsByValue(db.players, function(v) return v.realm == realmName end) do
+    for name, _ in fpairsByValue(ICT.db.players, function(v) return v.realm == realmName end) do
         count = count + 1
-        db.players[name] = nil
+        ICT.db.players[name] = nil
     end
     print(string.format("[%s] Wiped %s players on realm: %s", addOnName , count, realmName))
-    self:Update(db)
+    self:Update()
 end
 
-function Player:WipeAllPlayers(db)
+function Player:WipeAllPlayers()
     local count = 0
-    for _, _ in pairs(db.players) do
+    for _, _ in pairs(ICT.db.players) do
         count = count + 1
     end
-    db.players = {}
+    ICT.db.players = {}
     print(string.format("[%s] Wiped %s players", addOnName, count))
-    self:Update(db)
+    self:Update()
 end
 
 -- Remenant from the WeakAura
-function Player:EnablePlayer(db, playerName)
-    if db.players[playerName] then db.players[playerName].isDisabled = false end
+function Player:EnablePlayer(playerName)
+    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = false end
 end
 
 -- Remenant from the WeakAura
-function Player:DisablePlayer(db, playerName)
-    if db.players[playerName] then db.players[playerName].isDisabled = true end
+function Player:DisablePlayer(playerName)
+    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = true end
 end
 
 -- Remenant from the WeakAura
-function Player:ViewablePlayers(db, options)
+function Player:ViewablePlayers(options)
     local currentName = ICT:GetFullName()
     local currentRealm = GetRealmName()
     local playerFilter = function(v) return
@@ -227,14 +209,14 @@ function Player:ViewablePlayers(db, options)
         and not v.isDisabled
     end
     local players = {}
-    for _, player in fpairsByValue(db.players, playerFilter) do
+    for _, player in fpairsByValue(players, playerFilter) do
         players[player.fullName] = player
     end
     return players
 end
 
 function Player:GetName(player)
-    return InstanceCurrencyDB.options.verboseName and player.fullName or player.name
+    return ICT.db.options.verboseName and player.fullName or player.name
 end
 
 function PlayerSort(a, b)
