@@ -6,6 +6,31 @@ local Instances = ICT.Instances
 local Quests = ICT.Quests
 local Currency = ICT.Currency
 
+
+local function dailyReset(player)
+    Instances:ResetAll(player.dungeons)
+    for k, _ in pairs(ICT.CurrencyInfo) do
+        player.currency.daily[k] = player.currency.maxDaily[k] or 0
+    end
+    for k, _ in pairs(ICT.QuestInfo) do
+        player.quests.completed[k] = false
+    end
+end
+
+local function weeklyReset(player)
+    Instances:ResetAll(player.raids)
+    for k, _ in pairs(ICT.CurrencyInfo) do
+        player.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(player)
+    end
+end
+
+ICT.ResetInfo = {
+    [1] = { name = "Daily", func = dailyReset },
+    [3] = { name = "3 Day", func = function() end },
+    [5] = { name = "5 Day", func = function() end },
+    [7] = { name = "Weekly", func = weeklyReset },
+}
+
 function Player:Create()
     local player = {}
     player.name = UnitName("Player")
@@ -27,8 +52,8 @@ function Player:Create()
     }
     self:CreateInstances(player)
     -- Set transient information after copying main tables.
-    self:DailyReset(player)
-    self:WeeklyReset(player)
+    dailyReset(player)
+    weeklyReset(player)
     return player
 end
 
@@ -48,6 +73,9 @@ function Player:CreateInstances(player)
                 self:addInstance(player.dungeons, v)
             end
         elseif v.expansion < ICT.Expansions[ICT.WOTLK] then
+            self:addInstance(player.oldRaids, v)
+        end
+        if v.name == "Onyxia's Lair" then
             self:addInstance(player.oldRaids, v)
         end
     end
@@ -75,36 +103,23 @@ function Player:LocalizeInstanceNames(player)
     end
 end
 
-function Player:ResetInstances(player)
+function Player:ResetInstances()
     local timestamp = GetServerTime()
-    if not player.dailyReset or player.dailyReset < timestamp then
-        self:DailyReset(player)
-        print(string.format("[%s] Daily reset for player: %s", addOnName, player.fullName))
+    for k, v in pairs(ICT.db.reset) do
+        if v < timestamp then
+            print(string.format("[%s] %s reset, updating info.", addOnName, ICT.ResetInfo[k].name))
+            for _, player in pairs(ICT.db.players) do
+                ICT.ResetInfo[k].func(player)
+            end
+            -- There doesn't seem to be an API to get 3 or 5 day reset so recalculate from the last known piece.
+            ICT.db.reset[k] = v + k * 86400
+        end
     end
-    if not player.weeklyReset or player.weeklyReset < timestamp then
-        self:WeeklyReset(player)
-        print(string.format("[%s] Weekly reset for player: %s", addOnName, player.fullName))
+    -- Old raids have 3, 5 and 7 day resets... so use the instance specific timer.
+    -- TODO: in the future we may want to link raids to their reset length.
+    for _, player in pairs(ICT.db.players) do
+        Player:OldRaidReset(player)
     end
-    Player:OldRaidReset(player)
-end
-
-function Player:DailyReset(player)
-    Instances:ResetAll(player.dungeons)
-    for k, _ in pairs(ICT.CurrencyInfo) do
-        player.currency.daily[k] = player.currency.maxDaily[k] or 0
-    end
-    for k, _ in pairs(ICT.QuestInfo) do
-        player.quests.completed[k] = false
-    end
-    player.dailyReset = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
-end
-
-function Player:WeeklyReset(player)
-    Instances:ResetAll(player.raids)
-    for k, _ in pairs(ICT.CurrencyInfo) do
-        player.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(player)
-    end
-    player.weeklyReset = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
 
 function Player:OldRaidReset(player)
@@ -136,14 +151,14 @@ function Player:CalculateQuest(player)
 end
 
 function Player:Update()
-    for _, player in pairs(ICT.db.players) do
-        Player:ResetInstances(player)
-    end
+    Player:ResetInstances()
     local player = self:GetPlayer()
     Instances:Update(player)
     self:CalculateCurrency(player)
     self:CalculateQuest(player)
+    self:CalculateResetTimes(player)
 end
+
 -- Returns the provided player or current player if none provided.
 function Player:GetPlayer(playerName)
     playerName = playerName or ICT:GetFullName()
@@ -168,7 +183,7 @@ end
 
 function Player:WipeRealm(realmName)
     local count = 0
-    for name, _ in fpairsByValue(ICT.db.players, function(v) return v.realm == realmName end) do
+    for name, _ in ICT:fpairsByValue(ICT.db.players, function(v) return v.realm == realmName end) do
         count = count + 1
         ICT.db.players[name] = nil
     end
@@ -184,6 +199,19 @@ function Player:WipeAllPlayers()
     ICT.db.players = {}
     print(string.format("[%s] Wiped %s players", addOnName, count))
     self:Update()
+end
+
+function Player:CalculateResetTimes(player)
+    for _, instance in pairs(player.oldRaids) do
+        if instance.id == 249 then
+            ICT.db.reset[5] = ICT.db.reset[5] or instance.reset
+        end
+        if (instance.id == 509 or instance.id == 309) then
+            ICT.db.reset[3] = ICT.db.reset[3] or instance.reset
+        end
+    end
+    ICT.db.reset[1] = ICT.db.reset[1] or C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
+    ICT.db.reset[7] = ICT.db.reset[7] or C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
 
 -- Remenant from the WeakAura

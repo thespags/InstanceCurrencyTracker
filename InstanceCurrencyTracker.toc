@@ -6,6 +6,7 @@
 ## X-Curse-Project-ID: 892801
 ## X-Wago-ID: aNevrM62
 
+embeds.xml
 utils.lua
 instances.lua
 quests.lua
