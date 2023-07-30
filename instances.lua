@@ -131,6 +131,7 @@ ICT.InstanceInfo = {
     [550] = { name = "Tempest Keep", expansion = 2, maxPlayers = {25}, numEncounters = 4 },
     [564] = { name = "Black Temple", expansion = 2, maxPlayers = {25}, numEncounters = 9 },
     [534] = { name = "Hyjal Summit", expansion = 2, maxPlayers = {25}, numEncounters = 5 },
+    [568] = { name = "Zul'Aman ", expansion = 2, maxPlayers = {10}, numEncounters = 6},
     [580] = { name = "Sunwell Plateau", expansion = 2, maxPlayers = {25}, numEncounters = 6 },
     [409] = { name = "Molten Core", expansion = 1, maxPlayers = {40}, numEncounters = 10 },
     [309] = { name = "Zul'Gurub", expansion = 1, maxPlayers = {20}, numEncounters = 10},

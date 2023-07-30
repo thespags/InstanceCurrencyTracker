@@ -112,7 +112,10 @@ function Player:ResetInstances()
                 ICT.ResetInfo[k].func(player)
             end
             -- There doesn't seem to be an API to get 3 or 5 day reset so recalculate from the last known piece.
-            ICT.db.reset[k] = v + k * 86400
+            -- Keep going until we have a time in the future, the player may have not logged in a while.
+            while (ICT.db.reset[k] < timestamp) do
+                ICT.db.reset[k] = ICT.db.reset[k] + k * 86400
+            end
         end
     end
     -- Old raids have 3, 5 and 7 day resets... so use the instance specific timer.
@@ -203,10 +206,12 @@ end
 
 function Player:CalculateResetTimes(player)
     for _, instance in pairs(player.oldRaids) do
+        -- Ony40 has a 5 day reset.
         if instance.id == 249 then
             ICT.db.reset[5] = ICT.db.reset[5] or instance.reset
         end
-        if (instance.id == 509 or instance.id == 309) then
+        -- AQ20, ZG, and ZA have 3 day resets.
+        if instance.id == 509 or instance.id == 309 or instance.id == 568 then
             ICT.db.reset[3] = ICT.db.reset[3] or instance.reset
         end
     end

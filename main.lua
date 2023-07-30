@@ -169,9 +169,10 @@ local function updateSectionTitle(x, offset, title)
     return printCell(x, offset, titleText, titleColor)
 end
 
-local function printSectionTitle(x, offset, title, f)
+local function printSectionTitle(x, offset, title, tooltip)
     offset = offset + 1
-    updateSectionTitle(x, offset, title):SetScript(
+    local cell = updateSectionTitle(x, offset, title)
+    cell:SetScript(
         "OnClick",
         function()
             ICT.db.options.collapsible[title] = not ICT.db.options.collapsible[title]
@@ -179,7 +180,17 @@ local function printSectionTitle(x, offset, title, f)
             ICT:DisplayPlayer()
         end
     )
+    cell:SetScript("OnEnter", tooltip)
+    cell:SetScript("OnLeave", hideTooltipOnLeave)
     return offset + 1
+end
+
+local function instanceSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Instance Color Codes")
+    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
+    GameTooltip:AddLine("Locked", ICT:hex2rgb(lockedColor))
+    GameTooltip:Show()
 end
 
 -- Prints all the instances with associated tooltips.
@@ -188,7 +199,7 @@ local function printInstances(title, instances, x, offset)
         return offset
     end
 
-    offset = printSectionTitle(x, offset, title)
+    offset = printSectionTitle(x, offset, title, instanceSectionTooltip)
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
@@ -336,10 +347,19 @@ local function isQuestAvailable(player)
     end
 end
 
+local function questSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Quest Color Codes")
+    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
+    GameTooltip:AddLine("Completed", ICT:hex2rgb(lockedColor))
+    GameTooltip:AddLine("Missing Prerequesite", ICT:hex2rgb(unavailableColor))
+    GameTooltip:Show()
+end
+
 local function printQuests(player, x, offset)
     if ICT.db.options.showQuests then
         if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
-            offset = printSectionTitle(x, offset, "Quests")
+            offset = printSectionTitle(x, offset, "Quests", questSectionTooltip)
         end
         if not ICT.db.options.collapsible["Quests"] then
             -- sort by token then name...
@@ -365,6 +385,16 @@ local function cancelTicker(k)
     end
 end
 
+local function timerSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Reset Timer")
+    local r, g, b = ICT:hex2rgb(availableColor)
+    GameTooltip:AddLine("Countdown to the next reset respectively for 1, 3, 5 and 7 days.", r, g, b, true)
+    GameTooltip:AddLine("\n")
+    GameTooltip:AddLine("Note: 3 and 5 day resets need a known lockout to calculate from as Blizzard doesn't provide a way through their API.", r, g, b, true)
+    GameTooltip:Show()
+end
+
 local function printTimer(x, offset, title, time)
     printCell(x, offset, title .. "  " .. time(), availableColor)
     cancelTicker(title)
@@ -381,13 +411,13 @@ end
 local function printResetTimers(x, offset)
     cancelResetTimerTickers()
     if ICT:containsAnyValue(ICT.db.options.reset) then
-        offset = printSectionTitle(x, offset, "Reset")
+        offset = printSectionTitle(x, offset, "Reset", timerSectionTooltip)
 
-        if ICT.db.options.collapsible["Reset"] then
-        else
+        if not ICT.db.options.collapsible["Reset"] then
             for k, v in ICT:spairs(ICT.db.reset) do
                 if ICT.db.options.reset[k] then
-                    offset = printTimer(x, offset, ICT.ResetInfo[k].name, function() return ICT:DisplayTime(v - GetServerTime()) end)
+                    local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
+                    offset = printTimer(x, offset, ICT.ResetInfo[k].name, time)
                 end
             end
         end

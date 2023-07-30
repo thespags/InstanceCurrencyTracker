@@ -1,0 +1,7 @@
+package-as: InstanceCurrencyTrackerß
+
+externals:
+    Libs/LibStub:                https://repos.wowace.com/wow/libstub/trunk
+    Libs/LibDataBroker-1.1       https://repos.wowace.com/wow/libdatabroker-1-1
+    Libs/LibUIDropDownMenu       https://repos.wowace.com/wow/libuidropdownmenu/trunk
+    Libs/LibDBIcon-1.0           https://repos.wowace.com/wow/libdbicon-1-0/trunk
