@@ -150,17 +150,7 @@ function ICT:containsAnyValue(t, op)
     return self:containsAnyKey(t, function(k) return op and op(t[k]) or not op and t[k] end)
 end
 
--- Convenience to add to a table if it's not already there. Ended up not using.
 function ICT:putIfAbsent(t, key, value)
-    if not t[key] then
-        t[key] = value
-    end
-end
-
-function ICT:setDefaultValue(t, key, value)
-    if t[key] == nil then
-        print("nil")
-    end
     t[key] = t[key] == nil and value or t[key]
 end
 
@@ -168,6 +158,19 @@ end
 function ICT:printKeys(t)
     for k, _ in pairs(t) do
         print(k)
+    end
+end
+
+-- Helper function when debugging.
+function ICT:printValues(t)
+    for k, v in pairs(t) do
+        print(string.format("%s %s", k, v))
+    end
+end
+
+function ICT.dprint(text)
+    if false then
+        print(text)
     end
 end
 

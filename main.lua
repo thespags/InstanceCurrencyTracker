@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
 local Player = ICT.Player
 local Options = ICT.Options
 local Instances = ICT.Instances
@@ -21,13 +22,13 @@ local tickers = {}
 local displayLength = 0
 
 local function drawFrame(x, y, width, height)
-    ICT.db.X = x
-	ICT.db.Y = y
-    ICT.db.width = width
-    ICT.db.height = height
+    ICT.db.X = x or defaultX
+	ICT.db.Y = y or defaultY
+    ICT.db.width = width or defaultWidth
+    ICT.db.height = height or defaultHeight
     ICT.frame:ClearAllPoints()
-    ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
-    ICT.frame:SetSize(width, height)
+    ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", ICT.db.X, ICT.db.Y)
+    ICT.frame:SetSize(ICT.db.width, ICT.db.height)
 end
 
 local function hideTooltipOnLeave(self, motion)
@@ -46,9 +47,11 @@ local function enableMoving(frame, callback)
 end
 
 function ICT:CreateAddOn()
-    local f = CreateFrame("Frame", "InstanceCurrencyTracker", LFGParentFrame, "BasicFrameTemplateWithInset")
+    local f = CreateFrame("Frame", "InstanceCurrencyTracker", UIParent, "BasicFrameTemplateWithInset")
     ICT.frame = f
-    drawFrame(ICT.db.X or defaultX, ICT.db.y or defaultY, ICT.db.width or defaultWidth, ICT.db.height or defaultHeight)
+
+    f:SetFrameStrata("HIGH")
+    drawFrame(ICT.db.X, ICT.db.y, ICT.db.width, ICT.db.height)
     enableMoving(f)
     f:SetAlpha(.5)
     f:Hide()
@@ -82,7 +85,6 @@ function ICT:CreateAddOn()
     ICT:CreatePlayerDropdown()
     Options:CreateOptionDropdown()
     ICT:DisplayPlayer()
-    return f
 end
 
 local function getContent()
@@ -132,11 +134,11 @@ local function instanceTooltipOnEnter(key, instance)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         local instanceColor = instance.locked and lockedColor or nameColor
         GameTooltip:AddLine(instance.name, ICT:hex2rgb(instanceColor))
-        local instanceInfo = ICT.InstanceInfo[instance.id]
+        local info = ICT.InstanceInfo[instance.id]
 
         -- Display the available encounters for the instance.
-        local encountersDone = instanceInfo.numEncounters - (instance.encounterProgress or 0)
-        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, instanceInfo.numEncounters), ICT:hex2rgb(availableColor))
+        local encountersDone = info.numEncounters - (instance.encounterProgress or 0)
+        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, info.numEncounters), ICT:hex2rgb(availableColor))
 
         -- Display which players are locked or not for this instance.
         for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
@@ -146,9 +148,10 @@ local function instanceTooltipOnEnter(key, instance)
         end
 
         -- Display all available currency for the instance.
-        for tokenId, _ in ICT:spairs(instanceInfo.tokenIds or {}, ICT.CurrencySort) do
-            if ICT.db.options.currency[tokenId] then
-                local max = instanceInfo.maxEmblems(instance, tokenId)
+        for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
+            -- Onyxia 40 is reused and has 0 emblems so skip currency.
+            local max = info.maxEmblems(instance, tokenId)
+            if ICT.db.options.currency[tokenId] and max ~= 0 then
                 local available = instance.available[tokenId] or max
                 local currency = ICT:GetCurrencyName(tokenId)
                 local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
@@ -166,9 +169,10 @@ local function updateSectionTitle(x, offset, title)
     return printCell(x, offset, titleText, titleColor)
 end
 
-local function printSectionTitle(x, offset, title, f)
+local function printSectionTitle(x, offset, title, tooltip)
     offset = offset + 1
-    updateSectionTitle(x, offset, title):SetScript(
+    local cell = updateSectionTitle(x, offset, title)
+    cell:SetScript(
         "OnClick",
         function()
             ICT.db.options.collapsible[title] = not ICT.db.options.collapsible[title]
@@ -176,7 +180,17 @@ local function printSectionTitle(x, offset, title, f)
             ICT:DisplayPlayer()
         end
     )
+    cell:SetScript("OnEnter", tooltip)
+    cell:SetScript("OnLeave", hideTooltipOnLeave)
     return offset + 1
+end
+
+local function instanceSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Instance Color Codes")
+    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
+    GameTooltip:AddLine("Locked", ICT:hex2rgb(lockedColor))
+    GameTooltip:Show()
 end
 
 -- Prints all the instances with associated tooltips.
@@ -185,7 +199,7 @@ local function printInstances(title, instances, x, offset)
         return offset
     end
 
-    offset = printSectionTitle(x, offset, title)
+    offset = printSectionTitle(x, offset, title, instanceSectionTooltip)
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
@@ -207,14 +221,16 @@ local function printInstancesForCurrency(title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     local printTitle = true
     for _, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
-        if Options.showInstance(instance) and ICT.InstanceInfo[instance.id].tokenIds[tokenId] then
+        local info = ICT.InstanceInfo[instance.id]
+        local max = info.maxEmblems(instance, tokenId)
+        -- Onyxia 40 is reused and has 0 emblems so skip currency.
+        if Options.showInstance(instance) and info.tokenIds[tokenId] and max ~= 0 then
             if printTitle then
                 printTitle = false
                 GameTooltip:AddLine(title, ICT:hex2rgb(titleColor))
             end
             -- Displays available currency out of the total currency for this instance.
             local color = instance.locked and lockedColor or availableColor
-            local max = ICT.InstanceInfo[instance.id].maxEmblems(instance, tokenId)
             local available = instance.available[tokenId] or max
             GameTooltip:AddLine(string.format("%s: %s/%s", instance.name, available, max), ICT:hex2rgb(color))
         end
@@ -227,14 +243,16 @@ end
 
 local function printQuestsForCurrency(player, tokenId)
     local printTitle = true
-    for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
-        if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
-            if printTitle then
-                printTitle = false
-                GameTooltip:AddLine("Quests", ICT:hex2rgb(titleColor))
+    if ICT.db.options.showQuests then
+        for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
+            if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
+                if printTitle then
+                    printTitle = false
+                    GameTooltip:AddLine("Quests", ICT:hex2rgb(titleColor))
+                end
+                local color = getQuestColor(player, quest)
+                GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), ICT:hex2rgb(color))
             end
-            local color = getQuestColor(player, quest)
-            GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), ICT:hex2rgb(color))
         end
     end
 end
@@ -329,10 +347,19 @@ local function isQuestAvailable(player)
     end
 end
 
+local function questSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Quest Color Codes")
+    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
+    GameTooltip:AddLine("Completed", ICT:hex2rgb(lockedColor))
+    GameTooltip:AddLine("Missing Prerequesite", ICT:hex2rgb(unavailableColor))
+    GameTooltip:Show()
+end
+
 local function printQuests(player, x, offset)
     if ICT.db.options.showQuests then
         if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
-            offset = printSectionTitle(x, offset, "Quests")
+            offset = printSectionTitle(x, offset, "Quests", questSectionTooltip)
         end
         if not ICT.db.options.collapsible["Quests"] then
             -- sort by token then name...
@@ -358,6 +385,16 @@ local function cancelTicker(k)
     end
 end
 
+local function timerSectionTooltip(self, motion)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("Reset Timer")
+    local r, g, b = ICT:hex2rgb(availableColor)
+    GameTooltip:AddLine("Countdown to the next reset respectively for 1, 3, 5 and 7 days.", r, g, b, true)
+    GameTooltip:AddLine("\n")
+    GameTooltip:AddLine("Note: 3 and 5 day resets need a known lockout to calculate from as Blizzard doesn't provide a way through their API.", r, g, b, true)
+    GameTooltip:Show()
+end
+
 local function printTimer(x, offset, title, time)
     printCell(x, offset, title .. "  " .. time(), availableColor)
     cancelTicker(title)
@@ -365,29 +402,26 @@ local function printTimer(x, offset, title, time)
     return offset + 1
 end
 
-local function getDailyResetTime()
-    return ICT:DisplayTime(C_DateAndTime.GetSecondsUntilDailyReset())
-end
-
-local function getWeeklyResetTime()
-    return ICT:DisplayTime(C_DateAndTime.GetSecondsUntilWeeklyReset())
+local function cancelResetTimerTickers()
+    for k, _ in ICT:spairs(ICT.db.reset) do
+        cancelTicker(ICT.ResetInfo[k].name)
+    end
 end
 
 local function printResetTimers(x, offset)
-    if ICT.db.options.showResetTimers then
-        offset = printSectionTitle(x, offset, "Reset")
+    cancelResetTimerTickers()
+    if ICT:containsAnyValue(ICT.db.options.reset) then
+        offset = printSectionTitle(x, offset, "Reset", timerSectionTooltip)
 
-        if ICT.db.options.collapsible["Reset"] then
-            cancelTicker("Daily")
-            cancelTicker("Weekly")
-        else
-            offset = printTimer(x, offset, "Daily", getDailyResetTime)
-            offset = printTimer(x, offset, "Weekly", getWeeklyResetTime)
+        if not ICT.db.options.collapsible["Reset"] then
+            for k, v in ICT:spairs(ICT.db.reset) do
+                if ICT.db.options.reset[k] then
+                    local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
+                    offset = printTimer(x, offset, ICT.ResetInfo[k].name, time)
+                end
+            end
         end
         hideCell(x, offset)
-    else
-        cancelTicker("Daily")
-        cancelTicker("Weekly")
     end
     return offset
 end
@@ -415,34 +449,34 @@ function ICT:DisplayPlayer()
     for i=offset,displayLength do
         hideCell(x, i)
     end
-    UIDropDownMenu_SetText(ICT.frame.playerDropdown, Player:GetName(player))
+    LibDD:UIDropDownMenu_SetText(ICT.frame.playerDropdown, Player:GetName(player))
     displayLength = offset
 end
 
 function ICT:CreatePlayerDropdown()
-    local playerDropdown = CreateFrame("Frame", "PlayerSelection", ICT.frame, 'UIDropDownMenuTemplate')
+    local playerDropdown = LibDD:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
     ICT.frame.playerDropdown = playerDropdown
     playerDropdown:SetPoint("TOP", ICT.frame, 0, -30);
     playerDropdown:SetAlpha(1)
     playerDropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    UIDropDownMenu_SetWidth(playerDropdown, 160)
+    LibDD:UIDropDownMenu_SetWidth(playerDropdown, 160)
 
-    UIDropDownMenu_Initialize(
+    LibDD:UIDropDownMenu_Initialize(
         playerDropdown,
         function()
-            local info = UIDropDownMenu_CreateInfo()
+            local info = LibDD:UIDropDownMenu_CreateInfo()
             for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
                 info.text = Player:GetName(player)
                 info.value = player.fullName
                 info.checked = ICT.selectedPlayer == player.fullName
                 info.func = function(self)
                     ICT.selectedPlayer = self.value
-                    UIDropDownMenu_SetText(playerDropdown, Player:GetName(ICT.db.players[ICT.selectedPlayer]))
+                    LibDD:UIDropDownMenu_SetText(playerDropdown, Player:GetName(ICT.db.players[ICT.selectedPlayer]))
                     ICT:DisplayPlayer()
                 end
-                UIDropDownMenu_AddButton(info)
+                LibDD:UIDropDownMenu_AddButton(info)
             end
         end
     )

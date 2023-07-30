@@ -15,7 +15,7 @@ end
 
 local sameEmblemsPerBossPerSize = function(emblems10, emblems25)
     return function(instance)
-        return (instance.maxPlayers == 10 and emblems10 or emblems25) * (numEncounters(instance) - instance.encounterProgress)
+        return (instance.maxPlayers == 10 and emblems10 or instance.maxPlayers == 25 and emblems25 or 0) * (numEncounters(instance) - instance.encounterProgress)
     end
 end
 
@@ -26,7 +26,15 @@ end
 
 -- Checks if the last boss in the instance is killed, using the number of encounters as the last boss index.
 local isLastBossKilled = function(instance)
-    return isBossKilled(instance, numEncounters(instance))
+    local index
+    -- Override for Gundrak as lastboss is the optional boss. 
+    -- TODO COS may behave similiarly 
+    if instance.id == 604 then
+        index = 4
+    else
+        index = numEncounters(instance)
+    end
+    return isBossKilled(instance, index)
 end
 
 local addOneLastBossAlive = function(instance)
@@ -64,7 +72,7 @@ end
 
 local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
     return function(instance)
-        return (instance.maxPlayers == 10 and emblemsPer10 or emblemsPer25) * numEncounters(instance)
+        return (instance.maxPlayers == 10 and emblemsPer10 or instance.maxPlayers == 25 and emblemsPer25 or 0) * numEncounters(instance)
     end
 end
 
@@ -123,13 +131,16 @@ ICT.InstanceInfo = {
     [550] = { name = "Tempest Keep", expansion = 2, maxPlayers = {25}, numEncounters = 4 },
     [564] = { name = "Black Temple", expansion = 2, maxPlayers = {25}, numEncounters = 9 },
     [534] = { name = "Hyjal Summit", expansion = 2, maxPlayers = {25}, numEncounters = 5 },
+    [568] = { name = "Zul'Aman ", expansion = 2, maxPlayers = {10}, numEncounters = 6},
     [580] = { name = "Sunwell Plateau", expansion = 2, maxPlayers = {25}, numEncounters = 6 },
-    [409] = { name = "Molten Core", expansion = 1, maxPlayers = {25}, numEncounters = 10 },
-    [309] = { name = "Zul'Gurub", expansion = 1, maxPlayers = {25}, numEncounters = 10},
-    [469] = { name = "Blackwing Lair", expansion = 1, maxPlayers = {25}, numEncounters = 8 },
-    -- What is max size for aq20 and zg post classic?
-    [509] = { name = "Ruins of Ahn'Qiraj", expansion = 1, maxPlayers = {25}, numEncounters = 6 },
-    [531] = { name = "Temple of Ahn'Qiraj", expansion = 1, maxPlayers = {25}, numEncounters = 9 },
+    [409] = { name = "Molten Core", expansion = 1, maxPlayers = {40}, numEncounters = 10 },
+    [309] = { name = "Zul'Gurub", expansion = 1, maxPlayers = {20}, numEncounters = 10},
+    [469] = { name = "Blackwing Lair", expansion = 1, maxPlayers = {40}, numEncounters = 8 },
+    [509] = { name = "Ruins of Ahn'Qiraj", expansion = 1, maxPlayers = {20}, numEncounters = 6 },
+    [531] = { name = "Temple of Ahn'Qiraj", expansion = 1, maxPlayers = {40}, numEncounters = 9 },
+}
+ICT.ReusedInstance = {
+    [249] = { expansion = 1 }
 }
 -- Redundant but hopefully simplifies filters and mappings.
 for k, v in pairs(ICT.InstanceInfo) do
@@ -175,7 +186,7 @@ end
 function Instances:Lock(instance, reset, encounterProgress, i)
     if instance then
         instance.locked = true
-        instance.reset = reset
+        instance.reset = reset + GetServerTime()
         instance.encounterProgress = encounterProgress
         instance.instanceIndex = i
     end

@@ -1,25 +1,52 @@
 local addOnName, ICT = ...
 
+local icon = LibStub("LibDBIcon-1.0", true)
 local Player = ICT.Player
 local Instances = ICT.Instances
 local Options = ICT.Options
 local maxPlayers, instanceId
 
 local function getOrCreateDb()
-    if not InstanceCurrencyDB then
-        local db = {}
-        db.players = db.players or {}
-        db.options = db.options or {}
-        db.options.collapsible = db.options.collapsible or {}
-        InstanceCurrencyDB = db
+    local db = InstanceCurrencyDB or {}
+    InstanceCurrencyDB = db
+    ICT:putIfAbsent(db.options, "players", {})
+    ICT:putIfAbsent(db.options, "options", {})
+    ICT:putIfAbsent(db.options, "collapsible", {})
+    db.resetTimers = db.resetTimers or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
+    return db
+end
+
+local function flipFrame()
+    if not ICT.frame:IsVisible() then
+        ICT.frame:Show()
+    else
+        ICT.frame:Hide()
     end
-    return InstanceCurrencyDB
+end
+
+local function initMinimap()
+    local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject(addOnName, {
+        type = "data source",
+        text = addOnName,
+        -- Gold Coin
+        icon = "237281",
+        OnClick = function(self, btn)
+            flipFrame()
+        end,
+        OnTooltipShow = function(tooltip)
+            if not tooltip or not tooltip.AddLine then return end
+            tooltip:AddLine(addOnName)
+        end,
+    })
+    icon:Register(addOnName, miniButton, ICT.db.minimap)
+    Options:FlipMinimapIcon()
 end
 
 local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
+        initMinimap()
         Player:Update()
         for _, player in pairs(ICT.db.players) do
             -- Player may have already been created but we added new instances.
@@ -29,8 +56,9 @@ local function initEvent(self, event, eventAddOn)
         end
         ICT:CreateAddOn()
         print(string.format("[%s] Initialized...", addOnName))
-        LFGParentFrame:HookScript("OnShow", function() ICT.frame:Show() end)
-        LFGParentFrame:HookScript("OnHide", function() ICT.frame:Hide() end)
+        _, _, _, _, maxPlayers, _, _, instanceId = GetInstanceInfo()
+        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT.frame:Show() end end)
+        LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.anchorLFG then ICT.frame:Hide() end end)
     end
 end
 local initFrame = CreateFrame("Frame")
@@ -40,6 +68,7 @@ initFrame:SetScript("OnEvent", initEvent)
 local function updateEvent(self, event)
     -- Don't update if the addon hasn't been initialized yet.
     if ICT.frame and ICT.db then
+        ICT.dprint("updating: " .. event)
         Player:Update()
         ICT:DisplayPlayer()
     end
@@ -59,22 +88,32 @@ updateFrame:SetScript("OnEvent", updateEvent)
 
 -- message and add option
 local function messageResults(player, instance)
-    if instance then
+    -- Only broadcast if we are locked and collected something...
+    if instance and instance.locked then
+        ICT.dprint("broadcast: announcing")
         local info = ICT.InstanceInfo[instance.id]
+        -- Double check amounts before messaging.
+        -- It seems WOW may process oddly.
+        Player:Update()
+        ICT:DisplayPlayer()
         for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
-            if ICT.db.options.currency[tokenId] then
+            -- Onyxia 40 is reused and has 0 emblems so skip currency.
+            local max = info.maxEmblems(instance, tokenId)
+            if ICT.db.options.currency[tokenId] and max ~= 0 then
                 local available = instance.available[tokenId]
-                local max = info.maxEmblems(instance, tokenId)
                 local collected = max - available
                 local total = player.currency.wallet[tokenId]
                 local text = string.format("[%s] Collected %s of %s [%s] %s", addOnName, collected, max, total, ICT:GetCurrencyName(tokenId))
                 Options:PrintMessage(text)
             end
         end
+    elseif instance then
+        ICT.dprint("broadcast: no lock")
+    else
+        ICT.dprint("broadcast: no instance")
     end
 end
 local broadcastEvent =  function()
-    local db = getOrCreateDb()
     if maxPlayers and instanceId then
         local player = Player:GetPlayer()
         local instance = Instances:GetInstanceById(player, instanceId, maxPlayers)
@@ -94,24 +133,26 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     -- the rest (minus leading whitespace) is captured into rest.
     if command == "wipe" then
         if rest == "" then
-            Player:WipePlayer(db, ICT:GetFullName())
+            Player:WipePlayer(ICT:GetFullName())
         elseif rest == "all" then
-            Player:WipeAllPlayers(db)
+            Player:WipeAllPlayers()
         else
             command, rest = rest:match("^(%S*)%s*(.-)$")
             if command == "realm" then
                 if rest == "" then
-                    Player:WipeRealm(db, GetRealmName())
+                    Player:WipeRealm(GetRealmName())
                 else
-                    Player:WipeRealm(db, rest)
+                    Player:WipeRealm(rest)
                 end
             elseif command == "player" then
-                Player:WipePlayer(db, rest)
+                Player:WipePlayer(rest)
             else
                 print("Invalid command")
             end
         end
         -- Refresh frame
         ICT:DisplayPlayer()
+    elseif rest == "" then
+        flipFrame()
     end
 end
