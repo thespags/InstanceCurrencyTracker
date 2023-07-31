@@ -1,7 +1,5 @@
 local addOnName, ICT = ...
 
-local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
-local icon = LibStub("LibDBIcon-1.0", true)
 ICT.Options = {}
 local Options = ICT.Options
 local frameLabel = "      Frame"
@@ -55,14 +53,14 @@ end
 
 function Options:FlipMinimapIcon()
     if ICT.db.options.showMinimapIcon then
-        icon:Show(addOnName)
+        ICT.LDBIcon:Show(addOnName)
     else
-        icon:Hide(addOnName)
+        ICT.LDBIcon:Hide(addOnName)
     end
 end
 
 local function createInfo()
-    local info = LibDD:UIDropDownMenu_CreateInfo()
+    local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
     -- It seems you can't simply do not self.checked if keepShownOnClick is true
     -- otherwise on the first click the menu gets confused...
     info.keepShownOnClick = true
@@ -70,14 +68,14 @@ local function createInfo()
 end
 
 function Options:CreateOptionDropdown()
-    local dropdown = LibDD:Create_UIDropDownMenu("ICTOptions", ICT.frame)
+    local dropdown = ICT.DDMenu:Create_UIDropDownMenu("ICTOptions", ICT.frame)
     dropdown:SetPoint("BOTTOM", 0, 4)
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    LibDD:UIDropDownMenu_SetWidth(dropdown, 160)
-    LibDD:UIDropDownMenu_SetText(dropdown, "Options")
+    ICT.DDMenu:UIDropDownMenu_SetWidth(dropdown, 160)
+    ICT.DDMenu:UIDropDownMenu_SetText(dropdown, "Options")
     local db = ICT.db
     local displayInstances = getOrCreateDisplayInstances()
     local currency = getOrCreateCurrencyOptions()
@@ -91,7 +89,7 @@ function Options:CreateOptionDropdown()
     ICT:putIfAbsent(db.options, "showQuests", true)
     ICT:putIfAbsent(db.options, "anchorLFG", true)
 
-    LibDD:UIDropDownMenu_Initialize(
+    ICT.DDMenu:UIDropDownMenu_Initialize(
         dropdown,
         function(self, level, menuList)
             if (level or 1) == 1 then
@@ -104,7 +102,7 @@ function Options:CreateOptionDropdown()
                     db.options.verboseName = not db.options.verboseName
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(realmName)
+                ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
 
                 -- Switches between short and long forms of currency.
                 local verboseCurrency = createInfo()
@@ -116,7 +114,7 @@ function Options:CreateOptionDropdown()
                     db.options.verboseCurrency = not db.options.verboseCurrency
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(verboseCurrency)
+                ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrency)
 
                 -- Turns on/off instance and quest information in currency.
                 local verboseCurrencyTooltip = createInfo()
@@ -127,7 +125,7 @@ function Options:CreateOptionDropdown()
                     db.options.verboseCurrencyTooltip = not db.options.verboseCurrencyTooltip
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(verboseCurrencyTooltip)
+                ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrencyTooltip)
 
                 -- Turn on/off sending messages when leaving an instance.
                 local groupMessage = createInfo()
@@ -137,7 +135,7 @@ function Options:CreateOptionDropdown()
                 groupMessage.func = function(self)
                     db.options.groupMessage = not db.options.groupMessage
                 end
-                LibDD:UIDropDownMenu_AddButton(groupMessage)
+                ICT.DDMenu:UIDropDownMenu_AddButton(groupMessage)
 
                 local reset = createInfo()
                 reset.text = "Reset Timers"
@@ -151,7 +149,7 @@ function Options:CreateOptionDropdown()
                     end
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(reset)
+                ICT.DDMenu:UIDropDownMenu_AddButton(reset)
 
                 -- Create the instance options.
                 local instances = createInfo()
@@ -166,7 +164,7 @@ function Options:CreateOptionDropdown()
                     end
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(instances)
+                ICT.DDMenu:UIDropDownMenu_AddButton(instances)
 
                 local quests = createInfo()
                 quests.text = "Quests"
@@ -179,7 +177,7 @@ function Options:CreateOptionDropdown()
                     db.options.showQuests = not wasChecked
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(quests)
+                ICT.DDMenu:UIDropDownMenu_AddButton(quests)
 
                 -- Create the currency options.
                 local currencyInfo = createInfo()
@@ -194,8 +192,8 @@ function Options:CreateOptionDropdown()
                     end
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(currencyInfo)
-                LibDD:UIDropDownMenu_AddSeparator()
+                ICT.DDMenu:UIDropDownMenu_AddButton(currencyInfo)
+                ICT.DDMenu:UIDropDownMenu_AddSeparator()
                 local display = createInfo()
                 -- Indent to make up for missing icon.
                 display.text = "      Frame"
@@ -203,7 +201,7 @@ function Options:CreateOptionDropdown()
                 display.midWidth = 1000
                 display.notCheckable = true
                 display.hasArrow = true
-                LibDD:UIDropDownMenu_AddButton(display)
+                ICT.DDMenu:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
                 if menuList == "Reset Timers" then
                     for k, v in ICT:spairs(ICT.ResetInfo) do
@@ -214,7 +212,7 @@ function Options:CreateOptionDropdown()
                             resets[k] = not resets[k]
                             ICT:DisplayPlayer()
                         end
-                        LibDD:UIDropDownMenu_AddButton(info, level)
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
                 end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
@@ -231,7 +229,7 @@ function Options:CreateOptionDropdown()
                             end
                             ICT:DisplayPlayer()
                         end
-                        LibDD:UIDropDownMenu_AddButton(info, level)
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Quests" then
                     -- Switches between all quests or only those available to the player.
@@ -242,7 +240,7 @@ function Options:CreateOptionDropdown()
                         db.options.allQuests = not db.options.allQuests
                         ICT:DisplayPlayer()
                     end
-                    LibDD:UIDropDownMenu_AddButton(allAvailableQuests, level)
+                    ICT.DDMenu:UIDropDownMenu_AddButton(allAvailableQuests, level)
 
                     local showQuests = createInfo()
                     showQuests.text = "Show Quests"
@@ -251,7 +249,7 @@ function Options:CreateOptionDropdown()
                         db.options.showQuests = not db.options.showQuests
                         ICT:DisplayPlayer()
                     end
-                    LibDD:UIDropDownMenu_AddButton(showQuests, level)
+                    ICT.DDMenu:UIDropDownMenu_AddButton(showQuests, level)
                 elseif menuList == "Currency" then
                     for k, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
                         local info = createInfo()
@@ -261,7 +259,7 @@ function Options:CreateOptionDropdown()
                             currency[k] = not currency[k]
                             ICT:DisplayPlayer()
                         end
-                        LibDD:UIDropDownMenu_AddButton(info, level)
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == frameLabel then
                     local anchorLFG = createInfo()
@@ -270,16 +268,17 @@ function Options:CreateOptionDropdown()
                     anchorLFG.func = function(self)
                         db.options.anchorLFG = not db.options.anchorLFG
                     end
-                    LibDD:UIDropDownMenu_AddButton(anchorLFG, level)
+                    ICT.DDMenu:UIDropDownMenu_AddButton(anchorLFG, level)
 
                     local minimap = createInfo()
                     minimap.text = "Show Minimap Icon"
                     minimap.checked = db.options.showMinimapIcon
                     minimap.func = function(self)
                         db.options.showMinimapIcon = not db.options.showMinimapIcon
+                        ICT.db.minimap.hide = not db.options.showMinimapIcon
                         Options:FlipMinimapIcon()
                     end
-                    LibDD:UIDropDownMenu_AddButton(minimap, level)
+                    ICT.DDMenu:UIDropDownMenu_AddButton(minimap, level)
                 end
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
@@ -293,7 +292,7 @@ function Options:CreateOptionDropdown()
                         displayInstances[id] = not Options.showInstance(v)
                         ICT:DisplayPlayer()
                     end
-                    LibDD:UIDropDownMenu_AddButton(info, level)
+                    ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
                 end
             end
         end

@@ -164,7 +164,7 @@ end
 -- Helper function when debugging.
 function ICT:printValues(t)
     for k, v in pairs(t) do
-        print(string.format("%s %s", k, v))
+        print(string.format("%s %s", k, tostring(v)))
     end
 end
 

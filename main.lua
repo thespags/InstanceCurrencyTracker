@@ -1,6 +1,5 @@
 local addOnName, ICT = ...
 
-local LibDD = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
 local Player = ICT.Player
 local Options = ICT.Options
 local Instances = ICT.Instances
@@ -449,34 +448,34 @@ function ICT:DisplayPlayer()
     for i=offset,displayLength do
         hideCell(x, i)
     end
-    LibDD:UIDropDownMenu_SetText(ICT.frame.playerDropdown, Player:GetName(player))
+    ICT.DDMenu:UIDropDownMenu_SetText(ICT.frame.playerDropdown, Player:GetName(player))
     displayLength = offset
 end
 
 function ICT:CreatePlayerDropdown()
-    local playerDropdown = LibDD:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
+    local playerDropdown = ICT.DDMenu:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
     ICT.frame.playerDropdown = playerDropdown
     playerDropdown:SetPoint("TOP", ICT.frame, 0, -30);
     playerDropdown:SetAlpha(1)
     playerDropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    LibDD:UIDropDownMenu_SetWidth(playerDropdown, 160)
+    ICT.DDMenu:UIDropDownMenu_SetWidth(playerDropdown, 160)
 
-    LibDD:UIDropDownMenu_Initialize(
+    ICT.DDMenu:UIDropDownMenu_Initialize(
         playerDropdown,
         function()
-            local info = LibDD:UIDropDownMenu_CreateInfo()
+            local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
             for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
                 info.text = Player:GetName(player)
                 info.value = player.fullName
                 info.checked = ICT.selectedPlayer == player.fullName
                 info.func = function(self)
                     ICT.selectedPlayer = self.value
-                    LibDD:UIDropDownMenu_SetText(playerDropdown, Player:GetName(ICT.db.players[ICT.selectedPlayer]))
+                    ICT.DDMenu:UIDropDownMenu_SetText(playerDropdown, Player:GetName(ICT.db.players[ICT.selectedPlayer]))
                     ICT:DisplayPlayer()
                 end
-                LibDD:UIDropDownMenu_AddButton(info)
+                ICT.DDMenu:UIDropDownMenu_AddButton(info)
             end
         end
     )

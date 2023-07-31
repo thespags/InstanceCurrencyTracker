@@ -1,6 +1,8 @@
 local addOnName, ICT = ...
 
-local icon = LibStub("LibDBIcon-1.0", true)
+ICT.LDBIcon = LibStub("LibDBIcon-1.0", true)
+ICT.DDMenu = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
+ICT.LDBroker = LibStub("LibDataBroker-1.1")
 local Player = ICT.Player
 local Instances = ICT.Instances
 local Options = ICT.Options
@@ -25,8 +27,8 @@ local function flipFrame()
 end
 
 local function initMinimap()
-    local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject(addOnName, {
-        type = "data source",
+    local miniButton = ICT.LDBroker:NewDataObject(addOnName, {
+        type = "launcher",
         text = addOnName,
         -- Gold Coin
         icon = "237281",
@@ -38,7 +40,8 @@ local function initMinimap()
             tooltip:AddLine(addOnName)
         end,
     })
-    icon:Register(addOnName, miniButton, ICT.db.minimap)
+    ICT.db.minimap = ICT.db.minimap or {}
+    ICT.LDBIcon:Register(addOnName, miniButton, ICT.db.minimap)
     Options:FlipMinimapIcon()
 end
 
