@@ -155,16 +155,9 @@ function ICT:putIfAbsent(t, key, value)
 end
 
 -- Helper function when debugging.
-function ICT:printKeys(t)
-    for k, _ in pairs(t) do
-        print(k)
-    end
-end
-
--- Helper function when debugging.
 function ICT:printValues(t)
     for k, v in pairs(t) do
-        print(string.format("%s %s", k, tostring(v)))
+        print(string.format("%s %s", k, v))
     end
 end
 
