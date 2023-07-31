@@ -14,7 +14,7 @@ local function getOrCreateDb()
     ICT:putIfAbsent(db.options, "players", {})
     ICT:putIfAbsent(db.options, "options", {})
     ICT:putIfAbsent(db.options, "collapsible", {})
-    db.resetTimers = db.resetTimers or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
+    db.reset = db.reset or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
     return db
 end
 
