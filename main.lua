@@ -10,6 +10,7 @@ local unavailableColor = "FFFF0000"
 local nameColor = "FF00FF00"
 local cellWidth = 160
 local cellHeight = 10
+local tooltipIconSize = 12
 -- In the future we may want to display mutliple players at once.
 local numCells = 1
 
@@ -152,8 +153,7 @@ local function instanceTooltipOnEnter(key, instance)
             local max = info.maxEmblems(instance, tokenId)
             if ICT.db.options.currency[tokenId] and max ~= 0 then
                 local available = instance.available[tokenId] or max
-                local currency = ICT:GetCurrencyName(tokenId)
-                local text = string.format("%s: |c%s%s/%s|r", currency, availableColor, available, max)
+                local text = string.format("%s: |c%s%s/%s|r", ICT:GetCurrencyWithIconTooltip(tokenId), availableColor, available, max)
                 GameTooltip:AddLine(text, ICT:hex2rgb(titleColor))
             end
         end
@@ -260,7 +260,7 @@ end
 local function currencyTooltipOnEnter(selectedPlayer, tokenId)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(ICT:GetCurrencyName(tokenId), ICT:hex2rgb(titleColor))
+        GameTooltip:AddLine(ICT:GetCurrencyWithIconTooltip(tokenId), ICT:hex2rgb(titleColor))
 
         for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
             local available = Player:AvailableCurrency(player, tokenId)
@@ -279,8 +279,7 @@ end
 
 -- Prints currency with multi line information.
 local function printCurrencyVerbose(player, tokenId, x, offset)
-    local currency = ICT:GetCurrencyName(tokenId)
-    local cell = printCell(x, offset, currency, titleColor)
+    local cell = printCell(x, offset, ICT:GetCurrencyWithIcon(tokenId), titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
     offset = offset + 1
@@ -300,10 +299,9 @@ end
 
 -- Prints currency single line information.
 local function printCurrencyShort(player, tokenId, x, offset)
-    local currency = ICT:GetCurrencyName(tokenId)
     local current = player.currency.wallet[tokenId] or "n/a"
     local available = Player:AvailableCurrency(player, tokenId)
-    local text = string.format("%s |c%s%s (%s)|r", currency, availableColor, current, available)
+    local text = string.format("%s |c%s%s (%s)|r", ICT:GetCurrencyWithIcon(tokenId), availableColor, current, available)
     local cell = printCell(x, offset, text, titleColor)
     cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
     cell:SetScript("OnLeave", hideTooltipOnLeave)
@@ -329,8 +327,7 @@ local function questTooltipOnEnter(name, quest)
     return function(self, motion)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine(name, ICT:hex2rgb(nameColor))
-        local currency = ICT:GetCurrencyName(quest.tokenId)
-        GameTooltip:AddLine(string.format("%s: %s", currency, quest.seals), ICT:hex2rgb(availableColor))
+        GameTooltip:AddLine(string.format("%s: %s", ICT:GetCurrencyWithIconTooltip(quest.tokenId), quest.seals), ICT:hex2rgb(availableColor))
 
         for _, player in ICT:spairsByValue(ICT.db.players, PlayerSort) do
             local color = getQuestColor(player, quest)

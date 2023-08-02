@@ -1,5 +1,5 @@
 ## Interface: 30402
-## Version: 1.0.0
+## Version: 1.0.10
 ## Title: InstanceCurrencyTracker
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB

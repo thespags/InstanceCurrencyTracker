@@ -106,7 +106,7 @@ local function messageResults(player, instance)
                 local available = instance.available[tokenId]
                 local collected = max - available
                 local total = player.currency.wallet[tokenId]
-                local text = string.format("[%s] Collected %s of %s [%s] %s", addOnName, collected, max, total, ICT:GetCurrencyName(tokenId))
+                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, ICT:GetCurrencyWithIcon(tokenId), collected, max, total)
                 Options:PrintMessage(text)
             end
         end

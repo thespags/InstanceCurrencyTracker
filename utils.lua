@@ -8,6 +8,11 @@ ICT.Conquest = 221
 ICT.Triumph = 301
 ICT.SiderealEssence = 2589
 ICT.ChampionsSeal = 241
+ICT.Epicurean = 81
+ICT.JewelcraftersToken = 61
+ICT.StoneKeepersShards = 161
+ICT.WintergraspMark = 126
+ICT.Justice = 42
 -- Phase 3 dungeons grant conquest.
 ICT.DungeonEmblem = ICT.Conquest
 ICT.ClassIcons = {
@@ -29,16 +34,6 @@ end
 
 function ICT:GetFullName()
     return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
-end
-
--- Returns the amount of currency the player has for the currency provided.
-function ICT:GetCurrencyAmount(id)
-    return select(2, GetCurrencyInfo(id))
-end
-
--- Returns the localized name of the currency provided.
-function ICT:GetCurrencyName(id)
-    return select(1, GetCurrencyInfo(id))
 end
 
 function ICT:LocalizeInstanceName(v)

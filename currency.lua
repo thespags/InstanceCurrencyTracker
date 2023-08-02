@@ -3,6 +3,28 @@ local addOnName, ICT = ...
 ICT.Currency = {}
 local Currency = ICT.Currency
 
+-- Creates a string with the icon and name of the provided currency.
+function ICT:GetCurrencyWithIcon(id)
+    local currency = C_CurrencyInfo.GetCurrencyInfo(id)
+    return string.format("|T%s:12:12:0:0|t%s", currency["iconFileID"], currency["name"])
+end
+
+-- Creates a string with the icon and name of the provided currency.
+function ICT:GetCurrencyWithIconTooltip(id)
+    local currency = C_CurrencyInfo.GetCurrencyInfo(id)
+    return string.format("|T%s:14:14:0:0|t%s", currency["iconFileID"], currency["name"])
+end
+
+-- Returns the amount of currency the player has for the currency provided.
+function ICT:GetCurrencyAmount(id)
+    return C_CurrencyInfo.GetCurrencyInfo(id)["quantity"]
+end
+
+-- Returns the localized name of the currency provided.
+function ICT:GetCurrencyName(id)
+    return C_CurrencyInfo.GetCurrencyInfo(id)["name"]
+end
+
 local function calculateEmblems(instances, tokenId)
     local emblems = 0
 
@@ -58,13 +80,19 @@ end
 
 -- How to order currency, we sort from highest to lowest (reverse) so adding new currencies is easier.
 ICT.CurrencyInfo = {
-    [ICT.Triumph] = 6,
-    [ICT.SiderealEssence] = 5,
-    [ICT.ChampionsSeal] = 4,
-    [ICT.Conquest] = 3,
-    [ICT.Valor] = 2,
-    [ICT.Heroism] = 1,
+    [ICT.Triumph] = 11,
+    [ICT.SiderealEssence] = 10,
+    [ICT.ChampionsSeal] = 9,
+    [ICT.Conquest] = 8,
+    [ICT.Valor] = 7,
+    [ICT.Heroism] = 6,
+    [ICT.Epicurean] = 5,
+    [ICT.JewelcraftersToken] = 4,
+    [ICT.StoneKeepersShards] = 3,
+    [ICT.WintergraspMark] = 2,
+    [ICT.Justice] = 1,
 }
+
 function ICT.CurrencySort(a, b)
     return ICT.CurrencyInfo[a] > ICT.CurrencyInfo[b]
 end
