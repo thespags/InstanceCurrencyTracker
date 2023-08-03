@@ -44,7 +44,7 @@ end
 -- Sorted pairs iterator determined by the table key.
 function ICT:spairs(t, comparator, filter)
     local keys = {}
-    for k, v in pairs(t) do
+    for k, _ in pairs(t) do
         if not filter or filter(k) then
             table.insert(keys, k)
         end
@@ -63,7 +63,7 @@ end
 
 -- Sorted pairs iterator determined by mapping the values.
 function ICT:spairsByValue(t, comparator, filter)
-    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter)
+    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
 end
 
 -- Filtered pairs iterator determined by the table key with the given function.

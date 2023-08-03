@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 ICT.Options = {}
 local Options = ICT.Options
+local Player = ICT.Player
 local frameLabel = "      Frame"
 
 -- Helper to set all the currencies as enabled.
@@ -9,7 +10,8 @@ local function getOrCreateCurrencyOptions()
     if not ICT.db.options.currency then
         ICT.db.options.currency = {}
         for k, _ in pairs(ICT.CurrencyInfo) do
-            ICT.db.options.currency[k] = true
+            -- Display heroism and up (i.e. recent currency) by default.
+            ICT.db.options.currency[k] = ICT.CurrencyInfo[k] >= ICT.CurrencyInfo[ICT.Heroism]
         end
     end
     return ICT.db.options.currency
@@ -59,6 +61,14 @@ function Options:FlipMinimapIcon()
     end
 end
 
+function Options:FlipOptionsMenu()
+    if ICT.db.options.multiPlayerView then
+        ICT.frame.playerDropdown:Hide()
+    else
+        ICT.frame.playerDropdown:Show()
+    end
+end
+
 local function createInfo()
     local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
     -- It seems you can't simply do not self.checked if keepShownOnClick is true
@@ -69,7 +79,8 @@ end
 
 function Options:CreateOptionDropdown()
     local dropdown = ICT.DDMenu:Create_UIDropDownMenu("ICTOptions", ICT.frame)
-    dropdown:SetPoint("BOTTOM", 0, 4)
+    dropdown:SetPoint("TOP", ICT.frame, "BOTTOM", 0, 2)
+    -- dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT")
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
@@ -81,6 +92,7 @@ function Options:CreateOptionDropdown()
     local currency = getOrCreateCurrencyOptions()
     local resets = getOrCreateResetTimerOptions()
     ICT:putIfAbsent(db.options, "verboseName", false)
+    ICT:putIfAbsent(db.options, "multiPlayerView", false)
     ICT:putIfAbsent(db.options, "showResetTimers", true)
     ICT:putIfAbsent(db.options, "verboseCurrency", false)
     ICT:putIfAbsent(db.options, "verboseCurrencyTooltip", true)
@@ -103,29 +115,19 @@ function Options:CreateOptionDropdown()
                     ICT:DisplayPlayer()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
-
-                -- Switches between short and long forms of currency.
+                
+                -- Switches between a single player and multiple players to view.
                 local verboseCurrency = createInfo()
-                verboseCurrency.text = "Verbose Currency"
+                verboseCurrency.text = "Multi Player View"
                 verboseCurrency.keepShownOnClick = true
                 verboseCurrency.hasArrow = false
-                verboseCurrency.checked = db.options.verboseCurrency
+                verboseCurrency.checked = db.options.multiPlayerView
                 verboseCurrency.func = function(self)
-                    db.options.verboseCurrency = not db.options.verboseCurrency
+                    db.options.multiPlayerView = not db.options.multiPlayerView
+                    Options:FlipOptionsMenu()
                     ICT:DisplayPlayer()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrency)
-
-                -- Turns on/off instance and quest information in currency.
-                local verboseCurrencyTooltip = createInfo()
-                verboseCurrencyTooltip.text = "Verbose Currency Tooltip"
-                verboseCurrencyTooltip.hasArrow = false
-                verboseCurrencyTooltip.checked = db.options.verboseCurrencyTooltip
-                verboseCurrencyTooltip.func = function(self)
-                    db.options.verboseCurrencyTooltip = not db.options.verboseCurrencyTooltip
-                    ICT:DisplayPlayer()
-                end
-                ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrencyTooltip)
 
                 -- Turn on/off sending messages when leaving an instance.
                 local groupMessage = createInfo()
@@ -136,6 +138,20 @@ function Options:CreateOptionDropdown()
                     db.options.groupMessage = not db.options.groupMessage
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(groupMessage)
+
+                local players = createInfo()
+                players.text = "Players"
+                players.menuList = players.text
+                players.checked = ICT:containsAllValues(ICT.db.players, function(v) return not v.isDisabled end)
+                players.hasArrow = true
+                players.func = function(self)
+                    local wasDisabled = ICT:containsAnyValue(ICT.db.players, function(v) return v.isDisabled end)
+                    for _, player in pairs(ICT.db.players) do
+                        player.isDisabled = not wasDisabled
+                    end
+                    ICT:DisplayPlayer()
+                end
+                ICT.DDMenu:UIDropDownMenu_AddButton(players)
 
                 local reset = createInfo()
                 reset.text = "Reset Timers"
@@ -194,8 +210,9 @@ function Options:CreateOptionDropdown()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(currencyInfo)
                 ICT.DDMenu:UIDropDownMenu_AddSeparator()
-                local display = createInfo()
+
                 -- Indent to make up for missing icon.
+                local display = createInfo()
                 display.text = "      Frame"
                 display.menuList = display.text
                 display.midWidth = 1000
@@ -203,7 +220,19 @@ function Options:CreateOptionDropdown()
                 display.hasArrow = true
                 ICT.DDMenu:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
-                if menuList == "Reset Timers" then
+                if menuList == "Players" then
+                    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.IsMaxLevel) do
+                        local info = createInfo()
+                        info.text = ICT.Player.GetName(player)
+                        info.value = player.fullName
+                        info.checked = not player.isDisabled
+                        info.func = function(self)
+                            player.isDisabled = not player.isDisabled
+                            ICT:DisplayPlayer()
+                        end
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                    end
+                elseif menuList == "Reset Timers" then
                     for k, v in ICT:spairs(ICT.ResetInfo) do
                         local info = createInfo()
                         info.text = v.name
@@ -213,7 +242,7 @@ function Options:CreateOptionDropdown()
                             ICT:DisplayPlayer()
                         end
                         ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
-                end
+                    end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
                     for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
@@ -279,6 +308,29 @@ function Options:CreateOptionDropdown()
                         Options:FlipMinimapIcon()
                     end
                     ICT.DDMenu:UIDropDownMenu_AddButton(minimap, level)
+
+                    -- Switches between short and long forms of currency.
+                    local verboseCurrency = createInfo()
+                    verboseCurrency.text = "Verbose Currency"
+                    verboseCurrency.keepShownOnClick = true
+                    verboseCurrency.hasArrow = false
+                    verboseCurrency.checked = db.options.verboseCurrency
+                    verboseCurrency.func = function(self)
+                        db.options.verboseCurrency = not db.options.verboseCurrency
+                        ICT:DisplayPlayer()
+                    end
+                    ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrency, level)
+
+                    -- Turns on/off instance and quest information in currency.
+                    local verboseCurrencyTooltip = createInfo()
+                    verboseCurrencyTooltip.text = "Verbose Currency Tooltip"
+                    verboseCurrencyTooltip.hasArrow = false
+                    verboseCurrencyTooltip.checked = db.options.verboseCurrencyTooltip
+                    verboseCurrencyTooltip.func = function(self)
+                        db.options.verboseCurrencyTooltip = not db.options.verboseCurrencyTooltip
+                        ICT:DisplayPlayer()
+                    end
+                    ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrencyTooltip, level)
                 end
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.

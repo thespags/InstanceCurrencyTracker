@@ -1,6 +1,7 @@
 # Instance and Currency Tracker
 Tracks instance and currency information across all characters and realms on your account.
-The window is very configurable see [Options] for details.
+By default shows a single character view with tooltips to compare, this can be changed
+under 'Options' to show multiple characters. See additional configuritions under [Options] for more details.
 
 The addon uses IDs so should work in any language however labels are not localized.
 
@@ -17,16 +18,17 @@ Otherwise `/ict` will bring up the window.
 + Total currency in an instance  
 + Currency collected and available for each character  
 + Daily quest completed and prerequisites met  
++ Feature needed is enabling profession quests, pvp, and pre WOTLK currencies.
 
 ## Options
 + Show Realm Name  
 _Enables `[Realm] Player` versus `Player` for name fields._
-+ Verbose Currency  
-_Multi-line currency versus single line currency information_
-+ Simple Currency Tooltip  
-_Shows only current and available currency per player, otherwise includes instances and quests collected._
++ Multi Player View  
+_Shows all players side by side versus a single player._
 + Group Message  
 _Enables messaging to your group collected currency, otherwise prints to your chat window only._
++ Players
+_Enable/Disable the players to appear in the dropdown list and multi player view._
 + Reset Timers  
 _Show the one day, three day, five day, or weekly reset timers._  
 _Note: three and five require you to complete a raid with those lockout as there's no API to access the data._  
@@ -36,8 +38,13 @@ _Select the instances you wish to view, defaults to all WOTLK instances._
 _Shows all quests including those you have not met the prerequisite for._
 + Currency  
 _Select the currency you wish to view defaults to all currencies._
-+ Display  
-_Enable/Disable anchoring to the LFG frame and viewing the mini map icon._  
++ Frame  
+    + Display  
+    _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._  
+    + Verbose Currency  
+    _Multi-line currency versus single line currency information_
+    + Simple Currency Tooltip  
+    _Shows only current and available currency per player, otherwise includes instances and quests collected._
 
 ## Color Codes
 **Purple** Locked Instances and Completed Dailies  

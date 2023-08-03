@@ -5,7 +5,7 @@ local Player = ICT.Player
 local Instances = ICT.Instances
 local Quests = ICT.Quests
 local Currency = ICT.Currency
-
+local MaxLevel = 80
 
 local function dailyReset(player)
     Instances:ResetAll(player.dungeons)
@@ -141,7 +141,7 @@ end
 
 function Player:AvailableCurrency(player, tokenId)
     if not player.currency.weekly[tokenId] or not player.currency.daily[tokenId] then
-        return "n/a"
+        return 0
     end
     return player.currency.weekly[tokenId] + player.currency.daily[tokenId]
 end
@@ -220,16 +220,6 @@ function Player:CalculateResetTimes(player)
 end
 
 -- Remenant from the WeakAura
-function Player:EnablePlayer(playerName)
-    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = false end
-end
-
--- Remenant from the WeakAura
-function Player:DisablePlayer(playerName)
-    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = true end
-end
-
--- Remenant from the WeakAura
 function Player:ViewablePlayers(options)
     local currentName = ICT:GetFullName()
     local currentRealm = GetRealmName()
@@ -248,10 +238,18 @@ function Player:ViewablePlayers(options)
     return players
 end
 
-function Player:GetName(player)
+function Player.GetName(player)
     return ICT.db.options.verboseName and player.fullName or player.name
 end
 
-function PlayerSort(a, b)
-    return Player:GetName(a) < Player:GetName(b)
+function Player.PlayerSort(a, b)
+    return Player.GetName(a) < Player.GetName(b)
+end
+
+function Player.PlayerEnabled(player)
+    return not player.isDisabled and Player.IsMaxLevel(player)
+end
+
+function Player.IsMaxLevel(player)
+    return player.level == MaxLevel
 end
