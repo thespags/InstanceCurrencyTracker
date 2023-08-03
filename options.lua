@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 ICT.Options = {}
 local Options = ICT.Options
+local Player = ICT.Player
 local frameLabel = "      Frame"
 
 -- Helper to set all the currencies as enabled.
@@ -78,8 +79,8 @@ end
 
 function Options:CreateOptionDropdown()
     local dropdown = ICT.DDMenu:Create_UIDropDownMenu("ICTOptions", ICT.frame)
-    dropdown:SetPoint("TOPLEFT", ICT.frame, "BOTTOMLEFT")
-    dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT")
+    dropdown:SetPoint("TOP", ICT.frame, "BOTTOM", 0, 2)
+    -- dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT")
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
@@ -220,7 +221,7 @@ function Options:CreateOptionDropdown()
                 ICT.DDMenu:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
                 if menuList == "Players" then
-                    for k, player in ICT:spairs(ICT.db.players) do
+                    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.IsMaxLevel) do
                         local info = createInfo()
                         info.text = ICT.Player.GetName(player)
                         info.value = player.fullName

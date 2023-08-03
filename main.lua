@@ -62,6 +62,7 @@ function ICT:CreateAddOn()
     title:SetAlpha(1)
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
+
     local inset = CreateFrame("Frame", "InstanceCurrencyTracker", frame)
     inset:SetAllPoints(frame)
     inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -60)
@@ -69,14 +70,23 @@ function ICT:CreateAddOn()
     inset:SetAlpha(1)
     inset:SetIgnoreParentAlpha(true)
 
-    --#region
-    local hScrollBar = CreateFrame("EventFrame", nil, inset, "WowTrimHorizontalScrollBar")
-    hScrollBar:SetPoint("TOPLEFT", inset, "BOTTOMLEFT", 0, 0)
-    hScrollBar:SetPoint("TOPRIGHT", inset, "BOTTOMRIGHT", 0, 0)
+    local vScrollBar = CreateFrame("EventFrame", nil, inset, "WowTrimScrollBar")
+    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
+    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
 
-    local hScrollBox = CreateFrame("Frame", nil, inset, "WowScrollBox")
+    local hScrollBar = CreateFrame("EventFrame", nil, inset, "WowTrimHorizontalScrollBar")
+    hScrollBar:SetPoint("TOPLEFT", inset, "BOTTOMLEFT")
+    hScrollBar:SetPoint("TOPRIGHT", inset, "BOTTOMRIGHT")
+
+    local vScrollBox = CreateFrame("Frame", nil, inset, "WowScrollBox")
+    ICT.vScrollBox = vScrollBox
+    vScrollBox:SetAllPoints(inset)
+
+    local hScrollBox = CreateFrame("Frame", nil, vScrollBox, "WowScrollBox")
     ICT.hScrollBox = hScrollBox
-    hScrollBox:SetAllPoints(inset)
+    hScrollBox:SetScript("OnMouseWheel", nil)
+    hScrollBox.scrollable = true
+
     ICT.content = CreateFrame("Frame", nil, hScrollBox, "ResizeLayoutFrame")
     ICT.content.scrollable = true
     ICT.content.cells = {}
@@ -85,26 +95,11 @@ function ICT:CreateAddOn()
     hView:SetPanExtent(50)
     hView:SetHorizontal(true)
 
-    hScrollBox:SetScript("OnMouseWheel", nil)
-
-    local vScrollBar = CreateFrame("EventFrame", nil, inset, "WowTrimScrollBar")
-    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
-    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
-
-    local vScrollBox = CreateFrame("Frame", nil, inset, "WowScrollBox")
-    ICT.vScrollBox = vScrollBox
-    vScrollBox:SetAllPoints(inset)
-
-    hScrollBox:SetParent(vScrollBox)
-    hScrollBox:SetAllPoints(vScrollBox)
-    hScrollBox.scrollable = true
-
     local vView = CreateScrollBoxLinearView()
     vView:SetPanExtent(50)
 
     ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
     ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
-
 
     ICT:CreatePlayerDropdown()
     Options:CreateOptionDropdown()
@@ -493,15 +488,6 @@ function ICT:DisplayPlayer()
         end
     end
     ICT:UpdateFrameSizes(x, offset)
-
-    print((offset + 5) * cellHeight)
-    ICT.content:SetSize(x * cellWidth, (offset + 5) * cellHeight)
-    ICT.content:SetHeight( (offset + 5) * cellHeight)
-    print(ICT.content:GetHeight())
-    ICT.hScrollBox:SetHeight(ICT.content:GetHeight())
-    print(ICT.hScrollBox:GetHeight())
-    ICT.hScrollBox:FullUpdate()
-    ICT.vScrollBox:FullUpdate()
     displayY = offset
     displayX = x
 end
@@ -568,5 +554,21 @@ function ICT:ResetFrameButton()
 end
 
 function ICT:UpdateFrameSizes(x, offset)
-    ICT.resize:Init(ICT.frame, cellWidth + 40, defaultHeight - 200, cellWidth * x + 40, math.max(defaultHeight, cellHeight * offset))
+    local newHeight = offset * cellHeight
+    local newWidth = x * cellWidth
+
+    ICT.resize:Init(ICT.frame, cellWidth + 40, defaultHeight - 200, newWidth + 40, math.max(defaultHeight, newHeight))
+    ICT.hScrollBox:SetHeight(newHeight)
+    ICT.content:SetSize(newWidth, newHeight)
+    ICT.hScrollBox:FullUpdate()
+    ICT.vScrollBox:FullUpdate()
 end
+
+-- Possible idea for headings on multi view
+-- local button = CreateFrame("Button", nil, ICT.frame)
+-- button:SetSize(cellWidth+ 100, cellHeight+100)
+-- button:SetPoint("TOPLEFT", x * cellWidth + 10, 10)
+-- local cell = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+-- cell:SetPoint("LEFT")
+-- cell:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+-- cell:SetText(string.format("|c%s%s|r", nameColor, Player.GetName(player)))

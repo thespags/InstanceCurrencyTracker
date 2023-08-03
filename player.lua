@@ -220,16 +220,6 @@ function Player:CalculateResetTimes(player)
 end
 
 -- Remenant from the WeakAura
-function Player:EnablePlayer(playerName)
-    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = false end
-end
-
--- Remenant from the WeakAura
-function Player:DisablePlayer(playerName)
-    if ICT.db.players[playerName] then ICT.db.players[playerName].isDisabled = true end
-end
-
--- Remenant from the WeakAura
 function Player:ViewablePlayers(options)
     local currentName = ICT:GetFullName()
     local currentRealm = GetRealmName()
@@ -257,5 +247,9 @@ function Player.PlayerSort(a, b)
 end
 
 function Player.PlayerEnabled(player)
-    return not player.isDisabled and player.level == MaxLevel
+    return not player.isDisabled and Player.IsMaxLevel(player)
+end
+
+function Player.IsMaxLevel(player)
+    return player.level == MaxLevel
 end
