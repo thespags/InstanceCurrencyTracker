@@ -230,9 +230,20 @@ function ICT.ExpansionSort(a, b)
     return ICT.Expansions[a] > ICT.Expansions[b]
 end
 
-
 function ICT.InstanceSort(a, b)
-    return ICT.InstanceInfoSort(ICT.InstanceInfo[a.id], ICT.InstanceInfo[b.id], function() return a.name < b.name end)
+    if ICT.db.options.orderLockLast then
+        if a.locked and not b.locked then
+            return false
+        end
+        if not a.locked and b.locked then
+            return true
+        end
+    end
+    return ICT.InstanceInfoSort(
+        ICT.InstanceInfo[a.id],
+        ICT.InstanceInfo[b.id],
+        function() return a.name < b.name end
+    )
 end
 
 function ICT.InstanceInfoSort(aInfo, bInfo, op)

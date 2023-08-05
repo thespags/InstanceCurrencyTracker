@@ -163,6 +163,14 @@ end
 
 function ICT.QuestSort(player)
     return function(a, b)
+        if ICT.db.options.orderLockLast then
+            if a.locked and not b.locked then
+                return false
+            end
+            if not a.locked and b.locked then
+                return true
+            end
+        end
         if a.tokenId == b.tokenId then
             return a.name(player) < b.name(player)
         else

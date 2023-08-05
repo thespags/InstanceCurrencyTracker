@@ -110,6 +110,9 @@ function Options:CreateOptionDropdown()
                 realmName.text = "Realm Name"
                 realmName.hasArrow = false
                 realmName.checked = db.options.verboseName
+                realmName.tooltipTitle = realmName.text
+                realmName.tooltipOnButton = true
+                realmName.tooltipText = "Shows [{realm name}] {player name} versus {player name}."
                 realmName.func = function(self)
                     db.options.verboseName = not db.options.verboseName
                     ICT:DisplayPlayer()
@@ -122,6 +125,9 @@ function Options:CreateOptionDropdown()
                 verboseCurrency.keepShownOnClick = true
                 verboseCurrency.hasArrow = false
                 verboseCurrency.checked = db.options.multiPlayerView
+                verboseCurrency.tooltipTitle = verboseCurrency.text
+                verboseCurrency.tooltipOnButton = true
+                verboseCurrency.tooltipText = "Displays all selected characters in the frame or a single character selected with the drop down list."
                 verboseCurrency.func = function(self)
                     db.options.multiPlayerView = not db.options.multiPlayerView
                     Options:FlipOptionsMenu()
@@ -134,6 +140,9 @@ function Options:CreateOptionDropdown()
                 groupMessage.text = "Group Message"
                 groupMessage.hasArrow = false
                 groupMessage.checked = db.options.groupMessage
+                groupMessage.tooltipTitle = groupMessage.text
+                groupMessage.tooltipOnButton = true
+                groupMessage.tooltipText = "Messages your party or raid on leaving an instance with the collected currency. Otherwise prints to your chat window only."
                 groupMessage.func = function(self)
                     db.options.groupMessage = not db.options.groupMessage
                 end
@@ -144,6 +153,9 @@ function Options:CreateOptionDropdown()
                 players.menuList = players.text
                 players.checked = ICT:containsAllValues(ICT.db.players, function(v) return not v.isDisabled end)
                 players.hasArrow = true
+                players.tooltipTitle = players.text
+                players.tooltipOnButton = true
+                players.tooltipText = "Enables and disables characters from view in the drop down selection (single view) or frame (multi character view)."
                 players.func = function(self)
                     local wasDisabled = ICT:containsAnyValue(ICT.db.players, function(v) return v.isDisabled end)
                     for _, player in pairs(ICT.db.players) do
@@ -220,7 +232,7 @@ function Options:CreateOptionDropdown()
                 display.hasArrow = true
                 ICT.DDMenu:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
-                if menuList == "Players" then
+                if menuList == "Characters" then
                     for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.IsMaxLevel) do
                         local info = createInfo()
                         info.text = ICT.Player.GetName(player)
@@ -294,6 +306,9 @@ function Options:CreateOptionDropdown()
                     local anchorLFG = createInfo()
                     anchorLFG.text = "Anchor to LFG"
                     anchorLFG.checked = db.options.anchorLFG
+                    anchorLFG.tooltipTitle = anchorLFG.text
+                    anchorLFG.tooltipOnButton = true
+                    anchorLFG.tooltipText = "Brings up the frame when viewing the LFG frame otherwise detaches from the frame."
                     anchorLFG.func = function(self)
                         db.options.anchorLFG = not db.options.anchorLFG
                     end
@@ -310,11 +325,29 @@ function Options:CreateOptionDropdown()
                     ICT.DDMenu:UIDropDownMenu_AddButton(minimap, level)
 
                     -- Switches between short and long forms of currency.
+                    local order = createInfo()
+                    order.text = "Order Lock Last"
+                    order.keepShownOnClick = true
+                    order.hasArrow = false
+                    order.checked = db.options.orderLockLast
+                    order.tooltipTitle = order.text
+                    order.tooltipOnButton = true
+                    order.tooltipText = "Orders locked instances and completed quests after available instances and quests."
+                    order.func = function(self)
+                        db.options.orderLockLast = not db.options.orderLockLast
+                        ICT:DisplayPlayer()
+                    end
+                    ICT.DDMenu:UIDropDownMenu_AddButton(order, level)
+
+                    -- Switches between short and long forms of currency.
                     local verboseCurrency = createInfo()
                     verboseCurrency.text = "Verbose Currency"
                     verboseCurrency.keepShownOnClick = true
                     verboseCurrency.hasArrow = false
                     verboseCurrency.checked = db.options.verboseCurrency
+                    verboseCurrency.tooltipTitle = verboseCurrency.text
+                    verboseCurrency.tooltipOnButton = true
+                    verboseCurrency.tooltipText = "Multiline currency view or a single line currency view."
                     verboseCurrency.func = function(self)
                         db.options.verboseCurrency = not db.options.verboseCurrency
                         ICT:DisplayPlayer()
@@ -326,6 +359,9 @@ function Options:CreateOptionDropdown()
                     verboseCurrencyTooltip.text = "Verbose Currency Tooltip"
                     verboseCurrencyTooltip.hasArrow = false
                     verboseCurrencyTooltip.checked = db.options.verboseCurrencyTooltip
+                    verboseCurrencyTooltip.tooltipTitle = verboseCurrencyTooltip.text
+                    verboseCurrencyTooltip.tooltipOnButton = true
+                    verboseCurrencyTooltip.tooltipText = "Shows instances and quests currency available and total currency for the hovered over currency"
                     verboseCurrencyTooltip.func = function(self)
                         db.options.verboseCurrencyTooltip = not db.options.verboseCurrencyTooltip
                         ICT:DisplayPlayer()

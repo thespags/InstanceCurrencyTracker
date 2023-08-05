@@ -366,7 +366,7 @@ local function printQuestsForCurrency(player, tokenId)
             if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
                 if printTitle then
                     printTitle = false
-                    text = text .. string.format("\n\n|c%sQuests|r", tooltipTitleColor)
+                    text = text .. string.format("\n\n|c%sQuests|r", sectionColor)
                 end
                 local color = getQuestColor(player, quest)
                 text = text .. printInfo(quest.name(player), quest.seals, color)

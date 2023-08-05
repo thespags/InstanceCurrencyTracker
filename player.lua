@@ -251,7 +251,7 @@ function Player:UpdateSkills()
         end
         if not isHeader and profession and icon then
             professionCount = professionCount + 1;
-            
+
             player.professions[professionCount] = {
                 name = name,
                 icon = icon,

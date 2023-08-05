@@ -149,8 +149,6 @@ talentFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 talentFrame:SetScript("OnEvent", function ()
     ICT:throttleFunction(4, Player.UpdateGear, function() ICT:DisplayPlayer() end)
 end)
-    --PLAYER_EQUIPMENT_CHANGED
-
 
 SLASH_InstanceCurrencyTracker1 = "/ict";
 SlashCmdList.InstanceCurrencyTracker = function(msg)
