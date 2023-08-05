@@ -5,3 +5,5 @@ externals:
     Libs/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1
     Libs/LibUIDropDownMenu: https://repos.wowace.com/wow/libuidropdownmenu/trunk/LibUIDropDownMenu
     Libs/LibDBIcon-1.0: https://repos.curseforge.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+    Libs/LibDetours: https://github.com/anzz1/TacoTip/tree/master/Libs/LibDetours-1.0
+    Libs/LibClassicInspector: https://github.com/anzz1/TacoTip/tree/master/Libs/LibClassicInspector

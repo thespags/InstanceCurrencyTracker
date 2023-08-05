@@ -1,5 +1,5 @@
 ## Interface: 30402
-## Version: 1.0.11
+## Version: 1.0.12
 ## Title: InstanceCurrencyTracker
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB
@@ -8,9 +8,9 @@
 
 embeds.xml
 utils.lua
+currency.lua
 instances.lua
 quests.lua
-currency.lua
 player.lua
 options.lua
 main.lua

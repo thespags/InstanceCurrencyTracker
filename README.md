@@ -2,6 +2,7 @@
 Tracks instance and currency information across all characters and realms on your account.
 By default shows a single character view with tooltips to compare, this can be changed
 under 'Options' to show multiple characters. See additional configuritions under [Options] for more details.
+Be sure to hover over items to see tooltips for more details.
 
 The addon uses IDs so should work in any language however labels are not localized.
 
@@ -13,6 +14,10 @@ This can be disabled in the options menu, and replaced with a minimap icon.
 Otherwise `/ict` will bring up the window.  
 
 ## Information Collected
++ Character
+ +  Specs and Talents
+ + GearScore and iLvl if TacoTip addon is available
+ + Professions
 + Instance lockout and encounter information  
 + Currency available for an instance  
 + Total currency in an instance  

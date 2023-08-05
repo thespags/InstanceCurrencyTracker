@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 ICT.LDBIcon = LibStub("LibDBIcon-1.0", true)
 ICT.DDMenu = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
 ICT.LDBroker = LibStub("LibDataBroker-1.1")
+ICT.LCInspector = LibStub("LibClassicInspector")
 local Player = ICT.Player
 local Instances = ICT.Instances
 local Options = ICT.Options
@@ -51,6 +52,8 @@ local function initEvent(self, event, eventAddOn)
         ICT.db = getOrCreateDb()
         initMinimap()
         Player:Update()
+        Player:UpdateSkills()
+        Player:UpdateTalents()
         for _, player in pairs(ICT.db.players) do
             -- Player may have already been created but we added new instances.
             Player:CreateInstances(player)
@@ -127,6 +130,27 @@ end
 local broadcastFrame = CreateFrame("Frame")
 broadcastFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 broadcastFrame:SetScript("OnEvent", broadcastEvent)
+
+local skillFrame = CreateFrame("Frame")
+skillFrame:RegisterEvent("CHAT_MSG_SKILL")
+skillFrame:SetScript("OnEvent", function ()
+    ICT:throttleFunction(4, Player.UpdateSkills, function() ICT:DisplayPlayer() end)
+end)
+
+local talentFrame = CreateFrame("Frame")
+talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
+talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+talentFrame:SetScript("OnEvent", function ()
+    ICT:throttleFunction(4, Player.UpdateTalents, function() ICT:DisplayPlayer() end)
+end)
+
+local gearFrame = CreateFrame("Frame")
+talentFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+talentFrame:SetScript("OnEvent", function ()
+    ICT:throttleFunction(4, Player.UpdateGear, function() ICT:DisplayPlayer() end)
+end)
+    --PLAYER_EQUIPMENT_CHANGED
+
 
 SLASH_InstanceCurrencyTracker1 = "/ict";
 SlashCmdList.InstanceCurrencyTracker = function(msg)

@@ -4,10 +4,13 @@ local Player = ICT.Player
 local Options = ICT.Options
 local Instances = ICT.Instances
 local availableColor = "FFFFFFFF"
-local titleColor = "FFFFFF00"
+local sectionColor = "FFFFFF00"
+local selectedSectionColor = "FF484800"
+local tooltipTitleColor = "FF00FF00"
+local subtitleColor = "FFFFCC00"
+local textColor = "FF9CD6DE"
 local lockedColor = "FFFF00FF"
 local unavailableColor = "FFFF0000"
-local nameColor = "FF00FF00"
 local cellWidth = 200
 local cellHeight = 10
 local defaultWidth = cellWidth + 40
@@ -28,8 +31,43 @@ local function drawFrame(x, y, width, height)
     ICT.frame:SetSize(ICT.db.width, ICT.db.height)
 end
 
-local function hideTooltipOnLeave(self, motion)
-    GameTooltip:Hide()
+local function tooltipEnter(frame)
+    return frame and function(self, motion)
+        frame:Show()
+        local scale = frame:GetEffectiveScale()
+        local x, y = GetCursorPosition()
+        frame:SetPoint("RIGHT", nil, "BOTTOMLEFT", (x / scale) - 2, y / scale)
+    end
+end
+
+local function tooltipLeave(frame)
+    return frame and function(self, motion)
+        frame:Hide()
+    end
+end
+
+local function addTooltip(frame, tooltip)
+    frame:SetScript("OnEnter", tooltipEnter(tooltip))
+    frame:SetScript("OnLeave", tooltipLeave(tooltip))
+end
+
+local function createTooltip(name, text)
+    local tooltip = _G[name]
+    local textField = tooltip and tooltip.textField
+    if not tooltip then
+        tooltip = CreateFrame("Frame", name, UIParent, "TooltipBorderedFrameTemplate")
+        tooltip:SetFrameStrata("DIALOG")
+        tooltip:Hide()
+        textField = tooltip:CreateFontString()
+        textField:SetPoint("CENTER")
+        textField:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        textField:SetJustifyH("LEFT")
+        tooltip.textField = textField
+    end
+    textField:SetText(text)
+    tooltip:SetWidth(textField:GetStringWidth() + 18)
+    tooltip:SetHeight(textField:GetStringHeight() + 12)
+    return tooltip
 end
 
 local function enableMoving(frame, callback)
@@ -44,7 +82,7 @@ local function enableMoving(frame, callback)
 end
 
 function ICT:CreateAddOn()
-    local frame = CreateFrame("Frame", "InstanceCurrencyTracker", UIParent, "BasicFrameTemplateWithInset")
+    local frame = CreateFrame("Frame", "ICTFrame", UIParent, "BasicFrameTemplateWithInset")
     ICT.frame = frame
 
     frame:SetFrameStrata("HIGH")
@@ -63,7 +101,7 @@ function ICT:CreateAddOn()
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
 
-    local inset = CreateFrame("Frame", "InstanceCurrencyTracker", frame)
+    local inset = CreateFrame("Frame", "ICTInset", frame)
     inset:SetAllPoints(frame)
     inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 10, -60)
     inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -35, 35)
@@ -113,7 +151,7 @@ end
 -- Gets the associated cell or create it if it doesn't exist yet.
 local function getCell(x, y)
     local content = getContent()
-    local name = string.format("cell(%s, %s)", x, y)
+    local name = string.format("ICTcell(%s, %s)", x, y)
     if not content.cells[name] then
         local button = CreateFrame("Button", name, content)
         button:SetSize(cellWidth, cellHeight)
@@ -133,12 +171,13 @@ local function printCell(x, y, text, color)
     local cell = getCell(x, y)
     -- Create the string if necessary.
     if not cell.value then
-        cell.value = cell:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        cell.value = cell:CreateFontString()
         cell.value:SetPoint("LEFT")
     end
     -- TODO We could make font and size an option here.
-    cell.value:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
-    cell.value:SetText(string.format("|c%s%s|r", color, text))
+    cell.value:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    text = color and string.format("|c%s%s|r", color, text) or text
+    cell.value:SetText(text)
     cell:Show()
     return cell
 end
@@ -147,68 +186,127 @@ local function hideCell(x, y)
     getCell(x, y):Hide()
 end
 
--- Tooltip for instance information upon entering the cell.
-local function instanceTooltipOnEnter(key, instance)
-    return function(self, motion)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        local instanceColor = instance.locked and lockedColor or nameColor
-        GameTooltip:AddLine(instance.name, ICT:hex2rgb(instanceColor))
-        local info = ICT.InstanceInfo[instance.id]
-
-        -- Display the available encounters for the instance.
-        local encountersDone = info.numEncounters - (instance.encounterProgress or 0)
-        GameTooltip:AddLine(string.format("Encounters: %s/%s", encountersDone, info.numEncounters), ICT:hex2rgb(availableColor))
-
-        -- Display which players are locked or not for this instance.
-        for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
-            local playerInstance = Instances:GetInstanceByName(player, key) or { locked = false }
-            local playerColor = playerInstance.locked and lockedColor or availableColor
-            GameTooltip:AddLine(Player.GetName(player), ICT:hex2rgb(playerColor))
-        end
-
-        -- Display all available currency for the instance.
-        for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
-            -- Onyxia 40 is reused and has 0 emblems so skip currency.
-            local max = info.maxEmblems(instance, tokenId)
-            if ICT.db.options.currency[tokenId] and max ~= 0 then
-                local available = instance.available[tokenId] or max
-                local text = string.format("%s: |c%s%s/%s|r", ICT:GetCurrencyWithIconTooltip(tokenId), availableColor, available, max)
-                GameTooltip:AddLine(text, ICT:hex2rgb(titleColor))
-            end
-        end
-        GameTooltip:Show()
+local function getClassColor(player)
+    local classColorHex = select(4, GetClassColor(player.class))
+    -- From NIT: Safeguard for weakauras/addons that like to overwrite and break the GetClassColor() function.
+    if not classColorHex then
+        classColorHex = player.class == "SHAMAN" and "ff0070dd" or "ffffffff"
     end
+    return classColorHex
 end
 
-local function updateSectionTitle(x, offset, title)
+-- Prints a {label}: {value} with label and value appropriately colored.
+local function printCellInfo(label, value, labelColor, valueColor)
+    labelColor = labelColor or subtitleColor
+    valueColor = valueColor or textColor
+    return string.format("|c%s%s:|r |c%s%s|r", labelColor, label, valueColor, value)
+end
+
+-- Instead of cleaning this up to align newline and no newline this one stays the same name.
+local function printInfo(label, value, labelColor, valueColor)
+    labelColor = labelColor or subtitleColor
+    valueColor = valueColor or textColor
+    return "\n" .. printCellInfo(label, value, labelColor, valueColor)
+end
+
+local function playerTooltip(player)
+    local text = string.format("|T%s:14|t|c%s%s|r", ICT.ClassIcons[player.class], getClassColor(player), Player.GetName(player))
+    local printTitle = true
+    for k, spec in pairs(player.specs or {}) do
+        if printTitle then
+            printTitle = false
+            text = text .. string.format("\n|c%sSpecs|r", sectionColor)
+        end
+        local color = k == player.activeSpec and lockedColor or availableColor
+        text = text .. printInfo(spec.name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), color)
+        -- for _, glyph in pairs(spec.glyphs or {}) do
+        --     if glyph then
+        --         text = text .. string.format("|T%s:14|t", glyph.icon)
+        --     end
+        -- end
+        if TT_GS and spec.gearScore then
+            local scoreColor = ICT:rgb2hex(TT_GS:GetQuality(spec.gearScore))
+            text = text .. printInfo("GearScore", spec.gearScore, subtitleColor, scoreColor)
+            .. printInfo("iLvl", spec.ilvlScore, subtitleColor, scoreColor)
+        end
+    end
+
+    -- This should be already indexed primary over secondary professions.
+    printTitle = true
+    for _, v in pairs(player.professions or {}) do
+        if printTitle then
+            printTitle = false
+            text = text .. string.format("\n\n|c%sProfessions|r", sectionColor)
+        end
+        -- We should have already filtered out those without icons but safety check here.
+        local name = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
+        text = text .. printInfo(name, string.format("%s/%s", v.rank, v.max))
+    end
+    return createTooltip("ICT" .. player.fullName, text)
+end
+
+-- Tooltip for instance information upon entering the cell.
+local function instanceTooltip(key, instance)
+    local text = string.format("|c%s%s", tooltipTitleColor, instance.name)
+
+    local info = ICT.InstanceInfo[instance.id]
+    -- Display the available encounters for the instance.
+    local encountersDone = info.numEncounters - (instance.encounterProgress or 0)
+    text = text .. printInfo("Encounters", string.format("%s/%s", encountersDone, info.numEncounters))
+
+    -- Display which players are locked or not for this instance.
+    text = text .. string.format("\n\n|c%sLocks|r", sectionColor)
+    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
+        local playerInstance = Instances:GetInstanceByName(player, key) or { locked = false }
+        local playerColor = playerInstance.locked and lockedColor or availableColor
+        text = text .. string.format("\n|c%s%s|r", playerColor, Player.GetName(player))
+    end
+
+    -- Display all available currency for the instance.
+    local printTitle = true
+    for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
+        -- Onyxia 40 is reused and has 0 emblems so skip currency.
+        local max = info.maxEmblems(instance, tokenId)
+        if ICT.db.options.currency[tokenId] and max ~= 0 then
+            if printTitle then
+                text = text .. string.format("\n\n|c%sCurrency|r", sectionColor)
+                printTitle = false
+            end
+            local available = instance.available[tokenId] or max
+            text = text .. printInfo(ICT:GetCurrencyWithIconTooltip(tokenId), string.format("%s/%s", available, max))
+        end
+    end
+    return createTooltip("ICTInstanceTooltip" .. key, text)
+end
+
+local function updateSectionTitle(x, offset, title, color)
     local collapsed = ICT.db.options.collapsible[title]
-    local icon = collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP:12"
+    local icon = collapsed and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"
     local titleText = string.format("|T%s:12|t%s", icon, title)
-    return printCell(x, offset, titleText, titleColor)
+    local cell = printCell(x, offset, titleText, color)
+    return cell;
 end
 
 local function printSectionTitle(x, offset, title, tooltip)
     offset = offset + 1
-    local cell = updateSectionTitle(x, offset, title)
+    local cell = updateSectionTitle(x, offset, title, sectionColor)
     cell:SetScript(
         "OnClick",
         function()
             ICT.db.options.collapsible[title] = not ICT.db.options.collapsible[title]
-            updateSectionTitle(x, offset, title)
+            updateSectionTitle(x, offset, title, sectionColor)
             ICT:DisplayPlayer()
         end
     )
-    cell:SetScript("OnEnter", tooltip)
-    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    addTooltip(cell, tooltip)
     return offset + 1
 end
 
-local function instanceSectionTooltip(self, motion)
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Instance Color Codes")
-    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
-    GameTooltip:AddLine("Locked", ICT:hex2rgb(lockedColor))
-    GameTooltip:Show()
+local function instanceSectionTooltip()
+    local text = string.format("|c%sInstance Color Codes|r", tooltipTitleColor)
+    .. string.format("\n|c%sAvailable|r", availableColor)
+    .. string.format("\n|c%sLocked|r", lockedColor)
+    return createTooltip("ICTInstanceTooltip", text)
 end
 
 -- Prints all the instances with associated tooltips.
@@ -217,7 +315,7 @@ local function printInstances(title, instances, x, offset)
         return offset
     end
 
-    offset = printSectionTitle(x, offset, title, instanceSectionTooltip)
+    offset = printSectionTitle(x, offset, title, instanceSectionTooltip())
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
@@ -225,8 +323,7 @@ local function printInstances(title, instances, x, offset)
             if Options.showInstance(instance) then
                 local color = instance.locked and lockedColor or availableColor
                 local cell = printCell(x, offset, instance.name, color)
-                cell:SetScript("OnEnter", instanceTooltipOnEnter(key, instance))
-                cell:SetScript("OnLeave", hideTooltipOnLeave)
+                addTooltip(cell, instanceTooltip(key, instance))
                 offset = offset + 1
             end
         end
@@ -238,6 +335,7 @@ end
 local function printInstancesForCurrency(title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     local printTitle = true
+    local text = ""
     for _, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
         local info = ICT.InstanceInfo[instance.id]
         local max = info.maxEmblems(instance, tokenId)
@@ -245,14 +343,15 @@ local function printInstancesForCurrency(title, instances, tokenId)
         if Options.showInstance(instance) and info.tokenIds[tokenId] and max ~= 0 then
             if printTitle then
                 printTitle = false
-                GameTooltip:AddLine(title, ICT:hex2rgb(titleColor))
+                text = text .. string.format("\n\n|c%s%s|r", sectionColor, title)
             end
             -- Displays available currency out of the total currency for this instance.
             local color = instance.locked and lockedColor or availableColor
             local available = instance.available[tokenId] or max
-            GameTooltip:AddLine(string.format("%s: %s/%s", instance.name, available, max), ICT:hex2rgb(color))
+            text = text .. printInfo(instance.name, string.format("%s/%s", available, max), color)
         end
     end
+    return text
 end
 
 local function getQuestColor(player, quest)
@@ -261,56 +360,53 @@ end
 
 local function printQuestsForCurrency(player, tokenId)
     local printTitle = true
+    local text = ""
     if ICT.db.options.showQuests then
         for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
             if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
                 if printTitle then
                     printTitle = false
-                    GameTooltip:AddLine("Quests", ICT:hex2rgb(titleColor))
+                    text = text .. string.format("\n\n|c%sQuests|r", tooltipTitleColor)
                 end
                 local color = getQuestColor(player, quest)
-                GameTooltip:AddLine(string.format("%s: %s", quest.name(player), quest.seals), ICT:hex2rgb(color))
+                text = text .. printInfo(quest.name(player), quest.seals, color)
             end
         end
     end
+    return text
 end
 
 -- Tooltip for currency information upon entering the cell.
-local function currencyTooltipOnEnter(selectedPlayer, tokenId)
-    return function(self, motion)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(ICT:GetCurrencyWithIconTooltip(tokenId), ICT:hex2rgb(titleColor))
+local function currencyTooltip(selectedPlayer, tokenId)
+    local text = string.format("|c%s%s|r", tooltipTitleColor, ICT:GetCurrencyWithIconTooltip(tokenId))
 
-        for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
-            local available = Player:AvailableCurrency(player, tokenId)
-            local text = string.format("%s %s (%s)", Player.GetName(player), player.currency.wallet[tokenId] or "0", available)
-            GameTooltip:AddLine(text, ICT:hex2rgb(availableColor))
-
-        end
-        if ICT.db.options.verboseCurrencyTooltip then
-            printInstancesForCurrency("Dungeons", selectedPlayer.dungeons, tokenId)
-            printInstancesForCurrency("Raids", selectedPlayer.raids, tokenId)
-            printQuestsForCurrency(selectedPlayer, tokenId)
-        end
-        GameTooltip:Show()
+    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
+        local available = Player:AvailableCurrency(player, tokenId)
+        local total = player.currency.wallet[tokenId] or 0
+        text = text .. printInfo(Player.GetName(player), string.format("%s (%s)", total, available), getClassColor(player))
     end
+
+    if ICT.db.options.verboseCurrencyTooltip then
+        text = text .. printInstancesForCurrency("Dungeons", selectedPlayer.dungeons, tokenId)
+        text = text .. printInstancesForCurrency("Raids", selectedPlayer.raids, tokenId)
+        text = text .. printQuestsForCurrency(selectedPlayer, tokenId)
+    end
+    return createTooltip("ICTCurrencyTooltip" .. selectedPlayer.fullName .. tokenId, text)
 end
 
 -- Prints currency with multi line information.
 local function printCurrencyVerbose(player, tokenId, x, offset)
-    local cell = printCell(x, offset, ICT:GetCurrencyWithIcon(tokenId), titleColor)
-    cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
-    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    local cell = printCell(x, offset, ICT:GetCurrencyWithIcon(tokenId), sectionColor)
+    local tooltip = currencyTooltip(player, tokenId)
+    addTooltip(cell, tooltip)
     offset = offset + 1
     local available = Player:AvailableCurrency(player, tokenId)
-    cell = printCell(x, offset, "Available  " .. available, availableColor)
-    cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
-    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    cell = printCell(x, offset, "Available  " .. available, textColor)
+    addTooltip(cell, tooltip)
     offset = offset + 1
     local current = player.currency.wallet[tokenId] or 0
-    cell = printCell(x, offset, "Current     " .. current, availableColor)
-    cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
-    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    cell = printCell(x, offset, "Current     " .. current, textColor)
+    addTooltip(cell, tooltip)
     offset = offset + 1
     hideCell(x, offset)
     return offset
@@ -320,10 +416,10 @@ end
 local function printCurrencyShort(player, tokenId, x, offset)
     local current = player.currency.wallet[tokenId] or 0
     local available = Player:AvailableCurrency(player, tokenId)
-    local text = string.format("%s |c%s%s (%s)|r", ICT:GetCurrencyWithIcon(tokenId), availableColor, current, available)
-    local cell = printCell(x, offset, text, titleColor)
-    cell:SetScript("OnEnter", currencyTooltipOnEnter(player, tokenId))
-    cell:SetScript("OnLeave", hideTooltipOnLeave)
+    local text = printCellInfo(ICT:GetCurrencyWithIcon(tokenId), string.format("%s (%s)", current, available), subtitleColor, textColor)
+    local cell = printCell(x, offset, text)
+    local tooltip = currencyTooltip(player, tokenId)
+    addTooltip(cell, tooltip)
     return offset + 1
 end
 
@@ -342,18 +438,15 @@ local function printCurrency(player, x, offset)
     return offset
 end
 
-local function questTooltipOnEnter(name, quest)
-    return function(self, motion)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(name, ICT:hex2rgb(nameColor))
-        GameTooltip:AddLine(string.format("%s: %s", ICT:GetCurrencyWithIconTooltip(quest.tokenId), quest.seals), ICT:hex2rgb(availableColor))
+local function questTooltip(name, quest)
+    local text = string.format("|c%s%s|r", tooltipTitleColor, name)
+    .. printInfo(ICT:GetCurrencyWithIconTooltip(quest.tokenId), quest.seals)
 
-        for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
-            local color = getQuestColor(player, quest)
-            GameTooltip:AddLine(Player.GetName(player), ICT:hex2rgb(color))
-        end
-        GameTooltip:Show()
+    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
+        local color = getQuestColor(player, quest)
+        text = text .. string.format("\n|c%s%s|r", color, Player.GetName(player))
     end
+    return createTooltip("ICTQuestTooltip" .. name, text)
 end
 
 local function isQuestAvailable(player)
@@ -362,19 +455,18 @@ local function isQuestAvailable(player)
     end
 end
 
-local function questSectionTooltip(self, motion)
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Quest Color Codes")
-    GameTooltip:AddLine("Available", ICT:hex2rgb(availableColor))
-    GameTooltip:AddLine("Completed", ICT:hex2rgb(lockedColor))
-    GameTooltip:AddLine("Missing Prerequesite", ICT:hex2rgb(unavailableColor))
-    GameTooltip:Show()
+local function questSectionTooltip()
+    local text = string.format("|c%sQuest Color Codes|r", tooltipTitleColor)
+    .. string.format("\n|c%sAvailable|r", availableColor)
+    .. string.format("\n|c%sCompleted|r", lockedColor)
+    .. string.format("\n|c%sMissing Prerequesite|r", unavailableColor)
+    return createTooltip("ICTQuestTooltip", text)
 end
 
 local function printQuests(player, x, offset)
     if ICT.db.options.showQuests then
         if ICT:containsAnyValue(ICT.QuestInfo, isQuestAvailable(player)) then
-            offset = printSectionTitle(x, offset, "Quests", questSectionTooltip)
+            offset = printSectionTitle(x, offset, "Quests", questSectionTooltip())
         end
         if not ICT.db.options.collapsible["Quests"] then
             -- sort by token then name...
@@ -383,8 +475,8 @@ local function printQuests(player, x, offset)
                     local color = getQuestColor(player, quest)
                     local name = quest.name(player)
                     local cell = printCell(x, offset, name, color)
-                    cell:SetScript("OnEnter", questTooltipOnEnter(name, quest))
-                    cell:SetScript("OnLeave", hideTooltipOnLeave)
+                    local tooltip = questTooltip(name, quest)
+                    addTooltip(cell, tooltip)
                     offset = offset + 1
                 end
             end
@@ -400,43 +492,103 @@ local function cancelTicker(k)
     end
 end
 
-local function timerSectionTooltip(self, motion)
-    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:AddLine("Reset Timer")
-    local r, g, b = ICT:hex2rgb(availableColor)
-    GameTooltip:AddLine("Countdown to the next reset respectively for 1, 3, 5 and 7 days.", r, g, b, true)
-    GameTooltip:AddLine("\n")
-    GameTooltip:AddLine("Note: 3 and 5 day resets need a known lockout to calculate from as Blizzard doesn't provide a way through their API.", r, g, b, true)
-    GameTooltip:Show()
+local function timerSectionTooltip()
+    local text = string.format("|c%sReset Timer|r", tooltipTitleColor)
+    .. string.format("\n|c%sCountdown to the next reset respectively for 1, 3, 5 and 7 days.|r", availableColor)
+    .. string.format("\n\n|c%sNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.|r", availableColor)
+    return createTooltip("ICTResetTimerTooltip", text)
 end
 
-local function printTimer(x, offset, title, time)
-    printCell(x, offset, title .. "  " .. time(), availableColor)
-    cancelTicker(title)
-    tickers[title] = C_Timer.NewTicker(1, function () printCell(x, offset, title .. "  " .. time(), availableColor) end)
+local function printTimerSingleView(x, offset, title, time)
+    printCell(x, offset, printCellInfo(title, time(), subtitleColor, textColor))
+    tickers[title] = C_Timer.NewTicker(1, function () printCell(x, offset, printCellInfo(title, time(), subtitleColor, textColor)) end)
     return offset + 1
+end
+
+local function printTimerMultiView(x, title, time)
+    local name = "ICTReset" .. title
+    local timer = _G[name]
+    local textField = timer and timer.textField
+    if not timer then
+        timer = CreateFrame("Button", name, ICT.frame)
+        timer:SetAlpha(1)
+        timer:SetIgnoreParentAlpha(true)
+        timer:SetSize(cellWidth, cellHeight)
+        textField = timer:CreateFontString()
+        textField:SetPoint("CENTER")
+        textField:SetFont("Fonts\\FRIZQT__.TTF", 8)
+        textField:SetJustifyH("LEFT")
+        timer.textField = textField
+        addTooltip(timer, timerSectionTooltip())
+    end
+    timer:SetPoint("TOP", x, -36)
+    timer:Show()
+    textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", subtitleColor, title, textColor, time()))
+    tickers[title] = C_Timer.NewTicker(1, function() textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", subtitleColor, title, textColor, time())) end)
+    return x + 60
+end
+
+local function createTooltip(name, text)
+    local tooltip = _G[name]
+    local textField = tooltip and tooltip.textField
+    if not tooltip then
+        tooltip = CreateFrame("Frame", name, UIParent, "TooltipBorderedFrameTemplate")
+        tooltip:SetFrameStrata("DIALOG")
+        tooltip:Hide()
+        textField = tooltip:CreateFontString()
+        textField:SetPoint("CENTER", 0, 0)
+        textField:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        textField:SetJustifyH("LEFT")
+        tooltip.textField = textField
+    end
+    textField:SetText(text)
+    tooltip:SetWidth(textField:GetStringWidth() + 18)
+    tooltip:SetHeight(textField:GetStringHeight() + 12)
+    return tooltip
+end
+
+
+local function hideMultiView(title)
+    local name = "ICTReset" .. title
+    local timer = _G[name]
+    if timer then
+        timer:Hide()
+    end
 end
 
 local function cancelResetTimerTickers()
     for k, _ in ICT:spairs(ICT.db.reset) do
-        cancelTicker(ICT.ResetInfo[k].name)
+        local name = ICT.ResetInfo[k].name
+        cancelTicker(name)
+        hideMultiView(name)
     end
 end
 
 local function printResetTimers(x, offset)
     cancelResetTimerTickers()
-    if ICT:containsAnyValue(ICT.db.options.reset) then
-        offset = printSectionTitle(x, offset, "Reset", timerSectionTooltip)
-
-        if not ICT.db.options.collapsible["Reset"] then
+    local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
+    if count > 0 then
+        if ICT.db.options.multiPlayerView then
+            local start = 30 + -60 * count / 2
             for k, v in ICT:spairs(ICT.db.reset) do
                 if ICT.db.options.reset[k] then
                     local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
-                    offset = printTimer(x, offset, ICT.ResetInfo[k].name, time)
+                    start = printTimerMultiView(start, ICT.ResetInfo[k].name, time)
                 end
             end
+        else
+            offset = printSectionTitle(x, offset, "Reset", timerSectionTooltip())
+
+            if not ICT.db.options.collapsible["Reset"] then
+                for k, v in ICT:spairs(ICT.db.reset) do
+                    if ICT.db.options.reset[k] then
+                        local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
+                        offset = printTimerSingleView(x, offset, ICT.ResetInfo[k].name, time)
+                    end
+                end
+            end
+            hideCell(x, offset)
         end
-        hideCell(x, offset)
     end
     return offset
 end
@@ -451,7 +603,8 @@ end
 local function display(player, x)
     local offset = 1
     local name = string.format("|T%s:12|t%s", ICT.ClassIcons[player.class], Player.GetName(player))
-    printCell(x, offset, name, nameColor)
+    local cell = printCell(x, offset, name, getClassColor(player))
+    addTooltip(cell, playerTooltip(player))
     offset = printResetTimers(x, offset)
     offset = printInstances("Dungeons", player.dungeons, x, offset)
     offset = printInstances("Raids", player.raids, x, offset)
@@ -495,7 +648,7 @@ end
 function ICT:CreatePlayerDropdown()
     local playerDropdown = ICT.DDMenu:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
     ICT.frame.playerDropdown = playerDropdown
-    playerDropdown:SetPoint("TOP", ICT.frame, 0, -30);
+    playerDropdown:SetPoint("TOP", ICT.frame, 0, -30)
     playerDropdown:SetAlpha(1)
     playerDropdown:SetIgnoreParentAlpha(true)
     -- Width set to slightly smaller than parent frame.
@@ -522,12 +675,12 @@ function ICT:CreatePlayerDropdown()
 end
 
 function ICT:ResizeFrameButton()
-    local button = CreateFrame("Button", "ResizeButton", ICT.frame, "PanelResizeButtonTemplate")
+    local button = CreateFrame("Button", "ICTResizeButton", ICT.frame, "PanelResizeButtonTemplate")
     ICT.resize = button
     button:SetSize(20, 20)
     button:SetAlpha(1)
     button:SetIgnoreParentAlpha(true)
-    button:SetPoint("BottomRight", 0, 0)
+    button:SetPoint("BOTTOMRIGHT", 0, 0)
 	button:HookScript("OnMouseUp", function(self)
         ICT.db.width = ICT.frame:GetWidth()
         ICT.db.height = ICT.frame:GetHeight()
@@ -535,7 +688,7 @@ function ICT:ResizeFrameButton()
 end
 
 function ICT:ResetFrameButton()
-    local button = CreateFrame("Button", "ResetSizeAndPosition", ICT.frame)
+    local button = CreateFrame("Button", "ICTResetSizeAndPosition", ICT.frame)
     button:SetSize(32, 32)
     button:SetAlpha(1)
     button:SetIgnoreParentAlpha(true)
@@ -544,13 +697,9 @@ function ICT:ResetFrameButton()
     button:SetNormalTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Up")
     button:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
-    button:SetScript("OnEnter", function(self, motion)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine("Reset size and position")
-        GameTooltip:Show()
-    end)
     button:SetScript("OnClick", function() drawFrame(defaultX, defaultY, cellWidth * displayX + 40, math.max(defaultHeight, cellHeight * displayY)) end)
-    button:SetScript("OnLeave", hideTooltipOnLeave)
+    local tooltip = createTooltip("ICTResetFrame", "Reset size and position")
+    addTooltip(button, tooltip)
 end
 
 function ICT:UpdateFrameSizes(x, offset)
@@ -571,4 +720,4 @@ end
 -- local cell = button:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
 -- cell:SetPoint("LEFT")
 -- cell:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
--- cell:SetText(string.format("|c%s%s|r", nameColor, Player.GetName(player)))
+-- cell:SetText(string.format("|c%s%s|r", getClassColor(player), Player.GetName(player)))

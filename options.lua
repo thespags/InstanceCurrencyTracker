@@ -50,7 +50,7 @@ function Options:showInstances(instances)
 end
 
 function Options.showInstance(instance)
-    return InstanceCurrencyDB.options.displayInstances[instance.id]
+    return getOrCreateDisplayInstances()[instance.id]
 end
 
 function Options:FlipMinimapIcon()
@@ -116,9 +116,9 @@ function Options:CreateOptionDropdown()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
                 
-                -- Switches between a single player and multiple players to view.
+                -- Switches between a single character and multiple characters to view.
                 local verboseCurrency = createInfo()
-                verboseCurrency.text = "Multi Player View"
+                verboseCurrency.text = "Multi Character View"
                 verboseCurrency.keepShownOnClick = true
                 verboseCurrency.hasArrow = false
                 verboseCurrency.checked = db.options.multiPlayerView
@@ -140,7 +140,7 @@ function Options:CreateOptionDropdown()
                 ICT.DDMenu:UIDropDownMenu_AddButton(groupMessage)
 
                 local players = createInfo()
-                players.text = "Players"
+                players.text = "Characters"
                 players.menuList = players.text
                 players.checked = ICT:containsAllValues(ICT.db.players, function(v) return not v.isDisabled end)
                 players.hasArrow = true
@@ -253,7 +253,7 @@ function Options:CreateOptionDropdown()
                         info.checked = expansionContainsAll(v)
                         info.func = function(self)
                             local wasChecked = expansionContainsAll(v)
-                            for _, instance in ICT:fpairs(ICT.InstanceInfo, Options.isExpansion(v)) do
+                            for _, instance in ICT:fpairsByValue(ICT.InstanceInfo, Options.isExpansion(v)) do
                                 displayInstances[instance.id] = not wasChecked
                             end
                             ICT:DisplayPlayer()
@@ -352,7 +352,7 @@ function Options:CreateOptionDropdown()
 end
 
 function Options.isExpansion(expansion)
-    return function(id) return ICT.InstanceInfo[id].expansion == expansion end
+    return function(instance) return ICT.InstanceInfo[instance.id].expansion == expansion end
 end
 
 function Options:PrintMessage(text)

@@ -1,20 +1,6 @@
 local addOn, ICT = ...
 
 ICT.MaxLevel = 80
--- Currency Id's with name helpers.
-ICT.Heroism = 101
-ICT.Valor = 102
-ICT.Conquest = 221
-ICT.Triumph = 301
-ICT.SiderealEssence = 2589
-ICT.ChampionsSeal = 241
-ICT.Epicurean = 81
-ICT.JewelcraftersToken = 61
-ICT.StoneKeepersShards = 161
-ICT.WintergraspMark = 126
-ICT.Justice = 42
--- Phase 3 dungeons grant conquest.
-ICT.DungeonEmblem = ICT.Conquest
 ICT.ClassIcons = {
     ["WARRIOR"] = 626008,
     ["PALADIN"] = 626003,
@@ -101,6 +87,10 @@ function ICT:hex2rgb(hex)
     return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
 end
 
+function ICT:rgb2hex(r, g, b)
+    return string.format("FF%02X%02X%02X", r * 255, g * 255, b * 255)
+end
+
 -- Returns a function that simply returns the provided value.
 function ICT:ReturnX(x)
     return function(...) return x end
@@ -152,7 +142,7 @@ end
 -- Helper function when debugging.
 function ICT:printValues(t)
     for k, v in pairs(t) do
-        print(string.format("%s %s", k, v))
+        print(string.format("%s %s", k, tostring(v)))
     end
 end
 
@@ -171,4 +161,20 @@ function ICT:DisplayTime(time)
     local minutes = math.floor(time % 3600 / 60)
     local seconds = math.floor(time % 60)
     return string.format("%d:%02d:%02d:%02d", days, hours, minutes, seconds)
+end
+
+local throttle = true;
+ICT.throttles = {};
+function ICT:throttleFunction(time, f, callback)
+	if not ICT.throttles[f] then
+		ICT.throttles[f] = true
+		C_Timer.After(time, function()
+			f()
+            callback()
+			ICT.throttles[f] = false;
+		end)
+	elseif not throttle then
+		f()
+        callback()
+	end
 end

@@ -153,6 +153,8 @@ function Player:CalculateQuest(player)
     end
 end
 
+-- Updates instances and currencies.
+-- We may want to decouple these things in the future.
 function Player:Update()
     Player:ResetInstances()
     local player = self:GetPlayer()
@@ -219,23 +221,81 @@ function Player:CalculateResetTimes(player)
     ICT.db.reset[7] = ICT.db.reset[7] or C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
 
--- Remenant from the WeakAura
-function Player:ViewablePlayers(options)
-    local currentName = ICT:GetFullName()
-    local currentRealm = GetRealmName()
-    local playerFilter = function(v) return
-        -- Show all characters for the realm or specifically the current character.
-        (options.showAllAlts or currentName == v.fullName)
-        -- Show only max level characters if enabled.
-        and (v.level == ICT.MaxLevel or not options.onlyMaxLevelCharacters)
-        and (v.realm == currentRealm or options.showAllRealms)
-        and not v.isDisabled
+local SECONDARY_SKILLS = string.gsub(SECONDARY_SKILLS, ":", "")
+local PROFICIENCIES = string.gsub(PROFICIENCIES, ":", "")
+function Player:UpdateSkills()
+    local player = self:GetPlayer()
+    -- Skill list is always in same order, so we can get primary/secondary/weapon by checking the section headers.
+    local professionCount = 0
+    local isSecondary = false
+    local profession = false
+    -- Reset skills in case one was dropped.
+    player.professions = {}
+
+    for i = 1, GetNumSkillLines() do
+        local name, isHeader, _, rank, _, _, max = GetSkillLineInfo(i)
+        local icon = select(3, GetSpellInfo(name))
+        -- Note we aren't using anything besides professions, in the future we may want to display other attributes.
+        if isHeader and name == TRADE_SKILLS then
+            isSecondary = false
+            profession = true
+        elseif isHeader and name == SECONDARY_SKILLS then
+            isSecondary = true
+            profession = true
+        elseif isHeader and string.find(name, COMBAT_RATING_NAME1) then
+            profession = false
+        elseif isHeader and string.find(name, PROFICIENCIES) then
+            profession = false
+        elseif isHeader and name == LANGUAGES_LABEL then
+            profession = false
+        end
+        if not isHeader and profession and icon then
+            professionCount = professionCount + 1;
+            
+            player.professions[professionCount] = {
+                name = name,
+                icon = icon,
+                rank = rank,
+                max = max,
+                isSecondary = isSecondary
+            }
+        end
     end
-    local players = {}
-    for _, player in fpairsByValue(players, playerFilter) do
-        players[player.fullName] = player
+end
+
+local function getSpecs(player)
+    player.specs = player.specs or { {}, {} }
+    return player.specs
+end
+
+function Player.UpdateTalents()
+    local player = Player:GetPlayer()
+    local guid = UnitGUID("Player")
+    local active = ICT.LCInspector:GetActiveTalentGroup(guid)
+    local specs = getSpecs(player)
+    player.activeSpec = active
+
+    for i=1,2 do
+        local specialization = ICT.LCInspector:GetSpecialization(guid, i)
+        specs[i].name = ICT.LCInspector:GetSpecializationName(player.class, specialization, true)
+        specs[i].tab1, specs[i].tab2, specs[i].tab3 = ICT.LCInspector:GetTalentPoints(guid, i)
+        specs[i].glyphs = {}
+        for j=1,6 do
+            local _, _, id, icon = ICT.LCInspector:GetGlyphSocketInfo(guid, j, i)
+            specs[i].glyphs[j] = { id = id, icon = icon }   
+        end
     end
-    return players
+    Player.UpdateGear()
+end
+
+function Player.UpdateGear()
+    if TT_GS then
+        local player = Player:GetPlayer()
+        local guid = UnitGUID("Player")
+        local active = ICT.LCInspector:GetActiveTalentGroup(guid)
+        local spec = getSpecs(player)[active]
+        spec.gearScore, spec.ilvlScore = TT_GS:GetScore(guid)
+    end
 end
 
 function Player.GetName(player)
