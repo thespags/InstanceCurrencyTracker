@@ -2,17 +2,31 @@ local addOnName, ICT = ...
 
 ICT.Currency = {}
 local Currency = ICT.Currency
+-- Currency Id's with name helpers.
+ICT.Heroism = 101
+ICT.Valor = 102
+ICT.Conquest = 221
+ICT.Triumph = 301
+ICT.SiderealEssence = 2589
+ICT.ChampionsSeal = 241
+ICT.Epicurean = 81
+ICT.JewelcraftersToken = 61
+ICT.StoneKeepersShards = 161
+ICT.WintergraspMark = 126
+ICT.Justice = 42
+-- Phase 3 dungeons grant conquest.
+ICT.DungeonEmblem = ICT.Conquest
 
 -- Creates a string with the icon and name of the provided currency.
 function ICT:GetCurrencyWithIcon(id)
     local currency = C_CurrencyInfo.GetCurrencyInfo(id)
-    return string.format("|T%s:12:12:0:0|t%s", currency["iconFileID"], currency["name"])
+    return string.format("|T%s:12:12|t%s", currency["iconFileID"], currency["name"])
 end
 
 -- Creates a string with the icon and name of the provided currency.
 function ICT:GetCurrencyWithIconTooltip(id)
     local currency = C_CurrencyInfo.GetCurrencyInfo(id)
-    return string.format("|T%s:14:14:0:0|t%s", currency["iconFileID"], currency["name"])
+    return string.format("|T%s:14:14|t%s", currency["iconFileID"], currency["name"])
 end
 
 -- Returns the amount of currency the player has for the currency provided.
