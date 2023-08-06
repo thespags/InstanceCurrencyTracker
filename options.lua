@@ -11,7 +11,7 @@ local function getOrCreateCurrencyOptions()
         ICT.db.options.currency = {}
         for k, _ in pairs(ICT.CurrencyInfo) do
             -- Display heroism and up (i.e. recent currency) by default.
-            ICT.db.options.currency[k] = ICT.CurrencyInfo[k] >= ICT.CurrencyInfo[ICT.Heroism]
+            ICT.db.options.currency[k] = ICT.CurrencyInfo[k].order >= ICT.CurrencyInfo[ICT.Heroism].order
         end
     end
     return ICT.db.options.currency
@@ -28,6 +28,13 @@ local function getOrCreateDisplayInstances()
     return ICT.db.options.displayInstances
 end
 
+local function getOrCreateDisplayLegacyInstances(expansion)
+    ICT:putIfAbsent(ICT.db.options, "displayLegacyInstances", {})
+    local t = ICT.db.options.displayLegacyInstances
+    ICT:putIfAbsent(t, expansion, {})
+    return t[expansion]
+end
+
 local function getOrCreateResetTimerOptions()
     if not ICT.db.options.reset then
         ICT.db.options.reset = { [1] = true, [3] = false, [5] = false, [7] = true}
@@ -35,13 +42,27 @@ local function getOrCreateResetTimerOptions()
     return ICT.db.options.reset
 end
 
+local function showInstanceInfo(info, expansion)
+    if info.legacy == expansion then
+        return getOrCreateDisplayLegacyInstances(expansion)[info.id]
+    end
+    return getOrCreateDisplayInstances()[info.id]
+end
+
 local function expansionContainsAll(expansion)
-    local contains = function(v) return v.expansion ~= expansion or Options.showInstance(v) end
+    local contains = function(info)
+        if info.legacy == expansion then
+            return getOrCreateDisplayLegacyInstances(expansion)[info.id]
+        end
+        return info.expansion ~= expansion or getOrCreateDisplayInstances()[info.id]
+    end
     return ICT:containsAllValues(ICT.InstanceInfo, contains)
 end
 
-local function instanceContainsAll(displayInstances)
-    local contains = function(v) return displayInstances[v.id] end
+local function instanceContainsAll()
+    local contains = function(info)
+        return getOrCreateDisplayInstances()[info.id] and (not info.legacy or getOrCreateDisplayLegacyInstances(info.legacy)[info.id])
+    end
     return ICT:containsAllValues(ICT.InstanceInfo, contains)
 end
 
@@ -50,7 +71,20 @@ function Options:showInstances(instances)
 end
 
 function Options.showInstance(instance)
-    return getOrCreateDisplayInstances()[instance.id]
+    local info = ICT.InstanceInfo[instance.id]
+    if instance.legacy then
+        return getOrCreateDisplayLegacyInstances(info.legacy)[info.id]
+    end
+    return getOrCreateDisplayInstances()[info.id]
+end
+
+local function checkInstance(info, value, expansion)
+    if not expansion or info.expansion == expansion then
+        getOrCreateDisplayInstances()[info.id] = value
+    end
+    if (not expansion and info.legacy) or (expansion and info.legacy == expansion) then
+        getOrCreateDisplayLegacyInstances(info.legacy)[info.id] = value
+    end
 end
 
 function Options:FlipMinimapIcon()
@@ -88,7 +122,7 @@ function Options:CreateOptionDropdown()
     ICT.DDMenu:UIDropDownMenu_SetWidth(dropdown, 160)
     ICT.DDMenu:UIDropDownMenu_SetText(dropdown, "Options")
     local db = ICT.db
-    local displayInstances = getOrCreateDisplayInstances()
+    getOrCreateDisplayInstances()
     local currency = getOrCreateCurrencyOptions()
     local resets = getOrCreateResetTimerOptions()
     ICT:putIfAbsent(db.options, "verboseName", false)
@@ -118,7 +152,7 @@ function Options:CreateOptionDropdown()
                     ICT:DisplayPlayer()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
-                
+            
                 -- Switches between a single character and multiple characters to view.
                 local verboseCurrency = createInfo()
                 verboseCurrency.text = "Multi Character View"
@@ -183,12 +217,12 @@ function Options:CreateOptionDropdown()
                 local instances = createInfo()
                 instances.text = "Instances"
                 instances.menuList = instances.text
-                instances.checked = instanceContainsAll(displayInstances)
+                instances.checked = instanceContainsAll()
                 instances.hasArrow = true
                 instances.func = function(self)
-                    local wasChecked = instanceContainsAll(displayInstances)
+                    local wasChecked = instanceContainsAll()
                     for _, v in pairs(ICT.InstanceInfo) do
-                        displayInstances[v.id] = not wasChecked
+                        checkInstance(v, not wasChecked)
                     end
                     ICT:DisplayPlayer()
                 end
@@ -266,7 +300,7 @@ function Options:CreateOptionDropdown()
                         info.func = function(self)
                             local wasChecked = expansionContainsAll(v)
                             for _, instance in ICT:fpairsByValue(ICT.InstanceInfo, Options.isExpansion(v)) do
-                                displayInstances[instance.id] = not wasChecked
+                                checkInstance(instance, not wasChecked, ICT.Expansions[expansion])
                             end
                             ICT:DisplayPlayer()
                         end
@@ -371,13 +405,14 @@ function Options:CreateOptionDropdown()
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
                 -- Now create a level for all the instances of that expansion.
-                for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(ICT.Expansions[menuList])) do
+                local expansion = ICT.Expansions[menuList]
+                for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(expansion)) do
                     local info = createInfo()
                     info.text = GetRealZoneText(v.id)
-                    info.arg1 = v.id
-                    info.checked = Options.showInstance(v)
-                    info.func = function(self, id)
-                        displayInstances[id] = not Options.showInstance(v)
+                    info.arg1 = v
+                    info.checked = showInstanceInfo(v, expansion)
+                    info.func = function(self, instance)
+                        checkInstance(instance, not showInstanceInfo(v, expansion), expansion)
                         ICT:DisplayPlayer()
                     end
                     ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
@@ -387,8 +422,10 @@ function Options:CreateOptionDropdown()
     )
 end
 
+-- Applied to instance infos.
 function Options.isExpansion(expansion)
-    return function(instance) return ICT.InstanceInfo[instance.id].expansion == expansion end
+    -- Legacy case handles instances that are reused, presuming they aren't reused multiple times...
+    return function(info) return info.expansion == expansion or info.legacy == expansion end
 end
 
 function Options:PrintMessage(text)

@@ -13,7 +13,6 @@ ICT.Epicurean = 81
 ICT.JewelcraftersToken = 61
 ICT.StoneKeepersShards = 161
 ICT.WintergraspMark = 126
-ICT.Justice = 42
 -- Phase 3 dungeons grant conquest.
 ICT.DungeonEmblem = ICT.Conquest
 
@@ -94,19 +93,18 @@ end
 
 -- How to order currency, we sort from highest to lowest (reverse) so adding new currencies is easier.
 ICT.CurrencyInfo = {
-    [ICT.Triumph] = 11,
-    [ICT.SiderealEssence] = 10,
-    [ICT.ChampionsSeal] = 9,
-    [ICT.Conquest] = 8,
-    [ICT.Valor] = 7,
-    [ICT.Heroism] = 6,
-    [ICT.Epicurean] = 5,
-    [ICT.JewelcraftersToken] = 4,
-    [ICT.StoneKeepersShards] = 3,
-    [ICT.WintergraspMark] = 2,
-    [ICT.Justice] = 1,
+    [ICT.Triumph] = { order = 11 },
+    [ICT.SiderealEssence] = { order = 10 },
+    [ICT.ChampionsSeal] = { order = 9 },
+    [ICT.Conquest] = { order = 8 },
+    [ICT.Valor] = { order = 7 },
+    [ICT.Heroism] = { order = 6 },
+    [ICT.Epicurean] = { order = 5 },
+    [ICT.JewelcraftersToken] = { order = 4 },
+    [ICT.StoneKeepersShards] = { order = 3, unlimited = true},
+    [ICT.WintergraspMark] = { order = 2, unlimited = true},
 }
 
 function ICT.CurrencySort(a, b)
-    return ICT.CurrencyInfo[a] > ICT.CurrencyInfo[b]
+    return ICT.CurrencyInfo[a].order > ICT.CurrencyInfo[b].order
 end

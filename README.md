@@ -15,7 +15,7 @@ Otherwise `/ict` will bring up the window.
 
 ## Information Collected
 + Character
- +  Specs and Talents
+ + Specs and Talents
  + GearScore and iLvl if TacoTip addon is available
  + Professions
 + Instance lockout and encounter information  
@@ -45,7 +45,9 @@ _Shows all quests including those you have not met the prerequisite for._
 _Select the currency you wish to view defaults to all currencies._
 + Frame  
     + Display  
-    _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._  
+    _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._
+    + Order Lock Last"
+    _Orders locked instances and completed quests after available instances and quests._
     + Verbose Currency  
     _Multi-line currency versus single line currency information_
     + Simple Currency Tooltip  

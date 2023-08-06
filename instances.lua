@@ -122,7 +122,7 @@ ICT.InstanceInfo = {
     [615] = { name = "The Obsidian Sanctum", expansion = 3, maxPlayers = {10, 25}, numEncounters = 4, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
     [616] = { name = "The Eye of Eternity", expansion = 3, maxPlayers = {10, 25}, numEncounters = 1, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
     [603] = { name = "Ulduar", expansion = 3, numEncounters = 14, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Conquest), emblems = ulduarEmblems, maxEmblems = ICT:ReturnX(Instances.MaxUlduarEmblems) },
-    [249] = { name = "Onyxia's Lair", expansion = 3, numEncounters = 1, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [249] = { name = "Onyxia's Lair", expansion = 3, legacy = 1, numEncounters = 1, maxPlayers = {10, 25},tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
     [649] = { name = "Trial of the Crusader", expansion = 3, numEncounters = 5, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
     [532] = { name = "Karazhan", expansion = 2, maxPlayers = {10}, numEncounters = 11 },
     [565] = { name = "Gruul's Lair", expansion = 2, maxPlayers = {25}, numEncounters = 2 },
@@ -138,9 +138,6 @@ ICT.InstanceInfo = {
     [469] = { name = "Blackwing Lair", expansion = 1, maxPlayers = {40}, numEncounters = 8 },
     [509] = { name = "Ruins of Ahn'Qiraj", expansion = 1, maxPlayers = {20}, numEncounters = 6 },
     [531] = { name = "Temple of Ahn'Qiraj", expansion = 1, maxPlayers = {40}, numEncounters = 9 },
-}
-ICT.ReusedInstance = {
-    [249] = { expansion = 1 }
 }
 -- Redundant but hopefully simplifies filters and mappings.
 for k, v in pairs(ICT.InstanceInfo) do
