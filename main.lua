@@ -152,32 +152,47 @@ end
 local function getCell(x, y)
     local content = getContent()
     local name = string.format("ICTcell(%s, %s)", x, y)
-    if not content.cells[name] then
-        local button = CreateFrame("Button", name, content)
-        button:SetSize(cellWidth, cellHeight)
-        button:SetPoint("TOPLEFT", (x - 1) * cellWidth, -(y - 1) * cellHeight)
-        content.cells[name] = button
-    end
     local cell = content.cells[name]
+    if not cell then
+        cell = CreateFrame("Button", name, content)
+        cell:SetSize(cellWidth, cellHeight)
+        cell:SetPoint("TOPLEFT", (x - 1) * cellWidth, -(y - 1) * cellHeight)
+        content.cells[name] = cell
+
+        -- Create the string if necessary.
+        cell.left = cell:CreateFontString()
+        cell.left:SetPoint("LEFT")
+        cell.left:SetJustifyH("LEFT")
+        cell.left:SetFont("Fonts\\FRIZQT__.TTF", 10)
+
+        cell.right = cell:CreateFontString()
+        cell.right:SetPoint("RIGHT")
+        cell.right:SetJustifyH("RIGHT")
+        cell.right:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    end
     -- Remove any cell action so we can reuse the cell.
     cell:SetScript("OnEnter", nil)
     cell:SetScript("OnClick", nil)
-
     return cell
 end
 
 -- Prints text in the associated cell.
 local function printCell(x, y, text, color)
     local cell = getCell(x, y)
-    -- Create the string if necessary.
-    if not cell.value then
-        cell.value = cell:CreateFontString()
-        cell.value:SetPoint("LEFT")
-    end
-    -- TODO We could make font and size an option here.
-    cell.value:SetFont("Fonts\\FRIZQT__.TTF", 10)
     text = color and string.format("|c%s%s|r", color, text) or text
-    cell.value:SetText(text)
+    cell.left:SetText(text)
+    cell.left:Show()
+    cell.right:Hide()
+    cell:Show()
+    return cell
+end
+
+-- Prints text in the associated cell but right justified.
+local function printCellRight(x, y, text, color)
+    local cell = getCell(x, y)
+    text = color and string.format("|c%s%s|r", color, text) or text
+    cell.right:SetText(text .. "  ")
+    cell.right:Show()
     cell:Show()
     return cell
 end
@@ -210,7 +225,7 @@ local function printInfo(label, value, labelColor, valueColor)
 end
 
 local function playerTooltip(player)
-    local text = string.format("|T%s:14|t|c%s%s|r", ICT.ClassIcons[player.class], getClassColor(player), Player.GetName(player))
+    local text = string.format("|c%s%s|r", getClassColor(player), Player.GetNameWithIcon(player))
     local printTitle = true
     for k, spec in pairs(player.specs or {}) do
         if printTitle then
@@ -259,7 +274,7 @@ local function instanceTooltip(key, instance)
     for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
         local playerInstance = Instances:GetInstanceByName(player, key) or { locked = false }
         local playerColor = playerInstance.locked and lockedColor or availableColor
-        text = text .. string.format("\n|c%s%s|r", playerColor, Player.GetName(player))
+        text = text .. string.format("\n|c%s%s|r", playerColor, Player.GetNameWithIcon(player))
     end
 
     -- Display all available currency for the instance.
@@ -383,7 +398,7 @@ local function currencyTooltip(selectedPlayer, tokenId)
     for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
         local available = Player:AvailableCurrency(player, tokenId)
         local total = player.currency.wallet[tokenId] or 0
-        text = text .. printInfo(Player.GetName(player), string.format("%s (%s)", total, available), getClassColor(player))
+        text = text .. printInfo(Player.GetNameWithIcon(player), string.format("%s (%s)", total, available), getClassColor(player))
     end
 
     if ICT.db.options.verboseCurrencyTooltip then
@@ -416,8 +431,8 @@ end
 local function printCurrencyShort(player, tokenId, x, offset)
     local current = player.currency.wallet[tokenId] or 0
     local available = Player:AvailableCurrency(player, tokenId)
-    local text = printCellInfo(ICT:GetCurrencyWithIcon(tokenId), string.format("%s (%s)", current, available), subtitleColor, textColor)
-    local cell = printCell(x, offset, text)
+    local cell = printCell(x, offset, ICT:GetCurrencyWithIcon(tokenId), subtitleColor)
+    printCellRight(x, offset, string.format("%s (%s)", current, available), textColor)
     local tooltip = currencyTooltip(player, tokenId)
     addTooltip(cell, tooltip)
     return offset + 1
@@ -444,7 +459,7 @@ local function questTooltip(name, quest)
 
     for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
         local color = getQuestColor(player, quest)
-        text = text .. string.format("\n|c%s%s|r", color, Player.GetName(player))
+        text = text .. string.format("\n|c%s%s|r", color, Player.GetNameWithIcon(player))
     end
     return createTooltip("ICTQuestTooltip" .. name, text)
 end
@@ -481,8 +496,8 @@ local function printQuests(player, x, offset)
                 end
             end
         end
+        hideCell(x, offset)
     end
-    hideCell(x, offset)
     return offset
 end
 
@@ -527,26 +542,6 @@ local function printTimerMultiView(x, title, time)
     tickers[title] = C_Timer.NewTicker(1, function() textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", subtitleColor, title, textColor, time())) end)
     return x + 60
 end
-
-local function createTooltip(name, text)
-    local tooltip = _G[name]
-    local textField = tooltip and tooltip.textField
-    if not tooltip then
-        tooltip = CreateFrame("Frame", name, UIParent, "TooltipBorderedFrameTemplate")
-        tooltip:SetFrameStrata("DIALOG")
-        tooltip:Hide()
-        textField = tooltip:CreateFontString()
-        textField:SetPoint("CENTER", 0, 0)
-        textField:SetFont("Fonts\\FRIZQT__.TTF", 10)
-        textField:SetJustifyH("LEFT")
-        tooltip.textField = textField
-    end
-    textField:SetText(text)
-    tooltip:SetWidth(textField:GetStringWidth() + 18)
-    tooltip:SetHeight(textField:GetStringHeight() + 12)
-    return tooltip
-end
-
 
 local function hideMultiView(title)
     local name = "ICTReset" .. title
@@ -602,8 +597,7 @@ end
 
 local function display(player, x)
     local offset = 1
-    local name = string.format("|T%s:12|t%s", ICT.ClassIcons[player.class], Player.GetName(player))
-    local cell = printCell(x, offset, name, getClassColor(player))
+    local cell = printCell(x, offset, Player.GetNameWithIcon(player), getClassColor(player))
     addTooltip(cell, playerTooltip(player))
     offset = printResetTimers(x, offset)
     offset = printInstances("Dungeons", player.dungeons, x, offset)
@@ -659,7 +653,7 @@ function ICT:CreatePlayerDropdown()
         function()
             local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
             for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.PlayerEnabled) do
-                info.text = Player.GetName(player)
+                info.text = Player.GetNameWithIcon(player)
                 info.value = player.fullName
                 info.checked = ICT.selectedPlayer == player.fullName
                 info.func = function(self)

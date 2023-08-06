@@ -75,8 +75,9 @@ function Player:CreateInstances(player)
         elseif v.expansion < ICT.Expansions[ICT.WOTLK] then
             self:addInstance(player.oldRaids, v)
         end
-        if v.name == "Onyxia's Lair" then
-            self:addInstance(player.oldRaids, v)
+        if v.legacy then
+            local instance = self:addInstance(player.oldRaids, v)
+            instance.legacy = true
         end
     end
 end
@@ -89,6 +90,7 @@ function Player:addInstance(t, info, size)
         Instances:Reset(instance)
         t[k] = instance
     end
+    return t[k]
 end
 
 function Player:LocalizeInstanceNames(player)
@@ -140,6 +142,9 @@ function Player:CalculateCurrency(player)
 end
 
 function Player:AvailableCurrency(player, tokenId)
+    if ICT.CurrencyInfo[tokenId].unlimited then
+        return "N/A"
+    end
     if not player.currency.weekly[tokenId] or not player.currency.daily[tokenId] then
         return 0
     end
@@ -277,12 +282,12 @@ function Player.UpdateTalents()
 
     for i=1,2 do
         local specialization = ICT.LCInspector:GetSpecialization(guid, i)
-        specs[i].name = ICT.LCInspector:GetSpecializationName(player.class, specialization, true)
+        specs[i].name = specialization and ICT.LCInspector:GetSpecializationName(player.class, specialization, true) or ""
         specs[i].tab1, specs[i].tab2, specs[i].tab3 = ICT.LCInspector:GetTalentPoints(guid, i)
         specs[i].glyphs = {}
         for j=1,6 do
             local _, _, id, icon = ICT.LCInspector:GetGlyphSocketInfo(guid, j, i)
-            specs[i].glyphs[j] = { id = id, icon = icon }   
+            specs[i].glyphs[j] = id and { id = id, icon = icon } or nil
         end
     end
     Player.UpdateGear()
@@ -300,6 +305,10 @@ end
 
 function Player.GetName(player)
     return ICT.db.options.verboseName and player.fullName or player.name
+end
+
+function Player.GetNameWithIcon(player)
+   return string.format("|T%s:14|t%s", ICT.ClassIcons[player.class], Player.GetName(player))
 end
 
 function Player.PlayerSort(a, b)

@@ -25,9 +25,25 @@ local factionQuestName = function(hordeName, allianceName)
 end
 
 local level80 = function()
-    return function(player)
-        return UnitLevel("Player") == ICT.MaxLevel
+    return UnitLevel("Player") == ICT.MaxLevel
+end
+
+local getProfessionRank = function(player, id)
+    local icon = select(3, GetSpellInfo(id))
+    for _, v in pairs(player.professions or {}) do
+        if v.icon == icon then
+            return v.rank
+        end
     end
+    return -1
+end
+
+local isJewelCrafter = function(player)
+    return C_QuestLog.IsQuestFlaggedCompleted(13041) and getProfessionRank(player, 51311) >= 375
+end
+
+local isCook = function(player)
+    return UnitLevel("Player") >= 65 and getProfessionRank(player, 51296) >= 350
 end
 
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
@@ -52,14 +68,29 @@ ICT.QuestInfo = {
         ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
         seals = 5,
         tokenId = ICT.Triumph,
-        prereq = level80(),
+        prereq = level80,
     },
     ["Normal Daily Dungeon"] = {
         name = ICT:ReturnX("Normal Daily Dungeon"),
         ids = { 13240, 13241, 13243, 13244 },
         seals = 2,
         tokenId = ICT.Conquest,
-        prereq = level80(),
+        prereq = level80,
+    },
+    ["Jewelcrafting Daily"] = {
+        name = ICT:ReturnX("Jewelcrafting Daily"),
+        ids = { 12958, 12959, 12960, 12961, 12962, 12963, },
+        seals = 1,
+        tokenId = ICT.JewelcraftersToken,
+        prereq = isJewelCrafter,
+    },
+    ["Cooking Daily"] = {
+        name = ICT:ReturnX("Cooking Daily"),
+        ids = { 13112, 13113, 13114, 13115, 13116, 13100, 13101, 13103, 13102, 13107},
+        -- Mustard Dogs drops 2, but that requires the ability to detect the active daily.
+        seals = 1,
+        tokenId = ICT.Epicurean,
+        prereq = isCook,
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     ["Threat From Above"] = {
