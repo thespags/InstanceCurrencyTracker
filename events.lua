@@ -12,8 +12,8 @@ local maxPlayers, instanceId
 local function getOrCreateDb()
     local db = InstanceCurrencyDB or {}
     InstanceCurrencyDB = db
-    ICT:putIfAbsent(db.options, "players", {})
-    ICT:putIfAbsent(db.options, "options", {})
+    ICT:putIfAbsent(db, "players", {})
+    ICT:putIfAbsent(db, "options", {})
     ICT:putIfAbsent(db.options, "collapsible", {})
     db.reset = db.reset or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
     return db

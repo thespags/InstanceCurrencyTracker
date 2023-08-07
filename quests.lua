@@ -176,7 +176,7 @@ function Quests:CalculateAvailableDaily(tokenId)
     return function(player)
         local emblems = 0
         for _, v in ICT:fpairsByValue(ICT.QuestInfo, self:TokenFilter(tokenId)) do
-            emblems = emblems + (v.prereq and not self:IsDailyCompleted(v) and v.seals or 0)
+            emblems = emblems + (v.prereq(player) and not self:IsDailyCompleted(v) and v.seals or 0)
         end
         return emblems
     end
@@ -186,7 +186,7 @@ function Quests:CalculateMaxDaily(tokenId)
     return function(player)
         local emblems = 0
         for _, v in ICT:fpairsByValue(ICT.QuestInfo, self:TokenFilter(tokenId)) do
-            emblems = emblems + (v.prereq and v.seals or 0)
+            emblems = emblems + (v.prereq(player) and v.seals or 0)
         end
         return emblems
     end
