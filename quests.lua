@@ -192,6 +192,12 @@ function Quests:CalculateMaxDaily(tokenId)
     end
 end
 
+function Quests.IsQuestAvailable(player)
+    return function(quest)
+        return ICT.db.options.currency[quest.tokenId] and (player.quests.prereq[quest.key] or ICT.db.options.allQuests)
+    end
+end
+
 function ICT.QuestSort(player)
     return function(a, b)
         if ICT.db.options.orderLockLast then

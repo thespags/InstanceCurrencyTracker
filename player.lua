@@ -5,7 +5,6 @@ local Player = ICT.Player
 local Instances = ICT.Instances
 local Quests = ICT.Quests
 local Currency = ICT.Currency
-local MaxLevel = 80
 
 local function dailyReset(player)
     Instances:ResetAll(player.dungeons)
@@ -35,7 +34,7 @@ function Player:Create()
     local player = {}
     player.name = UnitName("Player")
     player.realm = GetRealmName()
-    player.fullName = ICT:GetFullName()
+    player.fullName = Player.GetCurrentPlayer()
     player.class = select(2, UnitClass("Player"))
     player.faction = select(1, UnitFactionGroup("Player"))
     player.level = UnitLevel("Player")
@@ -54,6 +53,7 @@ function Player:Create()
     -- Set transient information after copying main tables.
     dailyReset(player)
     weeklyReset(player)
+    Player.OnLoad(player)
     return player
 end
 
@@ -160,9 +160,9 @@ end
 
 -- Updates instances and currencies.
 -- We may want to decouple these things in the future.
-function Player:Update()
+function Player:Update(player)
     Player:ResetInstances()
-    local player = self:GetPlayer()
+    player = player or self:GetPlayer()
     Instances:Update(player)
     self:CalculateCurrency(player)
     self:CalculateQuest(player)
@@ -171,9 +171,8 @@ end
 
 -- Returns the provided player or current player if none provided.
 function Player:GetPlayer(playerName)
-    playerName = playerName or ICT:GetFullName()
-    local exists = ICT.db.players[playerName] and true or false
-    if not exists then
+    playerName = playerName or Player.GetCurrentPlayer()
+    if not ICT.db.players[playerName]  then
         print(string.format("[%s] Creating player: %s", addOnName, playerName))
     end
     local player = ICT.db.players[playerName] or Player:Create()
@@ -202,10 +201,7 @@ function Player:WipeRealm(realmName)
 end
 
 function Player:WipeAllPlayers()
-    local count = 0
-    for _, _ in pairs(ICT.db.players) do
-        count = count + 1
-    end
+    local count = ICT:sum(ICT.db.players, ICT:ReturnX(1))
     ICT.db.players = {}
     print(string.format("[%s] Wiped %s players", addOnName, count))
     self:Update()
@@ -228,8 +224,8 @@ end
 
 local SECONDARY_SKILLS = string.gsub(SECONDARY_SKILLS, ":", "")
 local PROFICIENCIES = string.gsub(PROFICIENCIES, ":", "")
-function Player:UpdateSkills()
-    local player = self:GetPlayer()
+function Player.UpdateSkills(player)
+    player = player or Player:GetPlayer()
     -- Skill list is always in same order, so we can get primary/secondary/weapon by checking the section headers.
     local professionCount = 0
     local isSecondary = false
@@ -239,7 +235,8 @@ function Player:UpdateSkills()
 
     for i = 1, GetNumSkillLines() do
         local name, isHeader, _, rank, _, _, max = GetSkillLineInfo(i)
-        local icon = select(3, GetSpellInfo(name))
+        local spellId = name == "Herbalism" and 2383 or name
+        local icon = select(3, GetSpellInfo(spellId))
         -- Note we aren't using anything besides professions, in the future we may want to display other attributes.
         if isHeader and name == TRADE_SKILLS then
             isSecondary = false
@@ -269,37 +266,160 @@ function Player:UpdateSkills()
 end
 
 local function getSpecs(player)
-    player.specs = player.specs or { {}, {} }
+    player.specs = player.specs or {}
     return player.specs
 end
 
-function Player.UpdateTalents()
-    local player = Player:GetPlayer()
-    local guid = UnitGUID("Player")
-    local active = ICT.LCInspector:GetActiveTalentGroup(guid)
+function Player.UpdateTalents(player)
+    player = player or Player:GetPlayer()
+    local active = ICT.LCInspector:GetActiveTalentGroup(player.guid)
     local specs = getSpecs(player)
     player.activeSpec = active
-
     for i=1,2 do
-        local specialization = ICT.LCInspector:GetSpecialization(guid, i)
+        local tab1, tab2, tab3 = ICT.LCInspector:GetTalentPoints(player.guid, i)
+        specs[i] = specs[i] or {}
+        local specialization = ICT.LCInspector:GetSpecialization(player.guid, i)
         specs[i].name = specialization and ICT.LCInspector:GetSpecializationName(player.class, specialization, true) or ""
-        specs[i].tab1, specs[i].tab2, specs[i].tab3 = ICT.LCInspector:GetTalentPoints(guid, i)
-        specs[i].glyphs = {}
-        for j=1,6 do
-            local _, _, id, icon = ICT.LCInspector:GetGlyphSocketInfo(guid, j, i)
-            specs[i].glyphs[j] = id and { id = id, icon = icon } or nil
-        end
+        specs[i].tab1, specs[i].tab2, specs[i].tab3 = tab1, tab2, tab3
+        specs[i].glyphs = { ICT.LCInspector:GetGlyphs(player.guid, i) }
     end
     Player.UpdateGear()
 end
 
-function Player.UpdateGear()
+function Player.UpdateGear(player)
     if TT_GS then
-        local player = Player:GetPlayer()
-        local guid = UnitGUID("Player")
-        local active = ICT.LCInspector:GetActiveTalentGroup(guid)
-        local spec = getSpecs(player)[active]
-        spec.gearScore, spec.ilvlScore = TT_GS:GetScore(guid)
+        player = player or Player:GetPlayer()
+        local active = ICT.LCInspector:GetActiveTalentGroup(player.guid)
+        local specs = getSpecs(player)
+        specs[active] = specs[active] or {}
+        specs[active].gearScore, specs[active].ilvlScore = TT_GS:GetScore(player.guid)
+    end
+end
+
+ICT.BagFamily = {
+    -- Generic
+    [0] = { icon = 133655, name = "General" },
+    -- Arrows ?
+    [1] = { icon = 41165, name = "Arrows" },
+    -- Bullets ?
+    [2] = { icon = 249175, name = "Bullets" },
+    -- Soul Shards
+    [3] = { icon = 134075, name = "Soul Shards" },
+    -- Herbalism ?
+    [6] = { icon = 136246, name = select(1, GetSpellInfo(265820))},
+    -- Enchanting ?
+    [7] = { icon = 136244, name = select(1, GetSpellInfo(51313))},
+    -- Leathworking 
+    [8] = { icon = 133611, name = select(1, GetSpellInfo(51302))},
+    -- Jewelcrafting ?
+    [10] = { icon = 134071, name = select(1, GetSpellInfo(51311))},
+    -- Mining ?
+    [11] = { icon = 136248, name = select(1, GetSpellInfo(50310))},
+    -- Inscription 
+    [16] = { icon = 237171, name = select(1, GetSpellInfo(45357))},
+    -- Engineering
+    [128] = { icon = 136243, name = select(1, GetSpellInfo(51306))},
+}
+-- If we decide to work on other versions than WOTLK.
+local GetBagName = GetBagName or C_Container.GetBagName
+local GetContainerNumFreeSlots = GetContainerNumFreeSlots or C_Container.GetContainerNumFreeSlots;
+local GetContainerNumSlots = GetContainerNumSlots or C_Container.GetContainerNumSlots;
+
+local function updateBags(player, key, startIndex, length)
+    player[key] = {}
+    player[key .. "Total"] = {}
+    local bags = player[key]
+    local bagsTotal = player[key .. "Total"]
+    for k, _ in pairs(ICT.BagFamily) do
+        bagsTotal[k] = { free = 0, total = 0 }
+    end
+    -- Surprisingly this one thing that is 0-indexed in WOW.
+    local endIndex = startIndex + length
+    for index=startIndex,endIndex do
+        local free, type = GetContainerNumFreeSlots(index)
+        local total = GetContainerNumSlots(index)
+        local name = GetBagName(index)
+        bags[index] = { name = name, free = free, type = type, total = total }
+        bagsTotal[type].free = bagsTotal[type].free + free
+        bagsTotal[type].total = bagsTotal[type].total + total
+    end
+end
+
+function Player.UpdateBags(player)
+    player = player or Player:GetPlayer()
+    updateBags(player, "bags", 0, NUM_BAG_SLOTS)
+end
+
+function Player.UpdateBankBags(player)
+    player = player or Player:GetPlayer()
+    updateBags(player, "bankBags", NUM_BAG_SLOTS + 1, NUM_BANKBAGSLOTS)
+end
+
+local function getAverageDurability()
+	local totalCurrent, totalMax = 0, 0
+	for i=0,19 do
+		local current, max = GetInventoryItemDurability(i)
+		if current and max then
+			totalCurrent = totalCurrent + current
+			totalMax = totalMax + max
+		end
+	end
+	if (totalMax == 0) then
+		return 100
+	end
+	return (totalCurrent / totalMax) * 100
+end
+
+function Player.UpdateDurability(player)
+    player = player or Player:GetPlayer()
+    player.durability = getAverageDurability()
+end
+
+function Player.UpdateMoney(player)
+    player = player or Player:GetPlayer()
+    player.money = GetMoney() or 0
+end
+
+function Player.UpdateGuild(player)
+    player = player or Player:GetPlayer()
+    player.guild, player.guildRank, _ = GetGuildInfo("Player")
+    player.guild = player.guild or "No Guild"
+end
+
+function Player.UpdateXP(player)
+    player = player or Player:GetPlayer()
+    player.currentXP = UnitXP("Player")
+    player.maxXP = UnitXPMax("Player")
+    player.level = UnitLevel("Player")
+    player.restedXP = GetXPExhaustion();
+end
+
+function Player.UpdateResting(player)
+    player = player or Player:GetPlayer()
+    player.resting = IsResting()
+    player.restedXP = GetXPExhaustion();
+end
+
+function Player.OnLoad(player)
+    player = player or Player:GetPlayer()
+    -- Pass in player so we don't get in a bad case of recursion.
+    Player:Update(player)
+    Player.UpdateSkills(player)
+    Player.UpdateTalents(player)
+    Player.UpdateGear(player)
+    Player.UpdateBags(player)
+    Player.UpdateDurability(player)
+    Player.UpdateMoney(player)
+    Player.UpdateGuild(player)
+    Player.UpdateXP(player)
+    Player.UpdateResting(player)
+    player.guid = UnitGUID("Player")
+
+    for k, v in pairs(ICT.db.players) do
+        if v.guid == player.guid and player.fullName ~= k then
+            ICT.db.players[k] = nil
+            break
+        end
     end
 end
 
@@ -316,9 +436,31 @@ function Player.PlayerSort(a, b)
 end
 
 function Player.PlayerEnabled(player)
-    return not player.isDisabled and Player.IsMaxLevel(player)
+    return not player.isDisabled and player.level > 0--and Player.IsMaxLevel(player)
 end
 
 function Player.IsMaxLevel(player)
-    return player.level == MaxLevel
+    return player.level == ICT.MaxLevel
+end
+
+function Player.GetCurrentPlayer()
+    return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
+end
+
+-- You gain 5% rested ever 8 hours, so every second equals the follow xp. 
+local restedPerSecond = .05 / ( 8 * 60 * 60)
+-- If you aren't resting you gain at a quarter of the rate, so divided by 4.
+local notRestedPerSecond = restedPerSecond / 4
+function Player.GetRestedXP(player)
+    -- This was added in later so safety check here.
+    if not player.resting or not player.time or not player.restedXP or not player.maxXP then
+        return 0
+    end
+    local percentPerSecond = player.resting and restedPerSecond or notRestedPerSecond
+    local timeElapsed = GetServerTime() - player.time
+    local percent = timeElapsed * percentPerSecond + (player.restedXP / player.maxXP)
+    if percent > 1.5 then
+        percent = 1.5
+    end
+	return percent
 end

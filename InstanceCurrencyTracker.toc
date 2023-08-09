@@ -1,6 +1,7 @@
 ## Interface: 30402
-## Version: 1.0.12
 ## Title: InstanceCurrencyTracker
+## Version: @project-version@
+## X-Date: @project-date-iso@
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB
 ## X-Curse-Project-ID: 892801
@@ -9,10 +10,12 @@
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 embeds.xml
 utils.lua
+colors.lua
 currency.lua
 instances.lua
 quests.lua
 player.lua
+tooltips.lua
 options.lua
 main.lua
 events.lua
