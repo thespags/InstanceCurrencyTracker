@@ -538,7 +538,7 @@ function Player:isMaxLevel()
     return self.level == ICT.MaxLevel
 end
 
-function Player:isPlayerEnabled()
+function Player:isEnabled()
     return not self.isDisabled and self:isLevelVisible()
 end
 

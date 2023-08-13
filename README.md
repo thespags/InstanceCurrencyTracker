@@ -15,17 +15,17 @@ Otherwise `/ict` will bring up the window.
 
 ## Information Collected
 + Character
- + Specs, Talents, Glyphs and Gear plus Durability
- + Shows missing Glyphs, Gems and Enchants
- + GearScore and iLvl if TacoTip addon is available
- + Professions
- + Level, XP, Rested XP, and Resting State
- + Guild and Guild Rank
- + Bags and Bank Bags
-  + Shows Bags by type and individual Bags
-  + Bank Bags requires you to view the bank
- + Gold
-  + Shows Gold by realm.
+  + Specs, Talents, Glyphs and Gear plus Durability
+  + Shows missing Glyphs, Gems and Enchants
+  + GearScore and iLvl if TacoTip addon is available
+  + Professions
+  + Level, XP, Rested XP, and Resting State
+  + Guild and Guild Rank
+  + Bags and Bank Bags
+    + Shows Bags by type and individual Bags
+    + Bank Bags requires you to view the bank
+  + Gold
+    + Shows Gold by realm
 + Instance lockout and encounter information  
 + Currency available for an instance  
 + Total currency in an instance  
@@ -40,10 +40,10 @@ _Enables `[Realm] Player` versus `Player` for name fields._
 _Shows all players side by side versus a single player._
 + Group Message  
 _Enables messaging to your group collected currency, otherwise prints to your chat window only._
-+ Characters
++ Characters  
 _Enable/Disable the characters to appear in the dropdown list and multi player view._
-+ Character Info
-+Enable/Disable line information about the character to appear under their name._
++ Character Info  
+_Enable/Disable line information about the character to appear under their name._
 + Reset Timers  
 _Show the one day, three day, five day, or weekly reset timers._  
 _Note: three and five require you to complete a raid with those lockout as there's no API to access the data._  
