@@ -584,9 +584,8 @@ local function timerSectionTooltip()
 end
 
 local function printTimerSingleView(x, offset, title, time)
-    offset = Cells:get(x, offset):printValue(title, time())
     tickers[title] = C_Timer.NewTicker(1, function () Cells:get(x, offset):printValue(title, time()) end)
-    return offset
+    return Cells:get(x, offset):printValue(title, time())
 end
 
 local function printTimerMultiView(x, title, time)
