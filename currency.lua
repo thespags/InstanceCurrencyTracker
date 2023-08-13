@@ -66,7 +66,7 @@ function Currency:CalculateRaidEmblems(tokenId)
 end
 
 local MaxTokens = {}
-local function caculateMaxEmblems(instances, tokenId)
+local function calculateMaxEmblems(instances, tokenId)
     -- Lock the value once we calculated as it doesn't change.
     -- It probably doesn't matter for performance but let's do it.
     -- Resets on reload in case this value is updated on new version.
@@ -81,13 +81,13 @@ end
 
 function Currency:CalculateMaxDungeonEmblems(tokenId)
     return function(player)
-        return caculateMaxEmblems(player.dungeons, tokenId)
+        return calculateMaxEmblems(player.dungeons, tokenId)
     end
 end
 
 function Currency:CalculateMaxRaidEmblems(tokenId)
     return function(player)
-        return caculateMaxEmblems(player.raids, tokenId)
+        return calculateMaxEmblems(player.raids, tokenId)
     end
 end
 

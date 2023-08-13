@@ -24,26 +24,16 @@ local factionQuestName = function(hordeName, allianceName)
     end
 end
 
-local level80 = function()
-    return UnitLevel("Player") == ICT.MaxLevel
-end
-
-local getProfessionRank = function(player, id)
-    local icon = select(3, GetSpellInfo(id))
-    for _, v in pairs(player.professions or {}) do
-        if v.icon == icon then
-            return v.rank
-        end
-    end
-    return -1
+local level80 = function(player)
+    return player.level == 80
 end
 
 local isJewelCrafter = function(player)
-    return C_QuestLog.IsQuestFlaggedCompleted(13041) and getProfessionRank(player, 51311) >= 375
+    return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:getProfessionRank(51311) >= 375
 end
 
 local isCook = function(player)
-    return UnitLevel("Player") >= 65 and getProfessionRank(player, 51296) >= 350
+    return player.level >= 65 and player:getProfessionRank(51296) >= 350
 end
 
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.

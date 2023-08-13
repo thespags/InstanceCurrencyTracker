@@ -18,13 +18,23 @@ function ICT:GetInstanceName(name, size)
     return string.format("%s (%s)", name, size)
 end
 
-function ICT:GetFullName()
-    return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
-end
-
 function ICT:LocalizeInstanceName(v)
     local name = GetRealZoneText(v.id)
     v.name = v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
+end
+
+function ICT.itemLinkSplit(itemLink)
+    if not itemLink then
+        return {}
+    end
+    local itemString = string.match(itemLink, "item:([%-?%d:]+)")
+    local t = {}
+    local i = 0
+    for v in string.gmatch(itemString, "(%d*):?") do
+        i = i + 1
+        t[i] =  v ~= "" and v or nil
+    end
+    return t
 end
 
 -- Sorted pairs iterator determined by the table key.
@@ -79,16 +89,27 @@ function ICT:sum(t, op, f)
     return total
 end
 
+function ICT:sumNonNil(...)
+    local count = 0
+    for _, v in pairs({...}) do
+        count = count + (v and 1 or 0)
+    end
+    return count
+end
+
+function ICT:max(t, op, f)
+    local max = 0
+    for _, v in pairs(t) do
+        if not f or f(v) then
+            local value = (op and op(v) or v)
+            max = value > max and value or max
+        end
+    end
+    return max
+end
+
 function ICT:add(left, right)
     return function(v) return left(v) + right(v) end
-end
-
-function ICT:hex2rgb(hex)
-    return tonumber("0x"..hex:sub(3,4)), tonumber("0x"..hex:sub(5,6)), tonumber("0x"..hex:sub(7,8))
-end
-
-function ICT:rgb2hex(r, g, b)
-    return string.format("FF%02X%02X%02X", r * 255, g * 255, b * 255)
 end
 
 -- Returns a function that simply returns the provided value.
@@ -105,34 +126,24 @@ function ICT:set(...)
     return t
 end
 
--- Returns true if all keys or mapped values in the table are true, otherwise false.
-function ICT:containsAllKeys(t, op)
-    for k, _ in pairs(t) do
-        if op and not op(k) or not op and not k then
+-- Returns true if all values or mapped values in the table are true, otherwise false.
+function ICT:containsAllValues(t, op)
+    for _, v in pairs(t) do
+        if op and not op(v) or not op and not v then
             return false
         end
     end
     return true
 end
 
--- Returns true if all values or mapped values in the table are true, otherwise false.
-function ICT:containsAllValues(t, op)
-    return self:containsAllKeys(t, function(k) return op and op(t[k]) or not op and t[k] end)
-end
-
--- Returns true if any key or mapped value in the table are true, otherwise false.
-function ICT:containsAnyKey(t, op)
-    for k, _ in pairs(t) do
-        if op and op(k) or not op and k then
+-- Returns true if any value or mapped value in the table are true, otherwise false.
+function ICT:containsAnyValue(t, op)
+    for _, v in pairs(t) do
+        if op and op(v) or not op and v then
             return true
         end
     end
     return false
-end
-
--- Returns true if any value or mapped value in the table are true, otherwise false.
-function ICT:containsAnyValue(t, op)
-    return self:containsAnyKey(t, function(k) return op and op(t[k]) or not op and t[k] end)
 end
 
 function ICT:putIfAbsent(t, key, value)
@@ -165,16 +176,28 @@ end
 
 local throttle = true;
 ICT.throttles = {};
-function ICT:throttleFunction(time, f, callback)
-	if not ICT.throttles[f] then
-		ICT.throttles[f] = true
-		C_Timer.After(time, function()
-			f()
-            callback()
-			ICT.throttles[f] = false;
-		end)
-	elseif not throttle then
-		f()
-        callback()
-	end
+function ICT:throttleFunction(source, time, f, callback)
+    return function()
+        -- Skip calling if the database/addon isn't initialized.
+        -- We handle this via "onLoad".
+        ICT.dprint(source)
+        if ICT.db and ICT.init then
+            local player = ICT.GetPlayer()
+            if time > 0 and not ICT.throttles[f] then
+                ICT.throttles[f] = true
+                C_Timer.After(time, function()
+                    f(player)
+                    callback()
+                    ICT.throttles[f] = false;
+                end)
+            elseif time <= 0 or not throttle then
+                f(player)
+                callback()
+            end
+        end
+    end
+end
+
+function ICT.NaturalSort(a, b)
+    return a < b
 end
