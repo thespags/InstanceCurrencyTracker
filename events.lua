@@ -5,7 +5,6 @@ ICT.DDMenu = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
 ICT.LDBroker = LibStub("LibDataBroker-1.1")
 ICT.LCInspector = LibStub("LibClassicInspector")
 local Player = ICT.Player
-local Instances = ICT.Instances
 local Options = ICT.Options
 local maxPlayers, instanceId
 
@@ -15,21 +14,10 @@ local function getOrCreateDb()
     ICT:putIfAbsent(db, "players", {})
     ICT:putIfAbsent(db, "options", {})
     ICT:putIfAbsent(db.options, "collapsible", {})
+    -- ICT:putIfAbsent(db.options.collapsible, "Info", true)
     db.reset = db.reset or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
     return db
 end
-
--- local foo = CreateFrame("Frame", "asdf", UIParent, "BasicFrameTemplateWithInset")
-
--- foo:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", 300, 400)
--- foo:SetSize(300, 400)
--- local tooltip = LibStub('LibQTip-2.0'):Acquire('MyFooBarTooltip', 2, "LEFT", "RIGHT")
--- tooltip:SmartAnchorTo(foo)
--- -- Add an header filling only the first two columns
--- tooltip:AddHeader('Anchor', 'Tooltip')
--- -- Add an new line, using all columns
--- tooltip:AddLine('Hello', 'World')
--- tooltip:Show()
 
 local function flipFrame()
     if not ICT.frame:IsVisible() then
@@ -41,11 +29,11 @@ local function flipFrame()
     end
 end
 
-local function updateDisplay()
-    local player = Player:GetPlayer()
+function ICT.UpdateDisplay()
+    local player = ICT.GetPlayer()
     player.time = GetServerTime();
     -- Defer updating the display if it's not currently viewed.
-    if ICT.frame:IsVisible() then
+    if ICT.frame and ICT.frame:IsVisible() then
         ICT:DisplayPlayer()
     else
         ICT.dprint("not updating frame")
@@ -76,16 +64,20 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
         initMinimap()
-        Player.OnLoad()
-        for _, player in pairs(ICT.db.players) do
+        for k, player in pairs(ICT.db.players) do
+            -- Recreate the player with any new functions.
+            ICT.db.players[k] = Player:new(player)
             -- Player may have already been created but we added new instances.
-            Player:CreateInstances(player)
+            player:createInstances()
             -- In case the langauge changed, localize again.
-            Player:LocalizeInstanceNames(player)
+            player:localizeInstanceNames()
         end
+        -- Check if we need to delay this part.
+        ICT.CreateCurrentPlayer()
+        ICT.init = true
+        ICT.GetPlayer():onLoad()
         ICT:CreateFrame()
         print(string.format("[%s] Initialized...", addOnName))
-        _, _, _, _, maxPlayers, _, _, instanceId = GetInstanceInfo()
         LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT:DisplayPlayer() ICT.frame:Show() end end)
         LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.anchorLFG then ICT.frame:Hide() end end)
     end
@@ -94,17 +86,10 @@ local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", initEvent)
 
-local function updateEvent(self, event)
-    -- Don't update if the addon hasn't been initialized yet.
-    if ICT.frame and ICT.db then
-        ICT.dprint("updating: " .. event)
-        Player:Update()
-        updateDisplay()
-    end
-end
 local updateFrame = CreateFrame("Frame")
 -- After the instance info is updated then trigger updates to our representation.
-updateFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
+-- This fires every time we load LFG so it seems unnecessary.
+-- updateFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 -- After an enounter update information for the instance.
 updateFrame:RegisterEvent("ENCOUNTER_END")
 -- After currency changes we need to update the wallet.
@@ -113,58 +98,64 @@ updateFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
 updateFrame:RegisterEvent("PLAYER_LEVEL_UP")
 -- Added for updating prerequisites and marking dailies done.
 updateFrame:RegisterEvent("QUEST_COMPLETE")
-updateFrame:SetScript("OnEvent", updateEvent)
+updateFrame:SetScript("OnEvent", ICT:throttleFunction("Instance/Currency", 0, Player.update, ICT.UpdateDisplay))
 
 local moneyFrame = CreateFrame("Frame")
 moneyFrame:RegisterEvent("PLAYER_MONEY")
-moneyFrame:SetScript("OnEvent", ICT:throttleFunction(2, Player.UpdateMoney, updateDisplay))
+moneyFrame:SetScript("OnEvent", ICT:throttleFunction("Money", 2, Player.updateMoney, ICT.UpdateDisplay))
 
 local skillFrame = CreateFrame("Frame")
 skillFrame:RegisterEvent("CHAT_MSG_SKILL")
-skillFrame:SetScript("OnEvent", ICT:throttleFunction(3, Player.UpdateSkills, updateDisplay))
+skillFrame:SetScript("OnEvent", ICT:throttleFunction("Skill", 3, Player.updateSkills, ICT.UpdateDisplay))
 
 local talentFrame = CreateFrame("Frame")
 talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
 talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
-talentFrame:SetScript("OnEvent", ICT:throttleFunction(3, Player.UpdateTalents, updateDisplay))
+talentFrame:SetScript("OnEvent", ICT:throttleFunction("Talent", 3, Player.updateTalents, ICT.UpdateDisplay))
+
+local glyphFrame = CreateFrame("Frame")
+glyphFrame:RegisterEvent("ACTIVATE_GLYPH")
+glyphFrame:SetScript("OnEvent", ICT:throttleFunction("Glyph", 1, Player.updateGlyphs, ICT.UpdateDisplay))
 
 local gearFrame = CreateFrame("Frame")
 gearFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-gearFrame:SetScript("OnEvent", ICT:throttleFunction(3, Player.UpdateGear, updateDisplay))
+gearFrame:RegisterEvent("SOCKET_INFO_SUCCESS")
+-- If something gets enchanted, although this is very potentially noisy as you can't filter it based on a specific skill.
+gearFrame:RegisterEvent("TRADE_SKILL_UPDATE")
+gearFrame:SetScript("OnEvent", ICT:throttleFunction("Gear", 3, Player.updateGear, ICT.UpdateDisplay))
 
 local bagFrame = CreateFrame("Frame")
 bagFrame:RegisterEvent("BAG_UPDATE")
-bagFrame:SetScript("OnEvent", ICT:throttleFunction(1, Player.UpdateBags, updateDisplay))
+bagFrame:SetScript("OnEvent", ICT:throttleFunction("Bag", 1, Player.updateBags, ICT.UpdateDisplay))
 
 -- Requires viewing the bank to update.
 -- Executes immediately after closing instead of delaying.
 local bankBagFrame = CreateFrame("Frame")
 bankBagFrame:RegisterEvent("BANKFRAME_CLOSED")
 -- Don't throttle but use the is db init check.
-bankBagFrame:SetScript("OnEvent", ICT:throttleFunction(0, Player.UpdateBankBags, updateDisplay))
+bankBagFrame:SetScript("OnEvent", ICT:throttleFunction("BankBag", 0, Player.updateBankBags, ICT.UpdateDisplay))
 
 local guildFrame = CreateFrame("Frame")
 guildFrame:RegisterEvent("PLAYER_GUILD_UPDATE")
 -- Don't throttle but use the is db init check.
-guildFrame:SetScript("OnEvent", ICT:throttleFunction(0, Player.UpdateGuild, updateDisplay))
+guildFrame:SetScript("OnEvent", ICT:throttleFunction("Guild", 0, Player.updateGuild, ICT.UpdateDisplay))
 
 local xpFrame = CreateFrame("Frame")
 xpFrame:RegisterEvent("PLAYER_XP_UPDATE")
-xpFrame:SetScript("OnEvent", ICT:throttleFunction(2, Player.UpdateXP, updateDisplay))
+xpFrame:SetScript("OnEvent", ICT:throttleFunction("XP", 2, Player.updateXP, ICT.UpdateDisplay))
 
 local restFrame = CreateFrame("Frame")
 restFrame:RegisterEvent("PLAYER_UPDATE_RESTING")
 restFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 -- Don't throttle but use the is db init check.
-restFrame:SetScript("OnEvent", ICT:throttleFunction(0, Player.UpdateResting, updateDisplay))
+restFrame:SetScript("OnEvent", ICT:throttleFunction("Rest", 0, Player.updateResting, ICT.UpdateDisplay))
 
--- If the player died, resurrected (e.g. rez sickness), or combat ended durability could have changed.
+-- If durability changed or equipment was swapped update the equipped durability.
 local durabilityFrame = CreateFrame("Frame")
-durabilityFrame:RegisterEvent("PLAYER_DEAD")
-durabilityFrame:RegisterEvent("PLAYER_UNGHOST")
-durabilityFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+durabilityFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
+durabilityFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 -- Don't throttle but use the is db init check.
-durabilityFrame:SetScript("OnEvent", ICT:throttleFunction(0, Player.UpdateDurability, updateDisplay))
+durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", 0, Player.updateDurability, ICT.UpdateDisplay))
 
 -- message and add option
 local function messageResults(player, instance)
@@ -174,7 +165,7 @@ local function messageResults(player, instance)
         local info = ICT.InstanceInfo[instance.id]
         -- Double check amounts before messaging.
         -- It seems WOW may process oddly.
-        Player:Update()
+        player:update()
         ICT:DisplayPlayer()
         for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
             -- Onyxia 40 is reused and has 0 emblems so skip currency.
@@ -193,10 +184,10 @@ local function messageResults(player, instance)
         ICT.dprint("broadcast: no instance")
     end
 end
-local broadcastEvent =  function()
+local broadcastEvent = function()
     if maxPlayers and instanceId then
-        local player = Player:GetPlayer()
-        local instance = Instances:GetInstanceById(player, instanceId, maxPlayers)
+        local player = ICT.GetPlayer()
+        local instance = player:getInstanceById(instanceId, maxPlayers)
         messageResults(player, instance)
     end
     _, _, _, _, maxPlayers, _, _, instanceId = GetInstanceInfo()
@@ -208,24 +199,23 @@ broadcastFrame:SetScript("OnEvent", broadcastEvent)
 SLASH_InstanceCurrencyTracker1 = "/ict";
 SlashCmdList.InstanceCurrencyTracker = function(msg)
     local command, rest = msg:match("^(%S*)%s*(.-)$")
-    local db = InstanceCurrencyDB
     -- Any leading non-whitespace is captured into command
     -- the rest (minus leading whitespace) is captured into rest.
     if command == "wipe" then
         if rest == "" then
-            Player:WipePlayer(Player.GetCurrentPlayer())
+            ICT.WipePlayer(Player.GetCurrentPlayer())
         elseif rest == "all" then
-            Player:WipeAllPlayers()
+            ICT.WipeAllPlayers()
         else
             command, rest = rest:match("^(%S*)%s*(.-)$")
             if command == "realm" then
                 if rest == "" then
-                    Player:WipeRealm(GetRealmName())
+                    ICT.WipeRealm(GetRealmName())
                 else
-                    Player:WipeRealm(rest)
+                    ICT.WipeRealm(rest)
                 end
             elseif command == "player" then
-                Player:WipePlayer(rest)
+                ICT.WipePlayer(rest)
             else
                 print("Invalid command")
             end
@@ -235,4 +225,31 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     elseif rest == "" then
         flipFrame()
     end
+end
+
+function ICT.WipePlayer(playerName)
+    if ICT.db.players[playerName] then
+        ICT.db.players[playerName] = nil
+        print(string.format("[%s] Wiped player: %s", addOnName, playerName))
+    else
+        print(string.format("[%s] Unknown player: %s", addOnName, playerName))
+    end
+    ICT.CreateCurrentPlayer()
+end
+
+function ICT.WipeRealm(realmName)
+    local count = 0
+    for name, _ in ICT:fpairsByValue(ICT.db.players, function(v) return v.realm == realmName end) do
+        count = count + 1
+        ICT.db.players[name] = nil
+    end
+    print(string.format("[%s] Wiped %s players on realm: %s", addOnName , count, realmName))
+    ICT.CreateCurrentPlayer()
+end
+
+function ICT.WipeAllPlayers()
+    local count = ICT:sum(ICT.db.players, ICT:ReturnX(1))
+    ICT.db.players = {}
+    print(string.format("[%s] Wiped %s players", addOnName, count))
+    ICT.CreateCurrentPlayer()
 end

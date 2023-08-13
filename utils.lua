@@ -23,6 +23,20 @@ function ICT:LocalizeInstanceName(v)
     v.name = v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
 end
 
+function ICT.itemLinkSplit(itemLink)
+    if not itemLink then
+        return {}
+    end
+    local itemString = string.match(itemLink, "item:([%-?%d:]+)")
+    local t = {}
+    local i = 0
+    for v in string.gmatch(itemString, "(%d*):?") do
+        i = i + 1
+        t[i] =  v ~= "" and v or nil
+    end
+    return t
+end
+
 -- Sorted pairs iterator determined by the table key.
 function ICT:spairs(t, comparator, filter)
     local keys = {}
@@ -162,19 +176,22 @@ end
 
 local throttle = true;
 ICT.throttles = {};
-function ICT:throttleFunction(time, f, callback)
+function ICT:throttleFunction(source, time, f, callback)
     return function()
-        -- Skip calling if the database isn't initialized.
-        if ICT.db then
+        -- Skip calling if the database/addon isn't initialized.
+        -- We handle this via "onLoad".
+        ICT.dprint(source)
+        if ICT.db and ICT.init then
+            local player = ICT.GetPlayer()
             if time > 0 and not ICT.throttles[f] then
                 ICT.throttles[f] = true
                 C_Timer.After(time, function()
-                    f()
+                    f(player)
                     callback()
                     ICT.throttles[f] = false;
                 end)
             elseif time <= 0 or not throttle then
-                f()
+                f(player)
                 callback()
             end
         end

@@ -102,6 +102,14 @@ function Options:FlipOptionsMenu()
     end
 end
 
+function Options:FlipSlider()
+    if ICT.db.options.showLevelSlider then
+        ICT.frame.levelSlider:Show()
+    else
+        ICT.frame.levelSlider:Hide()
+    end
+end
+
 local function createInfo()
     local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
     -- It seems you can't simply do not self.checked if keepShownOnClick is true
@@ -127,8 +135,9 @@ local function addPlayerOption(title, key, level, tooltip)
     ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
 end
 
-function Options:CreateOptionDropdown()
+function Options.CreateOptionDropdown()
     local dropdown = ICT.DDMenu:Create_UIDropDownMenu("ICTOptions", ICT.frame)
+    ICT.frame.options = dropdown
     dropdown:SetPoint("TOP", ICT.frame, "BOTTOM", 0, 2)
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
@@ -153,6 +162,7 @@ function Options:CreateOptionDropdown()
     ICT:putIfAbsent(options, "orderLockLast", false)
     ICT:putIfAbsent(options, "verboseCurrency", false)
     ICT:putIfAbsent(options, "verboseCurrencyTooltip", true)
+    ICT:putIfAbsent(options, "showLevelSlider", true)
     ICT:putIfAbsent(options.player, "showLevel", true)
     ICT:putIfAbsent(options.player, "showGuild", true)
     ICT:putIfAbsent(options.player, "showMoney", true)
@@ -183,7 +193,7 @@ function Options:CreateOptionDropdown()
                     ICT:DisplayPlayer()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
-         
+
                 -- Switches between a single character and multiple characters to view.
                 local multiPlayerView = createInfo()
                 multiPlayerView.text = "Multi Character View"
@@ -315,9 +325,9 @@ function Options:CreateOptionDropdown()
                 ICT.DDMenu:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
                 if menuList == "Characters" then
-                    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.IsMaxLevel) do
+                    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isLevelVisible) do
                         local info = createInfo()
-                        info.text = ICT.Player.GetName(player)
+                        info.text = player:getName()
                         info.value = player.fullName
                         info.checked = not player.isDisabled
                         info.func = function(self)
@@ -443,12 +453,25 @@ function Options:CreateOptionDropdown()
                     verboseCurrencyTooltip.checked = options.verboseCurrencyTooltip
                     verboseCurrencyTooltip.tooltipTitle = verboseCurrencyTooltip.text
                     verboseCurrencyTooltip.tooltipOnButton = true
-                    verboseCurrencyTooltip.tooltipText = "Shows instances and quests currency available and total currency for the hovered over currency"
+                    verboseCurrencyTooltip.tooltipText = "Shows instances and quests currency available and total currency for the hovered over currency."
                     verboseCurrencyTooltip.func = function(self)
                         options.verboseCurrencyTooltip = not options.verboseCurrencyTooltip
                         ICT:DisplayPlayer()
                     end
                     ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrencyTooltip, level)
+
+                    local levelSlider = createInfo()
+                    levelSlider.text = "Show Minimum Level Slider"
+                    levelSlider.hasArrow = false
+                    levelSlider.checked = options.showLevelSlider
+                    levelSlider.tooltipTitle = levelSlider.text
+                    levelSlider.tooltipOnButton = true
+                    levelSlider.tooltipText = "Displays the slider bar to control minimum character level."
+                    levelSlider.func = function(self)
+                        options.showLevelSlider = not options.showLevelSlider
+                        Options:FlipSlider()
+                    end
+                    ICT.DDMenu:UIDropDownMenu_AddButton(levelSlider, level)
                 elseif menuList == "Character Info" then
                     addPlayerOption("Show Level", "showLevel", level)
                     addPlayerOption("Show Guild", "showGuild", level)
@@ -497,4 +520,33 @@ function Options:PrintMessage(text)
     else
         print(text)
     end
+end
+
+function Options.CreatePlayerDropdown()
+    local playerDropdown = ICT.DDMenu:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
+    ICT.frame.playerDropdown = playerDropdown
+    playerDropdown:SetPoint("TOP", ICT.frame, 0, -30)
+    playerDropdown:SetAlpha(1)
+    playerDropdown:SetIgnoreParentAlpha(true)
+    -- Width set to slightly smaller than parent frame.
+    ICT.DDMenu:UIDropDownMenu_SetWidth(playerDropdown, 160)
+
+    ICT.DDMenu:UIDropDownMenu_Initialize(
+        playerDropdown,
+        function()
+            local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
+            for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isPlayerEnabled) do
+                info.text = player:getNameWithIcon()
+                info.value = player.fullName
+                info.checked = ICT.selectedPlayer == player.fullName
+                info.func = function(self)
+                    ICT.selectedPlayer = self.value
+                    ICT.DDMenu:UIDropDownMenu_SetText(playerDropdown, player:getName())
+                    ICT:DisplayPlayer()
+                end
+                ICT.DDMenu:UIDropDownMenu_AddButton(info)
+            end
+        end
+    )
+    Options:FlipOptionsMenu()
 end

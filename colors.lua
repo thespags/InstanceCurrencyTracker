@@ -17,6 +17,14 @@ function ICT:rgbPercentage2hex(r, g, b)
     return self:rgbInteger2hex(r * 255, g * 255, b * 255)
 end
 
+function ICT:getItemScoreHex(itemLink)
+    if TT_GS then
+        local _, _, r, g, b = TT_GS:GetItemScore(itemLink)
+        return ICT:rgbPercentage2hex(r, g, b)
+    end
+    return nil
+end
+
 local function inverseSrgbCompanding(color)
     local r, g, b = ICT:hex2rgbPercentage(color)
 
