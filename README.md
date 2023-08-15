@@ -56,13 +56,13 @@ _Select the currency you wish to view defaults to all currencies._
 + Frame  
     + Display  
     _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._
-    + Order Lock Last"
+    + Order Lock Last"  
     _Orders locked instances and completed quests after available instances and quests._
     + Verbose Currency  
     _Multi-line currency versus single line currency information_
     + Simple Currency Tooltip  
     _Shows only current and available currency per player, otherwise includes instances and quests collected._
-+ Minimum Character Level Slider
++ Minimum Character Level Slider  
 _Controsl the characters visible based on level._
 
 ## Color Codes

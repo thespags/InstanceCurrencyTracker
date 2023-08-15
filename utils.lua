@@ -1,5 +1,6 @@
 local addOn, ICT = ...
 
+ICT.OneDay = 86400
 ICT.MaxLevel = 80
 ICT.ClassIcons = {
     ["WARRIOR"] = 626008,
@@ -167,8 +168,8 @@ function ICT:DisplayTime(time)
     if not time then
         return ""
     end
-    local days = math.floor(time / 86400)
-    local hours = math.floor(time % 86400 / 3600)
+    local days = math.floor(time / ICT.OneDay)
+    local hours = math.floor(time % ICT.OneDay / 3600)
     local minutes = math.floor(time % 3600 / 60)
     local seconds = math.floor(time % 60)
     return string.format("%d:%02d:%02d:%02d", days, hours, minutes, seconds)

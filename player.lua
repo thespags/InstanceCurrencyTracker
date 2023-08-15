@@ -62,12 +62,13 @@ function Player:onLoad()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
     ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
-    self:updateBags()
+    ICT:throttleFunction("onLoad", 1, Player.updateBags, ICT.UpdateDisplay)()
     self:updateDurability()
     self:updateMoney()
     self:updateGuild()
     self:updateXP()
     self:updateResting()
+    -- self:updateCooldowns()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -166,8 +167,9 @@ function Player:ResetInstances()
             end
             -- There doesn't seem to be an API to get 3 or 5 day reset so recalculate from the last known piece.
             -- Keep going until we have a time in the future, the player may have not logged in a while.
+            -- Less math to avoid an off by 1 error.
             while (ICT.db.reset[k] < timestamp) do
-                ICT.db.reset[k] = ICT.db.reset[k] + k * 86400
+                ICT.db.reset[k] = ICT.db.reset[k] + k * ICT.OneDay
             end
         end
     end
@@ -243,6 +245,16 @@ function Player:updateInstance()
     end
 end
 
+local remap = {
+    [50310] = 2656,
+    [29354] = 2656,
+    [10248] = 2656,
+    [3564] = 2656,
+    [2576] = 2656,
+    [2575] = 2656,
+}
+-- All these are fishing
+local ignored = ICT:set(2383, 7731, 7732, 7620, 18248, 33095, 51294, 62734)
 local SECONDARY_SKILLS = string.gsub(SECONDARY_SKILLS, ":", "")
 local PROFICIENCIES = string.gsub(PROFICIENCIES, ":", "")
 function Player:updateSkills()
@@ -255,8 +267,11 @@ function Player:updateSkills()
 
     for i = 1, GetNumSkillLines() do
         local name, isHeader, _, rank, _, _, max = GetSkillLineInfo(i)
-        local spellId = name == "Herbalism" and 2383 or name
-        local icon = select(3, GetSpellInfo(spellId))
+        -- Herbliasm doesn't have a spell so swap to 'Find Herb', note this isn't localized...
+        local nameOrId = name == "Herbalism" and 2383 or name
+        local _, _, icon, _, _, _, spellId = GetSpellInfo(nameOrId)
+        -- Ugly, but Swap (mining) or ignore (fishing),
+        spellId = remap[spellId] or not ignored[spellId] and spellId or nil
         -- Note we aren't using anything besides professions, in the future we may want to display other attributes.
         if isHeader and name == TRADE_SKILLS then
             isSecondary = false
@@ -279,6 +294,7 @@ function Player:updateSkills()
                 icon = icon,
                 rank = rank,
                 max = max,
+                spellId = spellId,
                 isSecondary = isSecondary
             }
         end
@@ -371,34 +387,45 @@ local GetBagName = GetBagName or C_Container.GetBagName
 local GetContainerNumFreeSlots = GetContainerNumFreeSlots or C_Container.GetContainerNumFreeSlots;
 local GetContainerNumSlots = GetContainerNumSlots or C_Container.GetContainerNumSlots;
 
+local function addBags(index, bags, bagsTotal)
+    -- If nil then the slot is empty.
+    local total = GetContainerNumSlots(index)
+    if total > 0 then
+        local name = GetBagName(index)
+        -- Default Bank Bag doesn't have a name, so use the "Backpack" localized.
+        name = name == "" and GetBagName(0) or name
+        local free, type = GetContainerNumFreeSlots(index)
+        -- By name requires the item in your inventory so store this for the player.
+        local icon = C_Item.GetItemIconByID(name)
+        icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
+        bags[index] = { name = name, free = free, type = type, total = total, icon = icon }
+       -- print(name .. " " .. tostring(type))
+        bagsTotal[type] = bagsTotal[type] or { free = 0, total = 0 }
+        bagsTotal[type].free = bagsTotal[type].free + free
+        bagsTotal[type].total = bagsTotal[type].total + total
+
+        -- Handle cases if new bag types are added.
+        if not ICT.BagFamily[type] then
+            print(string.format("[%s] Unknown bag type %s (%s), please report this on the addon page.", addOnName, type, name))
+            ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
+        end
+    end
+end
+
 local function updateBags(self, key, startIndex, length)
-    self[key] = {}
-    self[key .. "Total"] = {}
-    local bags = self[key]
-    local bagsTotal = self[key .. "Total"]
+    local bags = {}
+    local bagsTotal = {}
     -- Surprisingly this one thing that is 0-indexed in WOW.
     local endIndex = startIndex + length
     for index=startIndex,endIndex do
-        -- If nil then the slot is empty.
-        local name = GetBagName(index)
-        if name then
-            local free, type = GetContainerNumFreeSlots(index)
-            local total = GetContainerNumSlots(index)
-            -- By name requires the item in your inventory so store this for the player.
-            local icon = C_Item.GetItemIconByID(name)
-            icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
-            bags[index] = { name = name, free = free, type = type, total = total, icon = icon }
-            bagsTotal[type] = bagsTotal[type] or { free = 0, total = 0 }
-            bagsTotal[type].free = bagsTotal[type].free + free
-            bagsTotal[type].total = bagsTotal[type].total + total
-
-            -- Handle cases if new bag types are added.
-            if not ICT.BagFamily[type] then
-                print(string.format("[%s] Unknown bag type %s (%s), please report this on the addon page.", addOnName, type, name))
-                ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
-            end
-        end
+        addBags(index, bags, bagsTotal)
     end
+    -- But wait, bank is -1, so handle it!
+    if key == "bankBags" then
+        addBags(-1, bags, bagsTotal)
+    end
+    self[key] = bags
+    self[key .. "Total"] = bagsTotal
 end
 
 function Player:updateBags()
@@ -406,7 +433,11 @@ function Player:updateBags()
 end
 
 function Player:updateBankBags()
-    updateBags(self, "bankBags", NUM_BAG_SLOTS + 1, NUM_BANKBAGSLOTS - 1)
+    -- BANK_CLOSED fires twice, but data is only on the first event, so skip the second...
+    local type = select(2, GetContainerNumFreeSlots(-1))
+    if type then
+        updateBags(self, "bankBags", NUM_BAG_SLOTS + 1, NUM_BANKBAGSLOTS)
+    end
 end
 
 local function getAverageDurability()
@@ -448,6 +479,13 @@ end
 function Player:updateResting()
     self.resting = IsResting()
     self.restedXP = GetXPExhaustion();
+end
+
+function Player:updateCooldowns()
+    self.cooldowns = self.cooldowns or {}
+    for spellId, v in pairs(ICT.Cooldowns.spells) do
+        ICT.Cooldowns:UpdateSpellData(self, spellId)
+    end
 end
 
 -- We probably want to merge these three tables so we don't need this funny business.
@@ -536,6 +574,10 @@ end
 
 function Player:isMaxLevel()
     return self.level == ICT.MaxLevel
+end
+
+function Player:isCurrentPlayer()
+    return self.fullName == Player.GetCurrentPlayer()
 end
 
 function Player:isEnabled()

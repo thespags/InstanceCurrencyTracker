@@ -47,7 +47,7 @@ local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllian
         else
             return "Unknown"
         end
-        return select(1, C_QuestLog.GetQuestInfo(questID))
+        return select(1, C_QuestLog.GetQuestInfo(questID)) or "Unknnown"
     end
 end
 
