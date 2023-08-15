@@ -105,7 +105,10 @@ moneyFrame:RegisterEvent("PLAYER_MONEY")
 moneyFrame:SetScript("OnEvent", ICT:throttleFunction("Money", 2, Player.updateMoney, ICT.UpdateDisplay))
 
 local skillFrame = CreateFrame("Frame")
+-- Individual skill ups.
 skillFrame:RegisterEvent("CHAT_MSG_SKILL")
+-- Learning a new skill or raising a skill from Journeyman to Master. 
+skillFrame:RegisterEvent("SKILL_LINES_CHANGED")
 skillFrame:SetScript("OnEvent", ICT:throttleFunction("Skill", 3, Player.updateSkills, ICT.UpdateDisplay))
 
 local talentFrame = CreateFrame("Frame")
@@ -132,6 +135,7 @@ bagFrame:SetScript("OnEvent", ICT:throttleFunction("Bag", 1, Player.updateBags, 
 -- Executes immediately after closing instead of delaying.
 local bankBagFrame = CreateFrame("Frame")
 bankBagFrame:RegisterEvent("BANKFRAME_CLOSED")
+bankBagFrame:RegisterEvent("BANKFRAME_OPENED")
 -- Don't throttle but use the is db init check.
 bankBagFrame:SetScript("OnEvent", ICT:throttleFunction("BankBag", 0, Player.updateBankBags, ICT.UpdateDisplay))
 
@@ -156,6 +160,11 @@ durabilityFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 durabilityFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 -- Don't throttle but use the is db init check.
 durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", 0, Player.updateDurability, ICT.UpdateDisplay))
+
+-- local cooldownFrame = CreateFrame("Frame")
+-- cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
+-- --CHAT_MSG_TRADESKILLS
+-- cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
 
 -- message and add option
 local function messageResults(player, instance)

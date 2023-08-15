@@ -7,7 +7,6 @@ local Cells = ICT.Cells
 local UI = ICT.UI
 
 -- Values that change
-local tickers = {}
 local paddings = {}
 
 local function enableMoving(frame, callback)
@@ -100,7 +99,8 @@ local function calculatePadding()
     paddings.bankBags = options.player.showBags and options.player.showBankBags
         and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0
-    paddings.professions = ICT:max(db.players, function(player) return #player.professions end, Player.isEnabled)
+    paddings.professions = ICT:max(db.players, function(player) return #(player.professions or {}) end, Player.isEnabled)
+    paddings.cooldowns = ICT:max(db.players, function(player) return #(player.cooldowns or {}) end, Player.isEnabled)
     paddings.specs = TT_GS and 6 or 2
     paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestAvailable()) end, Player.isEnabled)
 end
@@ -339,11 +339,34 @@ local function printCharacterInfo(player, x, offset)
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
                 local name = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
-                offset = Cells:get(x, offset):printValue(name, string.format("%s/%s", v.rank, v.max))
+                cell = Cells:get(x, offset)
+                offset = cell:printValue(name, string.format("%s/%s", v.rank, v.max))
+                if v.spellId and player:isCurrentPlayer() then
+                    cell:clickable(function() CastSpellByID(v.spellId) end)
+                end
             end
             offset = UI:hideRows(x, offset, padding)
         end
     end
+
+    -- if true then
+    --     offset = Cells:get(x, offset):hide()
+    --     offset = Cells:get(x, offset):printSectionTitle("Cooldowns")
+
+    --     if not ICT.db.options.collapsible["Cooldowns"] then
+    --         offset = UI:hideRows(x, offset, padding)
+    --         padding = getPadding(offset, paddings.cooldowns)
+    --         for _, v in pairs(player.cooldowns or {}) do
+    --             cell = Cells:get(x, offset)
+    --             local name = string.format("|T%s:14|t%s", v.icon, v.name)
+    --             offset = cell:printTicker(name, v.expires, v.duration)
+    --             if player:isCurrentPlayer() then
+    --                 cell:clickable(function() v:cast(player) end)
+    --             end
+    --         end
+    --         offset = UI:hideRows(x, offset, paddings.cooldowns)
+    --     end
+    -- end
     offset = Cells:get(x, offset):hide()
     Cells.indent = ""
     return offset
@@ -570,12 +593,6 @@ local function printQuests(player, x, offset)
     return offset
 end
 
-local function cancelTicker(k)
-    if tickers[k] then
-        tickers[k]:Cancel()
-    end
-end
-
 local function timerSectionTooltip()
     return Tooltips:new("Reset Timer")
     :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
@@ -583,72 +600,28 @@ local function timerSectionTooltip()
     :create("ICTResetTimerTooltip")
 end
 
-local function printTimerSingleView(x, offset, title, time)
-    tickers[title] = C_Timer.NewTicker(1, function () Cells:get(x, offset):printValue(title, time()) end)
-    return Cells:get(x, offset):printValue(title, time())
-end
-
-local function printTimerMultiView(x, title, time)
-    local name = "ICTReset" .. title
-    local timer = _G[name]
-    local textField = timer and timer.textField
-    if not timer then
-        timer = CreateFrame("Button", name, ICT.frame)
-        timer:SetAlpha(1)
-        timer:SetIgnoreParentAlpha(true)
-        timer:SetSize(UI.cellWidth, UI.cellHeight)
-        textField = timer:CreateFontString()
-        textField:SetPoint("CENTER")
-        textField:SetFont("Fonts\\FRIZQT__.TTF", 8)
-        textField:SetJustifyH("LEFT")
-        timer.textField = textField
-        timerSectionTooltip():attachFrame(timer)
-    end
-    timer:SetPoint("TOP", x, -36)
-    timer:Show()
-    textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time()))
-    tickers[title] = C_Timer.NewTicker(1, function() textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time())) end)
-    return x + 60
-end
-
-local function hideMultiView(title)
-    local name = "ICTReset" .. title
-    local timer = _G[name]
-    if timer then
-        timer:Hide()
-    end
-end
-
-local function cancelResetTimerTickers()
-    for k, _ in ICT:spairs(ICT.db.reset) do
-        local name = ICT.ResetInfo[k].name
-        cancelTicker(name)
-        hideMultiView(name)
-    end
-end
-
 local function printResetTimers(x, offset)
-    cancelResetTimerTickers()
     local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
+    local tooltip = timerSectionTooltip()
     if count > 0 then
         if ICT.db.options.multiPlayerView then
             local start = 32 + -60 * count / 2
+            local frame = nil
             for k, v in ICT:spairs(ICT.db.reset) do
                 if ICT.db.options.reset[k] then
-                    local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
-                    start = printTimerMultiView(start, ICT.ResetInfo[k].name, time)
+                    start, frame = UI:printMultiViewResetTicker(start, ICT.ResetInfo[k].name, v, k * ICT.OneDay)
+                    tooltip:attachFrame(frame)
                 end
             end
         else
             local cell = Cells:get(x, offset)
             offset = cell:printSectionTitle("Reset")
-            timerSectionTooltip():attach(cell)
+            tooltip:attach(cell)
 
             if not ICT.db.options.collapsible["Reset"] then
                 for k, v in ICT:spairs(ICT.db.reset) do
                     if ICT.db.options.reset[k] then
-                        local time = function() return v and ICT:DisplayTime(v - GetServerTime()) or "N/A" end
-                        offset = printTimerSingleView(x, offset, ICT.ResetInfo[k].name, time)
+                        offset = Cells:get(x, offset):printTicker(ICT.ResetInfo[k].name, v, k * ICT.OneDay)
                     end
                 end
             end
@@ -682,6 +655,7 @@ end
 function ICT:DisplayPlayer()
     calculatePadding()
     calculateGold()
+    UI:hideTickers()
     Options:FlipSlider()
     for _, v in pairs(deleteButtons) do
         v:Hide()
@@ -760,7 +734,7 @@ function ICT:CreatePlayerSlider()
     editBox:EnableMouse(true);
     editBox:SetBackdrop(ManualBackdrop);
     editBox:SetBackdropColor(0, 0, 0, 0.5);
-    editBox:SetBackdropBorderColor(0.3, 0.3, 0.30, 0.80);
+    editBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8);
     editBox:SetScript("OnEnter", function(frame)
         frame:SetBackdropBorderColor(0.5, 0.5, 0.5, 1);
     end);

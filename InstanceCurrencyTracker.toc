@@ -1,7 +1,7 @@
 ## Interface: 30402
 ## Title: InstanceCurrencyTracker
-## Version: @project-version@
-## X-Date: @project-date-iso@
+## Version: v1.0.17
+## X-Date: 2023-08-13T23:51:23Z
 ## Author: spags
 ## SavedVariables: InstanceCurrencyDB
 ## X-Curse-Project-ID: 892801
