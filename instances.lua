@@ -28,7 +28,7 @@ end
 local isLastBossKilled = function(instance)
     local index
     -- Override for Gundrak as lastboss is the optional boss. 
-    -- TODO COS may behave similiarly 
+    -- TODO COS may behave similarly 
     if instance.id == 604 then
         index = 4
     else
@@ -101,43 +101,43 @@ local maxNumEncountersPlusOne = function(instance) return numEncounters(instance
 -- We could overload the id and max player for some formula, such as concatenating the two.
 -- For readability of tables we will use English names instead of ids.
 ICT.InstanceInfo = {
-    [574] = { name = "Utgarde Keep", expansion = 3, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [575] = { name = "Utgarde Pinnacle", expansion = 3, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [595] = { name = "The Culling of Stratholme", expansion = 3, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [600] = { name = "Drak'Tharon Keep", expansion = 3, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [604] = { name = "Gundrak", expansion = 3, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [576] = { name = "The Nexus", expansion = 3, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [578] = { name = "The Oculus", expansion = 3, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [608] = { name = "Violet Hold", expansion = 3, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [602] = { name = "Halls of Lightning", expansion = 3, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [599] = { name = "Halls of Stone", expansion = 3, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [601] = { name = "Azjol-Nerub", expansion = 3, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [619] = { name = "Ahn'kahet: The Old Kingdom", expansion = 3, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
-    [650] = { name = "Trial of the Champion", expansion = 3, maxPlayers = {5}, numEncounters = 3, tokenIds = totcEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [574] = { name = "Utgarde Keep", expansion = 2, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [575] = { name = "Utgarde Pinnacle", expansion = 2, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [595] = { name = "The Culling of Stratholme", expansion = 2, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [600] = { name = "Drak'Tharon Keep", expansion = 2, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [604] = { name = "Gundrak", expansion = 2, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [576] = { name = "The Nexus", expansion = 2, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [578] = { name = "The Oculus", expansion = 2, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [608] = { name = "Violet Hold", expansion = 2, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [602] = { name = "Halls of Lightning", expansion = 2, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [599] = { name = "Halls of Stone", expansion = 2, maxPlayers = {5}, numEncounters = 4, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [601] = { name = "Azjol-Nerub", expansion = 2, maxPlayers = {5}, numEncounters = 3, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [619] = { name = "Ahn'kahet: The Old Kingdom", expansion = 2, maxPlayers = {5}, numEncounters = 5, tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [650] = { name = "Trial of the Champion", expansion = 2, maxPlayers = {5}, numEncounters = 3, tokenIds = totcEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
     --["Pit of Saron"] = { id = ?, numEncounters = 3 },
     --["The Forge of Souls"] = { id = ?, numEncounters = 3 },
     --["Halls of Reflection"] = { id = ?, numEncounters = 3 }
-    [624] = { name = "Vault of Archavon", expansion = 3, maxPlayers = {10, 25}, numEncounters = 3, tokenIds = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), emblems = voaEmblems, maxEmblems = ICT:ReturnX(2) },
-    [533] = { name = "Naxxramas", expansion = 3, maxPlayers = {10, 25}, numEncounters = 15, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [615] = { name = "The Obsidian Sanctum", expansion = 3, maxPlayers = {10, 25}, numEncounters = 4, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [616] = { name = "The Eye of Eternity", expansion = 3, maxPlayers = {10, 25}, numEncounters = 1, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
-    [603] = { name = "Ulduar", expansion = 3, numEncounters = 14, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Conquest), emblems = ulduarEmblems, maxEmblems = ICT:ReturnX(Instances.MaxUlduarEmblems) },
-    [249] = { name = "Onyxia's Lair", expansion = 3, legacy = 1, numEncounters = 1, maxPlayers = {10, 25},tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [649] = { name = "Trial of the Crusader", expansion = 3, numEncounters = 5, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
-    [532] = { name = "Karazhan", expansion = 2, maxPlayers = {10}, numEncounters = 11 },
-    [565] = { name = "Gruul's Lair", expansion = 2, maxPlayers = {25}, numEncounters = 2 },
-    [544] = { name = "Magtheridon's Lair", expansion = 2, maxPlayers = {25}, numEncounters = 1 },
-    [548] = { name = "Serpentshrine Cavern", expansion = 2, maxPlayers = {25}, numEncounters = 6 },
-    [550] = { name = "Tempest Keep", expansion = 2, maxPlayers = {25}, numEncounters = 4 },
-    [564] = { name = "Black Temple", expansion = 2, maxPlayers = {25}, numEncounters = 9 },
-    [534] = { name = "Hyjal Summit", expansion = 2, maxPlayers = {25}, numEncounters = 5 },
-    [568] = { name = "Zul'Aman ", expansion = 2, maxPlayers = {10}, numEncounters = 6},
-    [580] = { name = "Sunwell Plateau", expansion = 2, maxPlayers = {25}, numEncounters = 6 },
-    [409] = { name = "Molten Core", expansion = 1, maxPlayers = {40}, numEncounters = 10 },
-    [309] = { name = "Zul'Gurub", expansion = 1, maxPlayers = {20}, numEncounters = 10},
-    [469] = { name = "Blackwing Lair", expansion = 1, maxPlayers = {40}, numEncounters = 8 },
-    [509] = { name = "Ruins of Ahn'Qiraj", expansion = 1, maxPlayers = {20}, numEncounters = 6 },
-    [531] = { name = "Temple of Ahn'Qiraj", expansion = 1, maxPlayers = {40}, numEncounters = 9 },
+    [624] = { name = "Vault of Archavon", expansion = 2, maxPlayers = {10, 25}, numEncounters = 3, tokenIds = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), emblems = voaEmblems, maxEmblems = ICT:ReturnX(2) },
+    [533] = { name = "Naxxramas", expansion = 2, maxPlayers = {10, 25}, numEncounters = 15, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [615] = { name = "The Obsidian Sanctum", expansion = 2, maxPlayers = {10, 25}, numEncounters = 4, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [616] = { name = "The Eye of Eternity", expansion = 2, maxPlayers = {10, 25}, numEncounters = 1, tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [603] = { name = "Ulduar", expansion = 2, numEncounters = 14, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Conquest), emblems = ulduarEmblems, maxEmblems = ICT:ReturnX(Instances.MaxUlduarEmblems) },
+    [249] = { name = "Onyxia's Lair", expansion = 2, legacy = 1, numEncounters = 1, maxPlayers = {10, 25},tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [649] = { name = "Trial of the Crusader", expansion = 2, numEncounters = 5, maxPlayers = {10, 25}, tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [532] = { name = "Karazhan", expansion = 1, maxPlayers = {10}, numEncounters = 11 },
+    [565] = { name = "Gruul's Lair", expansion = 1, maxPlayers = {25}, numEncounters = 2 },
+    [544] = { name = "Magtheridon's Lair", expansion = 1, maxPlayers = {25}, numEncounters = 1 },
+    [548] = { name = "Serpentshrine Cavern", expansion = 1, maxPlayers = {25}, numEncounters = 6 },
+    [550] = { name = "Tempest Keep", expansion = 1, maxPlayers = {25}, numEncounters = 4 },
+    [564] = { name = "Black Temple", expansion = 1, maxPlayers = {25}, numEncounters = 9 },
+    [534] = { name = "Hyjal Summit", expansion = 1, maxPlayers = {25}, numEncounters = 5 },
+    [568] = { name = "Zul'Aman ", expansion = 1, maxPlayers = {10}, numEncounters = 6},
+    [580] = { name = "Sunwell Plateau", expansion = 1, maxPlayers = {25}, numEncounters = 6 },
+    [409] = { name = "Molten Core", expansion = 0, maxPlayers = {40}, numEncounters = 10 },
+    [309] = { name = "Zul'Gurub", expansion = 0, maxPlayers = {20}, numEncounters = 10},
+    [469] = { name = "Blackwing Lair", expansion = 0, maxPlayers = {40}, numEncounters = 8 },
+    [509] = { name = "Ruins of Ahn'Qiraj", expansion = 0, maxPlayers = {20}, numEncounters = 6 },
+    [531] = { name = "Temple of Ahn'Qiraj", expansion = 0, maxPlayers = {40}, numEncounters = 9 },
 }
 -- Redundant but hopefully simplifies filters and mappings.
 for k, v in pairs(ICT.InstanceInfo) do
@@ -149,9 +149,9 @@ ICT.WOTLK = "Wrath of the Lich King"
 ICT.TBC = "The Burning Crusade"
 ICT.VANILLA = "Vanilla"
 ICT.Expansions = {
-    [ICT.VANILLA] = 1,
-    [ICT.TBC] = 2,
-    [ICT.WOTLK] = 3
+    [ICT.VANILLA] = 0,
+    [ICT.TBC] = 1,
+    [ICT.WOTLK] = 2
 }
 
 -- Force reset all saved instance information.

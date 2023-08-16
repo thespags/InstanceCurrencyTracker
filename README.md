@@ -1,5 +1,8 @@
 # Instance and Currency Tracker
 Tracks instance and currency information across all characters and realms on your account.
+As well as other character information, such as gear, professions, cooldowns.
+Useful way to see missing enchants, gems, glyphs or ready cooldowns.
+
 By default shows a single character view with tooltips to compare, this can be changed
 under 'Options' to show multiple characters. See additional configuritions under [Options] for more details.
 Be sure to hover over items to see tooltips for more details.
@@ -15,23 +18,26 @@ Otherwise `/ict` will bring up the window.
 
 ## Information Collected
 + Character
-  + Specs, Talents, Glyphs and Gear plus Durability
-  + Shows missing Glyphs, Gems and Enchants
-  + GearScore and iLvl if TacoTip addon is available
-  + Professions
-  + Level, XP, Rested XP, and Resting State
-  + Guild and Guild Rank
-  + Bags and Bank Bags
-    + Shows Bags by type and individual Bags
-    + Bank Bags requires you to view the bank
-  + Gold
-    + Shows Gold by realm
+    + Level, Guild and Guild Rank
+        + If non max level; XP, Rested XP, and Resting State
+    + Gold
+        + Shows Gold by realm
+    + Bags and Bank Bags
+        + Shows Bags by type and individual Bags
+        + Bank Bags requires you to view the bank
+    + Specs, Talents plus Durability
+        + In tooltip, displays Gear, Glyphs, Gems, and Enchants
+        + In tooltip, will show missing gear, glyphs, gems, and enchants for any slot
+        + GearScore and iLvl if TacoTip addon is available
+    + Professions
+        + Clickable to bring up tradeskill frame.
+    + Profession Cooldowns
+        + Clickable to create the item if materials and location are met.
 + Instance lockout and encounter information  
 + Currency available for an instance  
 + Total currency in an instance  
 + Currency collected and available for each character  
 + Daily quest completed and prerequisites met  
-+ Feature needed is enabling profession quests, pvp, and pre WOTLK currencies.
 
 ## Options
 + Show Realm Name  
@@ -53,6 +59,8 @@ _Select the instances you wish to view, defaults to all WOTLK instances._
 _Shows all quests including those you have not met the prerequisite for._
 + Currency  
 _Select the currency you wish to view defaults to all currencies._
++ Cooldowns  
+_Select the cooldowns you wish to view, sorted by expansion._
 + Frame  
     + Display  
     _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._
@@ -78,4 +86,4 @@ _Controsl the characters visible based on level._
 \# all players on realm  
 `/ict wipe realm {REALM_NAME}`  
 \# all players  
-`/ict wipe all`  
+`/ict wipe all`

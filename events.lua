@@ -111,6 +111,19 @@ skillFrame:RegisterEvent("CHAT_MSG_SKILL")
 skillFrame:RegisterEvent("SKILL_LINES_CHANGED")
 skillFrame:SetScript("OnEvent", ICT:throttleFunction("Skill", 3, Player.updateSkills, ICT.UpdateDisplay))
 
+-- Links aren't shareable after the player logs out.
+-- local skillShowFrame = CreateFrame("Frame")
+-- skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
+-- skillShowFrame:SetScript("OnEvent", function()
+--     -- Remove color so we can color it.
+--     local link = GetTradeSkillListLink()
+--     local spellId = tonumber(ICT.tradeLinkSplit(link)[2]) or 0
+--     local player = ICT.GetPlayer()
+--     player.professionLinks = player.professionLinks or {}
+--     player.professionLinks[spellId] = link
+-- end
+-- )
+
 local talentFrame = CreateFrame("Frame")
 talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
 talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
@@ -161,10 +174,11 @@ durabilityFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 -- Don't throttle but use the is db init check.
 durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", 0, Player.updateDurability, ICT.UpdateDisplay))
 
--- local cooldownFrame = CreateFrame("Frame")
--- cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
--- --CHAT_MSG_TRADESKILLS
--- cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
+local cooldownFrame = CreateFrame("Frame")
+-- Trade skill update doesn't seem sufficient to determine an item was made (i.e. start a cooldown)
+cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
+cooldownFrame:RegisterEvent("CHAT_MSG_TRADESKILLS")
+cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
 
 -- message and add option
 local function messageResults(player, instance)

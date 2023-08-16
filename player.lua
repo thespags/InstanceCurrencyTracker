@@ -32,12 +32,13 @@ function ICT.CreateCurrentPlayer()
         maxDaily = {},
         -- There's no prereq for weekly currencies so no player based max weekly.
     }
+    ICT.db.players[fullName] = player
     player:createInstances()
     -- Set transient information after copying main tables.
     player:dailyReset()
     player:weeklyReset()
     player:onLoad()
-    ICT.db.players[fullName] = player
+    return player
 end
 
 -- Adds all the functions to the player.
@@ -62,13 +63,13 @@ function Player:onLoad()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
     ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
-    ICT:throttleFunction("onLoad", 1, Player.updateBags, ICT.UpdateDisplay)()
+    self:updateBags()
     self:updateDurability()
     self:updateMoney()
     self:updateGuild()
     self:updateXP()
     self:updateResting()
-    -- self:updateCooldowns()
+    self:updateCooldowns()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -288,7 +289,6 @@ function Player:updateSkills()
         end
         if not isHeader and profession and icon then
             professionCount = professionCount + 1;
-
             self.professions[professionCount] = {
                 name = name,
                 icon = icon,
@@ -351,12 +351,13 @@ function Player:updateGear()
             -- Convert to number for our table lookup, Blizzard calls handle strings vs numbers.
             item.enchantId = tonumber(details[2])
             item.gems = {}
-            item.gems[0] = details[3] and select(10, GetItemInfo(details[3])) or nil
-            item.gems[1] = details[4] and select(10, GetItemInfo(details[4])) or nil
-            item.gems[2] = details[5] and select(10, GetItemInfo(details[5])) or nil
-            item.gems[3] = details[6] and select(10, GetItemInfo(details[6])) or nil
+            item.gems[0] = details[3] and select(5, GetItemInfoInstant(details[3])) or nil
+            item.gems[1] = details[4] and select(5, GetItemInfoInstant(details[4])) or nil
+            item.gems[2] = details[5] and select(5, GetItemInfoInstant(details[5])) or nil
+            item.gems[3] = details[6] and select(5, GetItemInfoInstant(details[6])) or nil
             item.gemTotal = ICT:sumNonNil(item.gems[0], item.gems[1], item.gems[2], item.gems[3])
 
+            -- Requires the server to be loaded so we have level and invType.
             local _, _, _, level, _, _, _, _, invType, icon, _, classId, subClassId = GetItemInfo(itemLink)
             item.level = level
             item.invType = invType
@@ -396,7 +397,7 @@ local function addBags(index, bags, bagsTotal)
         name = name == "" and GetBagName(0) or name
         local free, type = GetContainerNumFreeSlots(index)
         -- By name requires the item in your inventory so store this for the player.
-        local icon = C_Item.GetItemIconByID(name)
+        local icon = select(5, GetItemInfoInstant(name))
         icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
         bags[index] = { name = name, free = free, type = type, total = total, icon = icon }
        -- print(name .. " " .. tostring(type))
@@ -483,9 +484,7 @@ end
 
 function Player:updateCooldowns()
     self.cooldowns = self.cooldowns or {}
-    for spellId, v in pairs(ICT.Cooldowns.spells) do
-        ICT.Cooldowns:UpdateSpellData(self, spellId)
-    end
+    ICT.Cooldowns:updateCooldowns(self)
 end
 
 -- We probably want to merge these three tables so we don't need this funny business.
