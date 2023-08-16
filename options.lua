@@ -27,6 +27,17 @@ local function getOrCreateDisplayInstances()
     return ICT.db.options.displayInstances
 end
 
+-- Defaults WOTLK cooldowns as shown and old content as off.
+local function getOrCreateDisplayCooldowns()
+    if not ICT.db.options.displayCooldowns then
+        ICT.db.options.displayCooldowns = {}
+        for k, v in pairs(ICT.Cooldowns.spells) do
+            ICT.db.options.displayCooldowns[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
+        end
+    end
+    return ICT.db.options.displayCooldowns
+end
+
 local function getOrCreateDisplayLegacyInstances(expansion)
     ICT:putIfAbsent(ICT.db.options, "displayLegacyInstances", {})
     local t = ICT.db.options.displayLegacyInstances
@@ -48,7 +59,7 @@ local function showInstanceInfo(info, expansion)
     return getOrCreateDisplayInstances()[info.id]
 end
 
-local function expansionContainsAll(expansion)
+local function expansionContainsAllInstances(expansion)
     local contains = function(info)
         if info.legacy == expansion then
             return getOrCreateDisplayLegacyInstances(expansion)[info.id]
@@ -77,6 +88,10 @@ function Options.showInstance(instance)
     return getOrCreateDisplayInstances()[info.id]
 end
 
+function Options.showCooldown(cooldown)
+    return getOrCreateDisplayCooldowns()[cooldown.id]
+end
+
 local function checkInstance(info, value, expansion)
     if not expansion or info.expansion == expansion then
         getOrCreateDisplayInstances()[info.id] = value
@@ -84,6 +99,17 @@ local function checkInstance(info, value, expansion)
     if (not expansion and info.legacy) or (expansion and info.legacy == expansion) then
         getOrCreateDisplayLegacyInstances(info.legacy)[info.id] = value
     end
+end
+
+local function expansionContainsAllCooldowns(expansion)
+    local contains = function(cooldown)
+        return cooldown.expansion ~= expansion or Options.showCooldown(cooldown)
+    end
+    return ICT:containsAllValues(ICT.Cooldowns.spells, contains)
+end
+
+local function cooldownContainsAll()
+    return ICT:containsAllValues(ICT.Cooldowns.spells, Options.showCooldown)
 end
 
 function Options:FlipMinimapIcon()
@@ -148,6 +174,7 @@ function Options.CreateOptionDropdown()
     local options = ICT.db.options
     options.player = options.player or {}
     getOrCreateDisplayInstances()
+    getOrCreateDisplayCooldowns()
     local currency = getOrCreateCurrencyOptions()
     local resets = getOrCreateResetTimerOptions()
 
@@ -313,6 +340,21 @@ function Options.CreateOptionDropdown()
                     ICT:DisplayPlayer()
                 end
                 ICT.DDMenu:UIDropDownMenu_AddButton(currencyInfo)
+
+                local cooldowns = createInfo()
+                cooldowns.text = "Cooldowns"
+                cooldowns.menuList = cooldowns.text
+                cooldowns.checked = cooldownContainsAll()
+                cooldowns.hasArrow = true
+                cooldowns.func = function(self)
+                    local wasChecked = cooldownContainsAll()
+                    for k, _ in pairs(ICT.Cooldowns.spells) do
+                        getOrCreateDisplayCooldowns()[k] = not wasChecked
+                    end
+                    ICT:DisplayPlayer()
+                end
+                ICT.DDMenu:UIDropDownMenu_AddButton(cooldowns)
+
                 ICT.DDMenu:UIDropDownMenu_AddSeparator()
 
                 -- Indent to make up for missing icon.
@@ -352,11 +394,11 @@ function Options.CreateOptionDropdown()
                     for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
                         local info = createInfo()
                         info.text = expansion
-                        info.menuList = expansion
+                        info.menuList = menuList .. ":" .. expansion
                         info.hasArrow = true
-                        info.checked = expansionContainsAll(v)
+                        info.checked = expansionContainsAllInstances(v)
                         info.func = function(self)
-                            local wasChecked = expansionContainsAll(v)
+                            local wasChecked = expansionContainsAllInstances(v)
                             for _, instance in ICT:fpairsByValue(ICT.InstanceInfo, Options.isExpansion(v)) do
                                 checkInstance(instance, not wasChecked, ICT.Expansions[expansion])
                             end
@@ -390,6 +432,23 @@ function Options.CreateOptionDropdown()
                         info.checked = currency[k]
                         info.func = function(self)
                             currency[k] = not currency[k]
+                            ICT:DisplayPlayer()
+                        end
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                    end
+                elseif menuList == "Cooldowns" then
+                    -- Create a level for the expansions, then the specific cooldown.
+                    for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
+                        local info = createInfo()
+                        info.text = expansion
+                        info.menuList = menuList .. ":" .. expansion
+                        info.hasArrow = true
+                        info.checked = expansionContainsAllCooldowns(v)
+                        info.func = function(self)
+                            local wasChecked = expansionContainsAllCooldowns(v)
+                            for k, _ in ICT:fpairsByValue(ICT.Cooldowns.spells, Options.isExpansion(v)) do
+                                getOrCreateDisplayCooldowns()[k] = not wasChecked
+                            end
                             ICT:DisplayPlayer()
                         end
                         ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
@@ -490,17 +549,33 @@ function Options.CreateOptionDropdown()
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
                 -- Now create a level for all the instances of that expansion.
-                local expansion = ICT.Expansions[menuList]
-                for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(expansion)) do
-                    local info = createInfo()
-                    info.text = GetRealZoneText(v.id)
-                    info.arg1 = v
-                    info.checked = showInstanceInfo(v, expansion)
-                    info.func = function(self, instance)
-                        checkInstance(instance, not showInstanceInfo(v, expansion), expansion)
-                        ICT:DisplayPlayer()
+                local subList, expansion = menuList:match("([%w%s]+):([%w%s]+)")
+                expansion = ICT.Expansions[expansion]
+                if subList == "Instances" then
+                    for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(expansion)) do
+                        local info = createInfo()
+                        info.text = GetRealZoneText(v.id)
+                        info.arg1 = v
+                        info.checked = showInstanceInfo(v, expansion)
+                        info.func = function(self, instance)
+                            checkInstance(instance, not showInstanceInfo(v, expansion), expansion)
+                            ICT:DisplayPlayer()
+                        end
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                elseif subList == "Cooldowns" then
+                    -- Now create a level for all the cooldowns of that expansion.
+                    for _, v in ICT:spairsByValue(ICT.Cooldowns.spells, ICT.CooldownSort, Options.isExpansion(expansion)) do
+                        local info = createInfo()
+                        info.text = v.name
+                        info.arg1 = v
+                        info.checked = getOrCreateDisplayCooldowns()[v.id]
+                        info.func = function(self, cooldown)
+                            getOrCreateDisplayCooldowns()[cooldown.id] = not getOrCreateDisplayCooldowns()[cooldown.id]
+                            ICT:DisplayPlayer()
+                        end
+                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                    end
                 end
             end
         end

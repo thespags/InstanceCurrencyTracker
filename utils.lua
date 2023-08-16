@@ -24,18 +24,26 @@ function ICT:LocalizeInstanceName(v)
     v.name = v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
 end
 
-function ICT.itemLinkSplit(itemLink)
-    if not itemLink then
+function ICT.linkSplit(link, name) 
+    if not link then
         return {}
     end
-    local itemString = string.match(itemLink, "item:([%-?%d:]+)")
+    local subLink = string.match(link, name .. ":([%-%w:]+)")
     local t = {}
     local i = 0
-    for v in string.gmatch(itemString, "(%d*):?") do
+    for v in string.gmatch(subLink, "([%-%w]*):?") do
         i = i + 1
         t[i] =  v ~= "" and v or nil
     end
     return t
+end
+
+function ICT.itemLinkSplit(link)
+    return ICT.linkSplit(link, "item")
+end
+
+function ICT.tradeLinkSplit(link)
+    return ICT.linkSplit(link, "trade")
 end
 
 -- Sorted pairs iterator determined by the table key.
@@ -125,6 +133,17 @@ function ICT:set(...)
         t[v] = true
     end
     return t
+end
+
+function ICT:size(t)
+    if t == nil then
+        return 0
+    end
+    local i = 0
+    for _ in pairs(t) do
+        i = i + 1
+    end
+    return i
 end
 
 -- Returns true if all values or mapped values in the table are true, otherwise false.

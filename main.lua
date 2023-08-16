@@ -99,8 +99,8 @@ local function calculatePadding()
     paddings.bankBags = options.player.showBags and options.player.showBankBags
         and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0
-    paddings.professions = ICT:max(db.players, function(player) return #(player.professions or {}) end, Player.isEnabled)
-    paddings.cooldowns = ICT:max(db.players, function(player) return #(player.cooldowns or {}) end, Player.isEnabled)
+    paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
+    paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), Options.showCooldown) end, Player.isEnabled)
     paddings.specs = TT_GS and 6 or 2
     paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestAvailable()) end, Player.isEnabled)
 end
@@ -338,9 +338,9 @@ local function printCharacterInfo(player, x, offset)
             padding = getPadding(offset, paddings.professions)
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
-                local name = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
+                local nameWithIcon = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
                 cell = Cells:get(x, offset)
-                offset = cell:printValue(name, string.format("%s/%s", v.rank, v.max))
+                offset = cell:printValue(nameWithIcon, string.format("%s/%s", v.rank, v.max))
                 if v.spellId and player:isCurrentPlayer() then
                     cell:clickable(function() CastSpellByID(v.spellId) end)
                 end
@@ -349,24 +349,23 @@ local function printCharacterInfo(player, x, offset)
         end
     end
 
-    -- if true then
-    --     offset = Cells:get(x, offset):hide()
-    --     offset = Cells:get(x, offset):printSectionTitle("Cooldowns")
+    if ICT:containsAnyValue(ICT.db.options.displayCooldowns) then
+        offset = Cells:get(x, offset):hide()
+        offset = Cells:get(x, offset):printSectionTitle("Cooldowns")
 
-    --     if not ICT.db.options.collapsible["Cooldowns"] then
-    --         offset = UI:hideRows(x, offset, padding)
-    --         padding = getPadding(offset, paddings.cooldowns)
-    --         for _, v in pairs(player.cooldowns or {}) do
-    --             cell = Cells:get(x, offset)
-    --             local name = string.format("|T%s:14|t%s", v.icon, v.name)
-    --             offset = cell:printTicker(name, v.expires, v.duration)
-    --             if player:isCurrentPlayer() then
-    --                 cell:clickable(function() v:cast(player) end)
-    --             end
-    --         end
-    --         offset = UI:hideRows(x, offset, paddings.cooldowns)
-    --     end
-    -- end
+        if not ICT.db.options.collapsible["Cooldowns"] then
+            padding = getPadding(offset, paddings.cooldowns)
+            for _, v in ICT:spairsByValue(player.cooldowns or {}, ICT.CooldownSort, Options.showCooldown) do
+                cell = Cells:get(x, offset)
+                local name = string.format("|T%s:14|t%s", v.icon, v.name)
+                offset = cell:printTicker(name, v.expires, v.duration)
+                if player:isCurrentPlayer() then
+                    cell:clickable(function() v:cast(player) end)
+                end
+            end
+            offset = UI:hideRows(x, offset, padding)
+        end
+    end
     offset = Cells:get(x, offset):hide()
     Cells.indent = ""
     return offset
@@ -431,13 +430,11 @@ local function printInstances(player, title, instances, x, offset)
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
-        for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
-            if Options.showInstance(instance) then
-                local color = UI:getSelectedColor(instance.locked)
-                cell = Cells:get(x, offset)
-                offset = cell:printLine(instance.name, color)
-                instanceTooltip(player, key, instance):attach(cell)
-            end
+        for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort, Options.showInstance) do
+            local color = UI:getSelectedColor(instance.locked)
+            cell = Cells:get(x, offset)
+            offset = cell:printLine(instance.name, color)
+            instanceTooltip(player, key, instance):attach(cell)
         end
     end
     return Cells:get(x, offset):hide()
@@ -621,7 +618,7 @@ local function printResetTimers(x, offset)
             if not ICT.db.options.collapsible["Reset"] then
                 for k, v in ICT:spairs(ICT.db.reset) do
                     if ICT.db.options.reset[k] then
-                        offset = Cells:get(x, offset):printTicker(ICT.ResetInfo[k].name, v, k * ICT.OneDay)
+                        offset = Cells:get(x, offset):printTicker(ICT.ResetInfo[k].name, v, k * ICT.OneDay, ICT.textColor)
                     end
                 end
             end

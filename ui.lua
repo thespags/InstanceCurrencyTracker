@@ -1,13 +1,15 @@
 local addOnName, ICT = ...
 
-ICT.tooltipTitleColor = "FF00FF00"
+local green = "FF00FF00"
+local red = "FFFF0000"
+ICT.tooltipTitleColor = green
 ICT.availableColor = "FFFFFFFF"
 ICT.sectionColor = "FFFFFF00"
 ICT.selectedSectionColor = "FF484800"
 ICT.subtitleColor = "FFFFCC00"
 ICT.textColor = "FF9CD6DE"
 ICT.lockedColor = "FFFF00FF"
-ICT.unavailableColor = "FFFF0000"
+ICT.unavailableColor = red
 
 local UI = {
     -- Individual cell size for each position in the frame.
@@ -149,26 +151,28 @@ function Cells:hide()
     return self.y + 1
 end
 
-local function countdown(expires, duration)
+local function countdown(expires, duration, startColor, endColor)
     if expires then
         local timeLeft = math.max(expires - GetServerTime(), 0)
-        local color = duration and ICT:gradient("FF00FF00", "FFFF0000", timeLeft / duration) or nil
-        return timeLeft == 0 and "Ready" or ICT:DisplayTime(timeLeft), ICT.textColor
+        startColor = startColor or green
+        endColor = endColor or red
+        local color = duration and duration > 0 and ICT:gradient(startColor, endColor, timeLeft / duration) or endColor
+        return timeLeft == 0 and "Ready" or ICT:DisplayTime(timeLeft), color
     end
     return "N/A"
 end
 
-function Cells:printTicker(title, expires, duration)
+function Cells:printTicker(title, expires, duration, colorOverride)
     local indent = Cells.indent
     local update = function()
-        local time, color = countdown(expires, duration)
+        local time, color = countdown(expires, duration, red, green)
         Cells.indent = indent
-        self:printValue(title, time, nil, color)
+        self:printValue(title, time, nil, colorOverride or color)
         Cells.indent = ""
     end
     UI.tickers[title] = { ticker = C_Timer.NewTicker(1, update) }
-    local time, color = countdown(expires, duration)
-    return self:printValue(title, time, nil, color)
+    local time, color = countdown(expires, duration, red, green)
+    return self:printValue(title, time, nil, colorOverride or color)
 end
 
 -- Prints text in the associated cell.
@@ -180,7 +184,9 @@ function Cells:printValue(leftText, rightText, leftColor, rightColor)
     self.frame:Show()
     self.leftText = leftText or ""
     self.leftColor = leftColor or ICT.subtitleColor
-    leftText = string.format("%s|c%s%s|r", self.indent, self.leftColor, self.leftText)
+    -- Handle if we were rewriting the cell while hovering over it.
+    local remap = self.hover and ICT.selectedSectionColor or self.leftColor
+    leftText = string.format("%s|c%s%s|r", self.indent, remap, self.leftText)
     self.left:SetText(leftText)
     self.left:Show()
     self.rightText = rightText or ""
@@ -197,11 +203,13 @@ function Cells:clickable(f)
     self.frame:SetScript("OnClick", f)
     self.frame:HookScript("OnEnter", function()
         Cells.indent = indent
+        self.hover = true
         self:printValue(self.leftText, self.rightText, ICT.selectedSectionColor, self.rightColor)
         Cells.indent = ""
     end)
     self.frame:HookScript("OnLeave", function()
         Cells.indent = indent
+        self.hover = false
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         Cells.indent = ""
     end)
@@ -328,12 +336,12 @@ function UI:printMultiViewResetTicker(x, title, expires, duration)
     frame:SetPoint("TOP", x, -36)
     frame:Show()
     local update = function()
-        local time, color = countdown(expires, duration)
-        frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, color, time))
+        local time, _ = countdown(expires, duration)
+        frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time))
     end
     self.tickers[title] = { ticker = C_Timer.NewTicker(1, update), frame = frame }
-    local time, color = countdown(expires, duration)
-    frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, color, time))
+    local time, _ = countdown(expires, duration)
+    frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time))
     return x + 60, frame
 end
 
