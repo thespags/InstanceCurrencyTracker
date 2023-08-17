@@ -42,11 +42,10 @@ local function calculateEmblems(instances, tokenId)
     local emblems = 0
 
     for _, instance in pairs(instances) do
-        local info = ICT.InstanceInfo[instance.id]
-        if info.tokenIds[tokenId] then
+        if instance:hasTokenId(tokenId) then
             local available = instance.available or {}
             instance.available = available
-            instance.available[tokenId] = info.emblems(instance, tokenId)
+            instance.available[tokenId] = instance:emblems(tokenId)
             emblems = emblems + instance.available[tokenId]
         end
     end
@@ -55,13 +54,13 @@ end
 
 function Currency:CalculateDungeonEmblems(tokenId)
     return function(player)
-        return calculateEmblems(player.dungeons, tokenId)
+        return calculateEmblems(player:getDungeons(), tokenId)
     end
 end
 
 function Currency:CalculateRaidEmblems(tokenId)
     return function(player)
-        return calculateEmblems(player.raids, tokenId)
+        return calculateEmblems(player:getRaids(), tokenId)
     end
 end
 
@@ -73,21 +72,21 @@ local function calculateMaxEmblems(instances, tokenId)
     if MaxTokens[tokenId] then
         return MaxTokens[tokenId]
     end
-    local op = function(v) return ICT.InstanceInfo[v.id] and ICT.InstanceInfo[v.id].maxEmblems(v, tokenId) or 0 end
-    local filter = function(v) return ICT.InstanceInfo[v.id].tokenIds[tokenId] end
+    local op = function(v) return v:maxEmblems(tokenId) end
+    local filter = function(v) return v:hasTokenId(tokenId) end
     MaxTokens[tokenId] = ICT:sum(instances, op, filter)
     return MaxTokens[tokenId]
 end
 
 function Currency:CalculateMaxDungeonEmblems(tokenId)
     return function(player)
-        return calculateMaxEmblems(player.dungeons, tokenId)
+        return calculateMaxEmblems(player:getDungeons(), tokenId)
     end
 end
 
 function Currency:CalculateMaxRaidEmblems(tokenId)
     return function(player)
-        return calculateMaxEmblems(player.raids, tokenId)
+        return calculateMaxEmblems(player:getRaids(), tokenId)
     end
 end
 

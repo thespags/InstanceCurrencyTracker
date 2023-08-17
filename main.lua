@@ -372,29 +372,31 @@ local function printCharacterInfo(player, x, offset)
 end
 
 -- Tooltip for instance information upon entering the cell.
-local function instanceTooltip(player, key, instance)
+local function instanceTooltip(player, instance)
     local tooltip = Tooltips:new(instance.name)
 
-    local info = ICT.InstanceInfo[instance.id]
     -- Display the available encounters for the instance.
-    local encountersDone = info.numEncounters - (instance.encounterProgress or 0)
-    tooltip:printValue("Encounters", string.format("%s/%s", encountersDone, info.numEncounters))
+    tooltip:printValue("Encounters", string.format("%s/%s", instance:encountersLeft(), instance:numOfEncounters()))
+    for k, v in pairs(instance:encounters()) do
+        local encounterColor = UI:getSelectedColor(instance:isEncounterKilled(k))
+        tooltip:printLine(v, encounterColor)
+    end
 
     -- Display which players are locked or not for this instance.
     -- You have to get at least one player to display a tooltip, so always print title.
     tooltip.shouldPrintTitle = true
     tooltip:printTitle("Locks")
     for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isEnabled) do
-        local playerInstance = player:getInstanceByName(key) or { locked = false }
+        local playerInstance = player:getInstance(instance.id, instance.size) or { locked = false }
         local playerColor = UI:getSelectedColor(playerInstance.locked)
         tooltip:printLine(player:getNameWithIcon(), playerColor)
     end
 
     -- Display all available currency for the instance.
     tooltip.shouldPrintTitle = true
-    for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
+    for tokenId, _ in ICT:spairs(instance:tokenIds(), ICT.CurrencySort) do
         -- Onyxia 40 is reused and has 0 emblems so skip currency.
-        local max = info.maxEmblems(instance, tokenId)
+        local max = instance:maxEmblems(tokenId)
         if ICT.db.options.currency[tokenId] and max ~= 0 then
             tooltip:printTitle("Currency")
             local available = instance.available[tokenId] or max
@@ -402,7 +404,7 @@ local function instanceTooltip(player, key, instance)
         end
     end
     -- This player is the original player which owns the cell.
-    return tooltip:create("ICTInstanceTooltip" .. key .. player.fullName)
+    return tooltip:create("ICTInstanceTooltip" .. instance.id .. instance.size .. player.fullName)
 end
 
 local function instanceSectionTooltip()
@@ -430,11 +432,11 @@ local function printInstances(player, title, instances, x, offset)
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
-        for key, instance in ICT:spairsByValue(instances, ICT.InstanceSort, Options.showInstance) do
+        for _, instance in ICT:spairsByValue(instances, ICT.InstanceSort, Options.showInstance) do
             local color = UI:getSelectedColor(instance.locked)
             cell = Cells:get(x, offset)
             offset = cell:printLine(instance.name, color)
-            instanceTooltip(player, key, instance):attach(cell)
+            instanceTooltip(player, instance):attach(cell)
         end
     end
     return Cells:get(x, offset):hide()
@@ -443,11 +445,10 @@ end
 local function printInstancesForCurrency(tooltip, title, instances, tokenId)
     -- Only print the title if there exists an instance for this token.
     tooltip.shouldPrintTitle = true
-    for _, instance in ICT:spairsByValue(instances, ICT.InstanceSort) do
-        local info = ICT.InstanceInfo[instance.id]
-        local max = info.maxEmblems(instance, tokenId)
+    for _, instance in pairs(instances) do
+        local max = instance:maxEmblems(tokenId)
         -- Onyxia 40 is reused and has 0 emblems so skip currency.
-        if Options.showInstance(instance) and info.tokenIds[tokenId] and max ~= 0 then
+        if Options.showInstance(instance) and instance:hasTokenId(tokenId) and max ~= 0 then
             tooltip:printTitle(title)
             -- Displays available currency out of the total currency for this instance.
             local color =  UI:getSelectedColor(instance.locked)
@@ -494,8 +495,8 @@ local function currencyTooltip(selectedPlayer, tokenId)
     end
 
     if ICT.db.options.verboseCurrencyTooltip then
-        printInstancesForCurrency(tooltip, "Dungeons", selectedPlayer.dungeons, tokenId)
-        printInstancesForCurrency(tooltip, "Raids", selectedPlayer.raids, tokenId)
+        printInstancesForCurrency(tooltip, "Dungeons", selectedPlayer:getDungeons(), tokenId)
+        printInstancesForCurrency(tooltip, "Raids", selectedPlayer:getRaids(), tokenId)
         printQuestsForCurrency(tooltip, selectedPlayer, tokenId)
     end
     return tooltip:create("ICTCurrencyTooltip" .. selectedPlayer.fullName .. tokenId)
@@ -639,9 +640,9 @@ local function display(player, x)
     local offset = 1
     offset = printCharacterInfo(player, x, offset)
     offset = printResetTimers(x, offset)
-    offset = printInstances(player, "Dungeons", player.dungeons, x, offset)
-    offset = printInstances(player, "Raids", player.raids, x, offset)
-    offset = printInstances(player, "Old Raids", player.oldRaids, x, offset)
+    offset = printInstances(player, "Dungeons", player:getDungeons(), x, offset)
+    offset = printInstances(player, "Raids", player:getRaids(), x, offset)
+    offset = printInstances(player, "Old Raids", player:getOldRaids(), x, offset)
     offset = printQuests(player, x, offset)
     offset = printCurrency(player, x, offset)
     UI:hideRows(x, offset, UI.displayY)

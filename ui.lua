@@ -69,6 +69,7 @@ function Tooltips:create(name)
     self.frame = _G[name]
     if not self.frame then
         self.frame = CreateFrame("Frame", name, UIParent, "TooltipBorderedFrameTemplate")
+        self.frame:SetBackdropColor(0,0,0,1);
         self.frame:SetFrameStrata("DIALOG")
         self.frame:Hide()
         self.frame.textField = self.frame:CreateFontString()

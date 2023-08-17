@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 ICT.Options = {}
 local Options = ICT.Options
+local Instances = ICT.Instances
 local Player = ICT.Player
 
 -- Helper to set all the currencies as enabled.
@@ -20,7 +21,7 @@ end
 local function getOrCreateDisplayInstances()
     if not ICT.db.options.displayInstances then
         ICT.db.options.displayInstances = {}
-        for k, v in pairs(ICT.InstanceInfo) do
+        for k, v in pairs(Instances.info()) do
             ICT.db.options.displayInstances[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
         end
     end
@@ -66,14 +67,14 @@ local function expansionContainsAllInstances(expansion)
         end
         return info.expansion ~= expansion or getOrCreateDisplayInstances()[info.id]
     end
-    return ICT:containsAllValues(ICT.InstanceInfo, contains)
+    return ICT:containsAllValues(Instances.info(), contains)
 end
 
 local function instanceContainsAll()
     local contains = function(info)
         return getOrCreateDisplayInstances()[info.id] and (not info.legacy or getOrCreateDisplayLegacyInstances(info.legacy)[info.id])
     end
-    return ICT:containsAllValues(ICT.InstanceInfo, contains)
+    return ICT:containsAllValues(Instances.info(), contains)
 end
 
 function Options:showInstances(instances)
@@ -81,11 +82,10 @@ function Options:showInstances(instances)
 end
 
 function Options.showInstance(instance)
-    local info = ICT.InstanceInfo[instance.id]
     if instance.legacy then
-        return getOrCreateDisplayLegacyInstances(info.legacy)[info.id]
+        return getOrCreateDisplayLegacyInstances(instance.legacy)[instance.id]
     end
-    return getOrCreateDisplayInstances()[info.id]
+    return getOrCreateDisplayInstances()[instance.id]
 end
 
 function Options.showCooldown(cooldown)
@@ -306,7 +306,7 @@ function Options.CreateOptionDropdown()
                 instances.hasArrow = true
                 instances.func = function(self)
                     local wasChecked = instanceContainsAll()
-                    for _, v in pairs(ICT.InstanceInfo) do
+                    for _, v in pairs(ICT.expansions) do
                         checkInstance(v, not wasChecked)
                     end
                     ICT:DisplayPlayer()
@@ -399,7 +399,7 @@ function Options.CreateOptionDropdown()
                         info.checked = expansionContainsAllInstances(v)
                         info.func = function(self)
                             local wasChecked = expansionContainsAllInstances(v)
-                            for _, instance in ICT:fpairsByValue(ICT.InstanceInfo, Options.isExpansion(v)) do
+                            for _, instance in ICT:fpairsByValue(Instances.info(), Options.isExpansion(v)) do
                                 checkInstance(instance, not wasChecked, ICT.Expansions[expansion])
                             end
                             ICT:DisplayPlayer()
@@ -543,7 +543,7 @@ function Options.CreateOptionDropdown()
                     addPlayerOption("Show Bags", "showBags", level)
                     addPlayerOption("Show Bank Bags", "showBankBags", level)
                     addPlayerOption("Show Specs", "showSpecs", level)
-                    addPlayerOption("Show Gear Scores", "showGearScores", level, "If TacoTip is available, this willd isplay gear scores for each spec respectively.")
+                    addPlayerOption("Show Gear Scores", "showGearScores", level, "If TacoTip is available, this will display gear scores for each spec respectively.")
                     addPlayerOption("Show Professions", "showProfessions", level)
                 end
             elseif level == 3 then
@@ -552,7 +552,7 @@ function Options.CreateOptionDropdown()
                 local subList, expansion = menuList:match("([%w%s]+):([%w%s]+)")
                 expansion = ICT.Expansions[expansion]
                 if subList == "Instances" then
-                    for _, v in ICT:spairsByValue(ICT.InstanceInfo, ICT.InstanceInfoSort, Options.isExpansion(expansion)) do
+                    for _, v in ICT:spairsByValue(Instances.info(), ICT.InstanceSort, Options.isExpansion(expansion)) do
                         local info = createInfo()
                         info.text = GetRealZoneText(v.id)
                         info.arg1 = v

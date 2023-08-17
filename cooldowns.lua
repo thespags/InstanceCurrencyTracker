@@ -151,7 +151,7 @@ for k, v in pairs(Cooldowns.spells) do
     v.spellName = name
     -- Remove transmute prefix.
     if name:find(":") then
-        name =  string.match(name, ".*: (.*)")
+        name = string.match(name, ".*: (.*)")
     end
     v.name = name
 
@@ -160,12 +160,12 @@ for k, v in pairs(Cooldowns.spells) do
     if v.duration <= 0 then
         Cooldowns.spells[k] = nil
     end
-    print(string.format("|T%s:14|t %s = %s", v.icon, v.name, v.duration))
+    -- print(string.format("|T%s:14|t %s = %s", v.icon, v.name, v.duration))
 end
 
 for k, v in pairs(Cooldowns.items) do
     v.icon = select(5, GetItemInfoInstant(k))
-    print(string.format("|T%s:14|t egg = %s", v.icon, v.duration))
+    -- print(string.format("|T%s:14|t egg = %s", v.icon, v.duration))
 end
 
 function Cooldowns:ConvertFrom32bitNegative(int32)
@@ -193,6 +193,10 @@ function Cooldowns:GetTimeLeft(start, duration)
 end
 
 function Cooldowns:updateCooldowns(player)
+    for k, v in pairs(player.cooldowns) do
+        
+        player.cooldowns[k] = Cooldowns:new(v)
+    end
     for spellId, info in pairs(Cooldowns.spells) do
         -- local spellData = player.cooldowns[spellId] or {}
         local spellKnown = IsPlayerSpell(spellId)
