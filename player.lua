@@ -63,8 +63,8 @@ function Player:onLoad()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
     ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
-    self:updateBags()
-    self:updateDurability()
+    -- Even with getItemInfoInstance we still fail on initial log in so delay.
+    ICT:throttleFunction("onLoad", 1, Player.updateBags, ICT.UpdateDisplay)()
     self:updateMoney()
     self:updateGuild()
     self:updateXP()
@@ -84,58 +84,45 @@ function Player:onLoad()
     end
 end
 
-function Player:addInstance(t, info, size)
-    local k = size and ICT:GetInstanceName(info.name, size) or info.name
-    if not t[k] then
-        local instance = { id = info.id, expansion = info.expansion, maxPlayers = size }
-        ICT:LocalizeInstanceName(instance)
-        Instances:Reset(instance)
-        t[k] = instance
-    end
-    return t[k]
-end
-
--- Creates instances in the transient tables if necessary.
--- The key is the English name with raid size if multiple sizes.
 function Player:createInstances()
-    self.dungeons = self.dungeons or {}
-    self.raids = self.raids or {}
-    self.oldRaids = self.oldRaids or {}
-    for _, v in pairs(ICT.InstanceInfo) do
-        if v.expansion == ICT.Expansions[ICT.WOTLK] then
-            if #v.maxPlayers > 1 then
-                for _, size in pairs(v.maxPlayers) do
-                    self:addInstance(self.raids, v, size)
-                end
-            else
-                self:addInstance(self.dungeons, v)
-            end
-        elseif v.expansion < ICT.Expansions[ICT.WOTLK] then
-            self:addInstance(self.oldRaids, v)
-        end
-        if v.legacy then
-            local instance = self:addInstance(self.oldRaids, v)
-            instance.legacy = true
-        end
-    end
-end
+    self.instances = self.instances or {}
 
--- If the user changed their language client, then relocalize all of the instance names.
--- Since we add (10/25) to raids, we store the name instead of querying WOW.
-function Player:localizeInstanceNames()
-    for _, v in pairs(self.dungeons) do
-        ICT:LocalizeInstanceName(v)
+    -- TODO remove this in future versions when enough folks have "updated"
+    if self.raids or self.dungeons or self.oldRaids then
+        for k, v in pairs(self.raids) do
+            local size = tonumber(string.match(k, ".*%((%d+)%)"))
+            local key = Instances:key(v.id, size)
+            self.instances[key] = Instances:new(nil, v.id, size)
+        end
+        for _, v in pairs(self.dungeons) do
+            local size = Instances.Resets[v.id][5]
+            local key = Instances:key(v.id, size)
+            self.instances[key] = Instances:new(nil, v.id, size)
+        end
+        for k, v in pairs(self.oldRaids) do
+            local size
+	    if v.id == 249 then
+                size = 40
+            else
+                size = next(Instances.Resets[v.id])
+            end
+            local key = Instances:key(v.id, size)
+            self.instances[key] = Instances:new(nil, v.id, size)
+        end
+        self.raids = nil
+        self.dungeons = nil
+        self.oldRaids = nil
     end
-    for _, v in pairs(self.raids) do
-        ICT:LocalizeInstanceName(v)
-    end
-    for _, v in pairs(self.oldRaids) do
-        ICT:LocalizeInstanceName(v)
+
+    for id, sizes in pairs(Instances.Resets) do
+        for size, _  in pairs(sizes) do
+            local key = Instances:key(id, size)
+            self.instances[key] = Instances:new(self.instances[key], id, size)
+        end
     end
 end
 
 function Player:dailyReset()
-    Instances:ResetAll(self.dungeons)
     for k, _ in pairs(ICT.CurrencyInfo) do
         self.currency.daily[k] = self.currency.maxDaily[k] or 0
     end
@@ -145,7 +132,6 @@ function Player:dailyReset()
 end
 
 function Player:weeklyReset()
-    Instances:ResetAll(self.raids)
     for k, _ in pairs(ICT.CurrencyInfo) do
         self.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(self)
     end
@@ -158,7 +144,7 @@ ICT.ResetInfo = {
     [7] = { name = "Weekly", func = Player.weeklyReset },
 }
 
-function Player:ResetInstances()
+function Player:resetInstances()
     local timestamp = GetServerTime()
     for k, v in pairs(ICT.db.reset) do
         if v < timestamp then
@@ -174,11 +160,28 @@ function Player:ResetInstances()
             end
         end
     end
-    -- Old raids have 3, 5 and 7 day resets... so use the instance specific timer.
-    -- In the future we may want to link raids to their reset length.
-    for _, player in pairs(ICT.db.players) do
-        Instances:ResetIfNecessary(player.oldRaids, GetServerTime())
+
+    for _, instance in pairs(self.instances) do
+        instance:resetIfNecessary(GetServerTime())
     end
+end
+
+local dungeons = {}
+function Player:getDungeons()
+    dungeons[self.fullName] = dungeons[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size == 5 and v.expansion == ICT.Expansions[ICT.WOTLK] end))
+    return dungeons[self.fullName]
+end
+
+local raids = {}
+function Player:getRaids()
+    raids[self.fullName] = raids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and v.expansion == ICT.Expansions[ICT.WOTLK] end))
+    return raids[self.fullName]
+end
+
+local oldRaids = {}
+function Player:getOldRaids()
+    oldRaids[self.fullName] = oldRaids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and v.expansion < ICT.Expansions[ICT.WOTLK] end))
+    return oldRaids[self.fullName]
 end
 
 function Player:calculateCurrency()
@@ -211,7 +214,7 @@ end
 -- Updates instances and currencies.
 -- We may want to decouple these things in the future.
 function Player:update()
-    self:ResetInstances()
+    self:resetInstances()
     self:updateInstance()
     self:calculateCurrency()
     self:calculateQuest()
@@ -219,7 +222,7 @@ function Player:update()
 end
 
 function Player:calculateResetTimes()
-    for _, instance in pairs(self.oldRaids) do
+    for _, instance in pairs(self:getOldRaids()) do
         -- Ony40 has a 5 day reset.
         if instance.id == 249 then
             ICT.db.reset[5] = ICT.db.reset[5] or instance.reset
@@ -238,10 +241,10 @@ function Player:updateInstance()
     local numSavedInstances = GetNumSavedInstances()
     for i=1, numSavedInstances do
         local _, _, reset, _, locked, _, _, _, maxPlayers, _, _, encounterProgress, _, instanceId = GetSavedInstanceInfo(i)
+        local instance = self:getInstance(instanceId, maxPlayers)
 
-        if locked then
-            local instance = self:getInstanceById(instanceId, maxPlayers)
-            Instances:Lock(instance, reset, encounterProgress, i)
+        if locked and instance then
+            instance:lock(reset, encounterProgress, i)
         end
     end
 end
@@ -400,7 +403,6 @@ local function addBags(index, bags, bagsTotal)
         local icon = select(5, GetItemInfoInstant(name))
         icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
         bags[index] = { name = name, free = free, type = type, total = total, icon = icon }
-       -- print(name .. " " .. tostring(type))
         bagsTotal[type] = bagsTotal[type] or { free = 0, total = 0 }
         bagsTotal[type].free = bagsTotal[type].free + free
         bagsTotal[type].total = bagsTotal[type].total + total
@@ -487,25 +489,8 @@ function Player:updateCooldowns()
     ICT.Cooldowns:updateCooldowns(self)
 end
 
--- We probably want to merge these three tables so we don't need this funny business.
--- But then we have to filter the table for each type on certain views.
-function Player:getInstanceByName(name, maxPlayers)
-    if self.dungeons[name] then
-        return self.dungeons[name]
-    end
-    local raidName = name and maxPlayers and ICT:GetInstanceName(name, maxPlayers) or name
-    if self.raids[raidName] then
-        return self.raids[raidName]
-    end
-    if self.oldRaids[name] then
-        return self.oldRaids[name]
-    end
-    return nil
-end
-
-function Player:getInstanceById(instanceId, maxPlayers)
-    local name = ICT.InstanceInfo[instanceId] and ICT.InstanceInfo[instanceId].name
-    return self:getInstanceByName(name, maxPlayers)
+function Player:getInstance(id, maxPlayers)
+    return self.instances[Instances:key(id, maxPlayers)]
 end
 
 -- You gain 5% rested ever 8 hours, so every second equals the follow xp. 

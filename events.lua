@@ -6,6 +6,7 @@ ICT.LDBroker = LibStub("LibDataBroker-1.1")
 ICT.LCInspector = LibStub("LibClassicInspector")
 local Player = ICT.Player
 local Options = ICT.Options
+local version = GetAddOnMetadata("InstanceCurrencyTracker", "Version")
 local maxPlayers, instanceId
 
 local function getOrCreateDb()
@@ -63,21 +64,21 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
+        ICT.db.version = version
+
         initMinimap()
         for k, player in pairs(ICT.db.players) do
             -- Recreate the player with any new functions.
             ICT.db.players[k] = Player:new(player)
             -- Player may have already been created but we added new instances.
             player:createInstances()
-            -- In case the langauge changed, localize again.
-            player:localizeInstanceNames()
         end
         -- Check if we need to delay this part.
         ICT.CreateCurrentPlayer()
         ICT.init = true
         ICT.GetPlayer():onLoad()
         ICT:CreateFrame()
-        print(string.format("[%s] Initialized...", addOnName))
+        print(string.format("[%s] Initialized %s...", addOnName, version))
         LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT:DisplayPlayer() ICT.frame:Show() end end)
         LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.anchorLFG then ICT.frame:Hide() end end)
     end
@@ -185,14 +186,13 @@ local function messageResults(player, instance)
     -- Only broadcast if we are locked and collected something...
     if instance and instance.locked then
         ICT.dprint("broadcast: announcing")
-        local info = ICT.InstanceInfo[instance.id]
         -- Double check amounts before messaging.
         -- It seems WOW may process oddly.
         player:update()
         ICT:DisplayPlayer()
-        for tokenId, _ in ICT:spairs(info.tokenIds or {}, ICT.CurrencySort) do
+        for tokenId, _ in ICT:spairs(instance:tokenIds(), ICT.CurrencySort) do
             -- Onyxia 40 is reused and has 0 emblems so skip currency.
-            local max = info.maxEmblems(instance, tokenId)
+            local max = instance:maxEmblems(tokenId)
             if ICT.db.options.currency[tokenId] and max ~= 0 then
                 local available = instance.available[tokenId]
                 local collected = max - available
@@ -210,7 +210,7 @@ end
 local broadcastEvent = function()
     if maxPlayers and instanceId then
         local player = ICT.GetPlayer()
-        local instance = player:getInstanceById(instanceId, maxPlayers)
+        local instance = player:getInstance(instanceId, maxPlayers)
         messageResults(player, instance)
     end
     _, _, _, _, maxPlayers, _, _, instanceId = GetInstanceInfo()

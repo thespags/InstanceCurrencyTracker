@@ -15,15 +15,6 @@ ICT.ClassIcons = {
     ["DRUID"] = 625999
 }
 
-function ICT:GetInstanceName(name, size)
-    return string.format("%s (%s)", name, size)
-end
-
-function ICT:LocalizeInstanceName(v)
-    local name = GetRealZoneText(v.id)
-    v.name = v.maxPlayers and string.format("%s (%s)", name, v.maxPlayers) or name
-end
-
 function ICT.linkSplit(link, name) 
     if not link then
         return {}
@@ -126,6 +117,14 @@ function ICT:ReturnX(x)
     return function(...) return x end
 end
 
+function ICT:toTable(pairs)
+    local t = {}
+    for k, v in pairs do
+        t[k] = v
+    end
+    return t
+end
+
 -- Given a non table arguements will make a set, i.e. a table with values true.
 function ICT:set(...)
     local t = {}
@@ -172,6 +171,10 @@ end
 
 -- Helper function when debugging.
 function ICT:printValues(t)
+    if not t then
+        print("nil")
+        return
+    end
     for k, v in pairs(t) do
         print(string.format("%s %s", k, tostring(v)))
     end

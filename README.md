@@ -18,26 +18,32 @@ Otherwise `/ict` will bring up the window.
 
 ## Information Collected
 + Character
-    + Level, Guild and Guild Rank
-        + If non max level; XP, Rested XP, and Resting State
-    + Gold
-        + Shows Gold by realm
-    + Bags and Bank Bags
-        + Shows Bags by type and individual Bags
-        + Bank Bags requires you to view the bank
-    + Specs, Talents plus Durability
-        + In tooltip, displays Gear, Glyphs, Gems, and Enchants
-        + In tooltip, will show missing gear, glyphs, gems, and enchants for any slot
-        + GearScore and iLvl if TacoTip addon is available
+    + Specs, Talents, Glyphs and Gear plus Durability
+    + Shows missing Glyphs, Gems and Enchants
+    + GearScore and iLvl if TacoTip addon is available
     + Professions
         + Clickable to bring up tradeskill frame.
     + Profession Cooldowns
         + Clickable to create the item if materials and location are met.
-+ Instance lockout and encounter information  
-+ Currency available for an instance  
-+ Total currency in an instance  
-+ Currency collected and available for each character  
-+ Daily quest completed and prerequisites met  
+    + Level, XP, Rested XP, and Resting State
+    + Guild and Guild Rank
+    + Bags and Bank Bags
+        + Shows Bags by type and individual Bags
+        + Bank Bags requires you to view the bank
+    + Gold
+        + Shows Gold by realm
++ Instance 
+    + Encounters completed and available
+    + Lockout per character
+    + Currency completed and available for the instance 
++ Currency
+    + Total Instance Currency
+    + Quest rewards Currency
+    + Available and Total Currency per character
++ Quests
+    + Quest rewards
+    + Quest completed per character
+    + Prerequisites met per character
 
 ## Options
 + Show Realm Name  
