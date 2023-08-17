@@ -99,11 +99,10 @@ function ICT.InstanceSort(a, b)
 
     -- Later expansions appear earlier in our lists...
     if a.expansion == b.expansion then
-        if a.size == b.size then
-            return a.name < b.name
+        if a.name == b.name then
+            return a.size < b.size
         end
-        -- Dungeons appear before raids.
-        return a.size < b.size
+        return a.name < b.name
     end
     return a.expansion > b.expansion
 end
@@ -387,13 +386,13 @@ Instances.Expansions = {
     [616] = { expansion = 2, id = 616, size = 10, },
     [619] = { expansion = 2, id = 619, size = 5, },
     [624] = { expansion = 2, id = 624, size = 10, },
-    [631] = { expansion = 2, id = 631, size = 10, },
-    [632] = { expansion = 2, id = 632, size = 5, },
+    -- [631] = { expansion = 2, id = 631, size = 10, },
+    -- [632] = { expansion = 2, id = 632, size = 5, },
     [649] = { expansion = 2, id = 649, size = 10, },
     [650] = { expansion = 2, id = 650, size = 5, },
-    [658] = { expansion = 2, id = 658, size = 5, },
-    [668] = { expansion = 2, id = 668, size = 5, },
-    [724] = { expansion = 2, id = 724, size = 10, },
+    -- [658] = { expansion = 2, id = 658, size = 5, },
+    -- [668] = { expansion = 2, id = 668, size = 5, },
+    -- [724] = { expansion = 2, id = 724, size = 10, },
 }
 
 -- 1 (Daily), 2 (Weekly), 3 (3-Day), 4 (5-Day) 
@@ -446,11 +445,11 @@ Instances.Resets = {
     [616] = { [10] = 2, [25] = 2, },
     [619] = { [5] = 1, },
     [624] = { [10] = 2, [25] = 2, },
-    [631] = { [10] = 2, [25] = 2, },
-    [632] = { [5] = 1, },
+    -- [631] = { [10] = 2, [25] = 2, },
+    -- [632] = { [5] = 1, },
     [649] = { [10] = 2, [25] = 2, },
     [650] = { [5] = 1, },
-    [658] = { [5] = 1, },
-    [668] = { [5] = 1, },
-    [724] = { [10] = 2, [25] = 2, },
+    -- [658] = { [5] = 1, },
+    -- [668] = { [5] = 1, },
+    -- [724] = { [10] = 2, [25] = 2, },
 }

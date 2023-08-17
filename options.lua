@@ -306,7 +306,7 @@ function Options.CreateOptionDropdown()
                 instances.hasArrow = true
                 instances.func = function(self)
                     local wasChecked = instanceContainsAll()
-                    for _, v in pairs(ICT.expansions) do
+                    for _, v in pairs(Instances.info()) do
                         checkInstance(v, not wasChecked)
                     end
                     ICT:DisplayPlayer()

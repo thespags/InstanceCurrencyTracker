@@ -160,6 +160,7 @@ function Player:resetInstances()
             end
         end
     end
+
     for _, instance in pairs(self.instances) do
         instance:resetIfNecessary(GetServerTime())
     end
