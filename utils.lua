@@ -15,7 +15,7 @@ ICT.ClassIcons = {
     ["DRUID"] = 625999
 }
 
-function ICT.linkSplit(link, name) 
+function ICT.linkSplit(link, name)
     if not link then
         return {}
     end
@@ -38,10 +38,10 @@ function ICT.tradeLinkSplit(link)
 end
 
 -- Sorted pairs iterator determined by the table key.
-function ICT:spairs(t, comparator, filter)
+function ICT:spairs(t, comparator, filter, ...)
     local keys = {}
     for k, _ in pairs(t) do
-        if not filter or filter(k) then
+        if not filter or filter(k, ...) then
             table.insert(keys, k)
         end
     end
@@ -58,24 +58,31 @@ function ICT:spairs(t, comparator, filter)
 end
 
 -- Sorted pairs iterator determined by mapping the values.
-function ICT:spairsByValue(t, comparator, filter)
-    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
+function ICT:spairsByValue(t, comparator, filter, ...)
+    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k, ...) return filter(t[k], ...) end, ...)
 end
 
 -- Filtered pairs iterator determined by the table key with the given function.
-function ICT:fpairs(t, f)
-    local k, v
+function ICT:fpairs(t, filter, ...)
+    local keys = {}
+    for k, _ in pairs(t) do
+        if not filter or filter(k, ...) then
+            table.insert(keys, k)
+        end
+    end
+
+    local i = 0
     return function()
-        repeat
-            k, v = next(t, k)
-        until not k or f(k)
-        return k, v
+        i = i + 1
+        if keys[i] then
+            return keys[i], t[keys[i]]
+        end
     end
 end
 
 -- Filtered pairs iterator determined by the table value with the given function.
-function ICT:fpairsByValue(t, f)
-    return self:fpairs(t, function(k) return f(t[k]) end)
+function ICT:fpairsByValue(t, f, ...)
+    return self:fpairs(t, function(k, ...) return f(t[k], ...) end, ...)
 end
 
 -- Sums a list by the values or a function mapping the values to a number.
@@ -141,6 +148,19 @@ function ICT:size(t)
     local i = 0
     for _ in pairs(t) do
         i = i + 1
+    end
+    return i
+end
+
+function ICT:iSize(t, f)
+    if t == nil then
+        return 0
+    end
+    local i = 0
+    for _, v in t do
+        if not f or f(v) then
+            i = i + 1
+        end
     end
     return i
 end

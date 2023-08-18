@@ -134,6 +134,7 @@ with open("LFGDungeons.csv") as file:
         prev = expansions[id].get("size", size)
         expansions[id]["size"] = min(prev, size)
     expansions[249]["legacy"] = 0
+    expansions[249]["legacySize"] = 40
 
 
 f = open("instances.lua", "w")

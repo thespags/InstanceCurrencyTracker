@@ -9,8 +9,9 @@ function Instances:new(instance, id, size)
     self.__index = self
     instance.id = id
     instance.size = size
-    instance.expansion = Instances.Expansions[id].expansion
-    instance.legacy = Instances.Expansions[id].legacy
+    local info = Instances.Expansions[id]
+    instance.expansion = size == info.legacySize and info.legacy or info.expansion
+    instance.legacy = size == info.legacySize and info.legacy or nil
     instance:localizeName()
     instance:resetIfNecessary()
     instance.encounterSize = #instance:encounters()
@@ -87,6 +88,26 @@ function Instances:maxEmblems(tokenId)
     return info and info.maxEmblems(self, tokenId) or 0
 end
 
+function Instances:fromExpansion(expansion)
+    -- Legacy case handles instances that are reused, presuming they aren't reused multiple times...
+    return self.expansion == expansion or self.legacy == expansion
+end
+
+function Instances:isRaid(expansion)
+    return self.size > 5 and (not expansion or self.expansion == expansion)
+end
+
+function Instances:isDungeon(expansion)
+    return self.size == 5 and (not expansion or self.expansion == expansion)
+end
+
+function Instances:isVisible(expansion)
+    if expansion and expansion == self.legacy or self.legacy then
+        return ICT.getOrCreateDisplayLegacyInstances(expansion or self.legacy)[self.id]
+    end
+    return ICT.getOrCreateDisplayInstances()[self.id]
+end
+
 function ICT.InstanceSort(a, b)
     if ICT.db.options.orderLockLast then
         if a.locked and not b.locked then
@@ -98,11 +119,33 @@ function ICT.InstanceSort(a, b)
     end
 
     -- Later expansions appear earlier in our lists...
-    if a.expansion == b.expansion then
+    if a.expansion == b.expansion or a.legacy == b.expansion then
         if a.name == b.name then
             return a.size < b.size
         end
         return a.name < b.name
+    end
+    return a.expansion > b.expansion
+end
+
+local function compare(a, b, aSize, bSize)
+    aSize = aSize or a.size
+    bSize = bSize or b.size
+
+    if aSize == bSize then
+        return a.name < b.name
+    end
+    return aSize < bSize
+end
+
+function ICT.InstanceOptionSort(a, b)
+    -- Later expansions appear earlier in our lists...
+    if a.expansion == b.expansion then
+        return compare(a, b)
+    elseif a.legacy == b.expansion then
+        return compare(a, b, a.legacySize, b.size)
+    elseif a.expansion == b.legacy then
+        return compare(a, b, a.size, b.legacySize)
     end
     return a.expansion > b.expansion
 end
@@ -249,16 +292,21 @@ Instances.currency = {
 -- End Currency Helpers
 
 -- Attaches the localize name to info for sorting in the options menu.
-local info
-function Instances.info()
-    if info then
-        return info
+local infos
+function Instances.infos()
+    if infos then
+        return infos
     end
-    info = Instances.Expansions
+    infos = {}
     for k, v in pairs(Instances.Expansions) do
-        v.name = GetRealZoneText(k)
+        local info = Instances:new({}, v.id, v.size)
+        infos[k] = info
+        -- override name
+        info.name = GetRealZoneText(k)
+        info.legacySize = Instances.Expansions[v.id].legacySize
+        info.legacy = Instances.Expansions[v.id].legacy
     end
-    return info
+    return infos
 end
 
 Instances.Encounters = {
@@ -338,7 +386,7 @@ Instances.Encounters = {
 
 -- Size here is the smallest for the specific raid, we use this for sorting.
 Instances.Expansions = {
-    [249] = { expansion = 2, id = 249, legacy = 0, size = 10, },
+    [249] = { expansion = 2, id = 249, legacy = 0, size = 10, legacySize = 40 },
     [269] = { expansion = 1, id = 269, size = 5, },
     [309] = { expansion = 0, id = 309, size = 20, },
     [409] = { expansion = 0, id = 409, size = 40, },
