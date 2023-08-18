@@ -1,9 +1,7 @@
 local addOnName, ICT = ...
 
-ICT.LDBIcon = LibStub("LibDBIcon-1.0", true)
-ICT.DDMenu = LibStub:GetLibrary("LibUIDropDownMenu-4.0", true)
-ICT.LDBroker = LibStub("LibDataBroker-1.1")
-ICT.LCInspector = LibStub("LibClassicInspector")
+ICT.LDBIcon = LibStub("LibDBIcon-1.0")
+local LDBroker = LibStub("LibDataBroker-1.1")
 local Player = ICT.Player
 local Options = ICT.Options
 local version = GetAddOnMetadata("InstanceCurrencyTracker", "Version")
@@ -42,7 +40,7 @@ function ICT.UpdateDisplay()
 end
 
 local function initMinimap()
-    local miniButton = ICT.LDBroker:NewDataObject(addOnName, {
+    local miniButton = LDBroker:NewDataObject(addOnName, {
         type = "launcher",
         text = addOnName,
         -- Gold Coin

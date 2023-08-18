@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local LCInspector = LibStub("LibClassicInspector")
 ICT.Player = {}
 local Player = ICT.Player
 local Instances = ICT.Instances
@@ -92,12 +93,12 @@ function Player:createInstances()
         for k, v in pairs(self.raids) do
             local size = tonumber(string.match(k, ".*%((%d+)%)"))
             local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new(nil, v.id, size)
+            self.instances[key] = Instances:new({}, v.id, size)
         end
         for _, v in pairs(self.dungeons) do
             local size = Instances.Resets[v.id][5]
             local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new(nil, v.id, size)
+            self.instances[key] = Instances:new({}, v.id, size)
         end
         for k, v in pairs(self.oldRaids) do
             local size
@@ -107,7 +108,7 @@ function Player:createInstances()
                 size = next(Instances.Resets[v.id])
             end
             local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new(nil, v.id, size)
+            self.instances[key] = Instances:new({}, v.id, size)
         end
         self.raids = nil
         self.dungeons = nil
@@ -180,7 +181,7 @@ end
 
 local oldRaids = {}
 function Player:getOldRaids()
-    oldRaids[self.fullName] = oldRaids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and v.expansion < ICT.Expansions[ICT.WOTLK] end))
+    oldRaids[self.fullName] = oldRaids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and (v.expansion < ICT.Expansions[ICT.WOTLK] or v.legacy) end))
     return oldRaids[self.fullName]
 end
 
@@ -305,15 +306,15 @@ function Player:updateSkills()
 end
 
 function Player:updateTalents()
-    local active = ICT.LCInspector:GetActiveTalentGroup(self.guid)
+    local active = LCInspector:GetActiveTalentGroup(self.guid)
     self.specs = self.specs or { {}, {} }
     self.activeSpec = active
     for i=1,2 do
-        local tab1, tab2, tab3 = ICT.LCInspector:GetTalentPoints(self.guid, i)
+        local tab1, tab2, tab3 = LCInspector:GetTalentPoints(self.guid, i)
         if tab1 ~= nil and tab2 ~= nil and tab3 ~= nil then
             self.specs[i] = self.specs[i] or {}
-            local specialization = ICT.LCInspector:GetSpecialization(self.guid, i)
-            self.specs[i].name = specialization and ICT.LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
+            local specialization = LCInspector:GetSpecialization(self.guid, i)
+            self.specs[i].name = specialization and LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
             self.specs[i].tab1, self.specs[i].tab2, self.specs[i].tab3 = tab1, tab2, tab3
         end
     end
@@ -337,7 +338,7 @@ function Player:updateGlyphs()
 end
 
 function Player:updateGear()
-    local active = ICT.LCInspector:GetActiveTalentGroup(self.guid)
+    local active = LCInspector:GetActiveTalentGroup(self.guid)
     self.specs = self.specs or { {}, {} }
     self.activeSpec = active
     self.specs[active] = self.specs[active] or {}
