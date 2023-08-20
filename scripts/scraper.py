@@ -24,6 +24,9 @@ def key_string(v):
 # A complicated thing of sorting and new lines to print a python map as a lua map.
 # Some things we want sorted for readability, map keys, number lists.
 # Other things we don't want sorted like encounter order.
+ignored = {631, 632, 658, 668, 724}
+
+
 def to_string(v, newline=True, sort=True):
     if type(v) is dict:
         keys = list(v.keys())
@@ -31,9 +34,11 @@ def to_string(v, newline=True, sort=True):
         output = "{"
         indent = "\n    " if newline else " "
         for key in keys:
-            output += indent + "{0} = {1},".format(
+            comment = "--" if key in ignored else ""
+            output += indent + "{2}{0} = {1},".format(
                 key_string(v=key),
-                to_string(v=v[key], newline=False, sort=sort)
+                to_string(v=v[key], newline=False, sort=sort),
+                comment
             )
         output += "\n}" if newline else " }"
         return output
@@ -59,7 +64,6 @@ with open("SpellItemEnchantment.csv") as file:
     for row in csvreader:
         enchantments[int(row[0])] = row[1]
 
-
 encounters = {}
 with open("DungeonEncounter.csv") as file:
     csvreader = csv.reader(file)
@@ -80,7 +84,6 @@ with open("DungeonEncounter.csv") as file:
             sortedV.append(encounter)
         encounters[k] = sortedV
 
-
 difficulties = {}
 with open("Difficulty.csv") as file:
     csvreader = csv.reader(file)
@@ -91,6 +94,7 @@ with open("Difficulty.csv") as file:
     for row in csvreader:
         difficulties[int(row[idIndex])] = int(row[maxPlayersIndex])
 
+resetIntervals = {1: 1, 2: 7, 3: 3, 4: 5}
 resets = {}
 with open("MapDifficulty.csv") as file:
     csvreader = csv.reader(file)
@@ -108,8 +112,19 @@ with open("MapDifficulty.csv") as file:
         if id not in resets:
             resets[id] = {}
         maxPlayers = int(row[maxPlayersIndex])
-        resets[id][maxPlayers] = reset
+        resets[id][maxPlayers] = resetIntervals[reset]
 
+activities = {}
+with open("GroupFinderActivity.csv") as file:
+    csvreader = csv.reader(file)
+    header = next(csvreader)
+    idIndex = get_key(header, "MapID")
+    valueIndex = get_key(header, "ID")
+
+    for row in csvreader:
+        id = int(row[idIndex])
+        value = int(row[valueIndex])
+        activities[id] = value
 
 expansions = {}
 with open("LFGDungeons.csv") as file:
@@ -133,20 +148,18 @@ with open("LFGDungeons.csv") as file:
         size = difficulties[difficulty]
         prev = expansions[id].get("size", size)
         expansions[id]["size"] = min(prev, size)
+        expansions[id]["activityId"] = activities[id]
     expansions[249]["legacy"] = 0
     expansions[249]["legacySize"] = 40
-
 
 f = open("instances.lua", "w")
 f.write("Instances.Encounters = " + to_string(encounters, sort=False))
 f.write("\n\n-- Size here is the smallest for the specific raid, we use this for sorting.")
 f.write("\nInstances.Expansions = " + to_string(expansions))
-f.write("\n\n-- 1 (Daily), 2 (Weekly), 3 (3-Day), 4 (5-Day) ")
+f.write("\n\n-- Corresponds to the number of days on the lockout for the size.")
 f.write("\nInstances.Resets = " + to_string(resets))
 f.close()
-
 
 f = open("items.lua", "w")
 f.write("ICT.Enchants = " + to_string(enchantments))
 f.close()
-
