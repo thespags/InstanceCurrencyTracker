@@ -4,8 +4,6 @@ local LCInspector = LibStub("LibClassicInspector")
 ICT.Player = {}
 local Player = ICT.Player
 local Instances = ICT.Instances
-local Quests = ICT.Quests
-local Currency = ICT.Currency
 
 -- Adds "static" fields, 
 -- Note: we may wnat to move this information to "onLoad",
@@ -88,33 +86,6 @@ end
 function Player:createInstances()
     self.instances = self.instances or {}
 
-    -- TODO remove this in future versions when enough folks have "updated"
-    if self.raids or self.dungeons or self.oldRaids then
-        for k, v in pairs(self.raids) do
-            local size = tonumber(string.match(k, ".*%((%d+)%)"))
-            local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new({}, v.id, size)
-        end
-        for _, v in pairs(self.dungeons) do
-            local size = Instances.Resets[v.id][5]
-            local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new({}, v.id, size)
-        end
-        for k, v in pairs(self.oldRaids) do
-            local size
-	    if v.id == 249 then
-                size = 40
-            else
-                size = next(Instances.Resets[v.id])
-            end
-            local key = Instances:key(v.id, size)
-            self.instances[key] = Instances:new({}, v.id, size)
-        end
-        self.raids = nil
-        self.dungeons = nil
-        self.oldRaids = nil
-    end
-
     for id, sizes in pairs(Instances.Resets) do
         for size, _  in pairs(sizes) do
             local key = Instances:key(id, size)
@@ -124,8 +95,8 @@ function Player:createInstances()
 end
 
 function Player:dailyReset()
-    for k, _ in pairs(ICT.CurrencyInfo) do
-        self.currency.daily[k] = self.currency.maxDaily[k] or 0
+    for _, currency in ipairs(ICT.Currencies) do
+        self.currency.daily[currency.id] = self.currency.maxDaily[currency.id] or 0
     end
     for k, _ in pairs(ICT.QuestInfo) do
         self.quests.completed[k] = false
@@ -133,8 +104,8 @@ function Player:dailyReset()
 end
 
 function Player:weeklyReset()
-    for k, _ in pairs(ICT.CurrencyInfo) do
-        self.currency.weekly[k] = Currency:CalculateMaxRaidEmblems(k)(self)
+    for _, currency in ipairs(ICT.Currencies) do
+        self.currency.weekly[currency.id] = currency:calculateMaxRaid(self)
     end
 end
 
@@ -168,47 +139,46 @@ function Player:resetInstances()
 end
 
 local dungeons = {}
-function Player:getDungeons()
-    dungeons[self.fullName] = dungeons[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size == 5 and v.expansion == ICT.Expansions[ICT.WOTLK] end))
-    return dungeons[self.fullName]
+function Player:getDungeons(expansion)
+    local key = self.fullName .. ":" .. (expansion and expansion or "")
+    dungeons[key] = dungeons[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instances.isDungeon, expansion)))
+    return dungeons[key]
 end
 
 local raids = {}
-function Player:getRaids()
-    raids[self.fullName] = raids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and v.expansion == ICT.Expansions[ICT.WOTLK] end))
-    return raids[self.fullName]
-end
-
-local oldRaids = {}
-function Player:getOldRaids()
-    oldRaids[self.fullName] = oldRaids[self.fullName] or ICT:toTable(ICT:spairsByValue(self.instances, ICT.InstanceSort, function(v) return v.size > 5 and (v.expansion < ICT.Expansions[ICT.WOTLK] or v.legacy) end))
-    return oldRaids[self.fullName]
+function Player:getRaids(expansion)
+    local key = self.fullName .. ":" .. (expansion and expansion or "")
+    raids[key] = raids[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instances.isRaid, expansion)))
+    return raids[key]
 end
 
 function Player:calculateCurrency()
-    for k, _ in pairs(ICT.CurrencyInfo) do
-        self.currency.wallet[k] = ICT:GetCurrencyAmount(k)
-        -- There's no weekly raid quests so just add raid emblems.
-        self.currency.weekly[k] = Currency:CalculateRaidEmblems(k)(self)
-        self.currency.daily[k] = ICT:add(Currency:CalculateDungeonEmblems(k), Quests:CalculateAvailableDaily(k))(self)
-        self.currency.maxDaily[k] = ICT:add(Currency:CalculateMaxDungeonEmblems(k), Quests:CalculateMaxDaily(k))(self)
+    for _, currency in ipairs(ICT.Currencies) do
+        local id = currency.id
+        self.currency.wallet[id] = currency:getAmount()
+        -- There's no weekly raid quests so just add raid currency.
+        self.currency.weekly[id] = currency:calculateAvailableRaid(self)
+        self.currency.daily[id] = currency:calculateAvailableDungeon(self) + currency:calculateAvailableQuest(self)
+        self.currency.maxDaily[id] = currency:calculateMaxDungeon(self) + currency:calculateMaxQuest(self)
+        -- Because there's no weekly raid quests, there's no variable max hence we don't need to track maxWeekly.
     end
 end
 
-function Player:availableCurrency(tokenId)
-    if ICT.CurrencyInfo[tokenId].unlimited then
+function Player:availableCurrency(currency)
+    if currency.unlimited then
         return "N/A"
     end
-    if not self.currency.weekly[tokenId] or not self.currency.daily[tokenId] then
+    local id = currency.id
+    if not self.currency.weekly[id] or not self.currency.daily[id] then
         return 0
     end
-    return self.currency.weekly[tokenId] + self.currency.daily[tokenId]
+    return self.currency.weekly[id] + self.currency.daily[id]
 end
 
 function Player:calculateQuest()
     for k, quest in pairs(ICT.QuestInfo) do
         self.quests.prereq[k] = quest.prereq(self)
-        self.quests.completed[k] = Quests:IsDailyCompleted(quest)
+        self.quests.completed[k] = quest:isDailyCompleted()
     end
 end
 
@@ -223,16 +193,11 @@ function Player:update()
 end
 
 function Player:calculateResetTimes()
-    for _, instance in pairs(self:getOldRaids()) do
-        -- Ony40 has a 5 day reset.
-        if instance.id == 249 then
-            ICT.db.reset[5] = ICT.db.reset[5] or instance.reset
-        end
-        -- AQ20, ZG, and ZA have 3 day resets.
-        if instance.id == 509 or instance.id == 309 or instance.id == 568 then
-            ICT.db.reset[3] = ICT.db.reset[3] or instance.reset
-        end
+    -- Look for 1, 3, 5, and 7 day resets.
+    for _, instance in pairs(self.instances) do
+        ICT.db.reset[instance:resetInterval()] = ICT.db.reset[instance:resetInterval()] or instance.reset
     end
+    -- If we don't have a daily or weekly reset we can use the API.
     ICT.db.reset[1] = ICT.db.reset[1] or C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime()
     ICT.db.reset[7] = ICT.db.reset[7] or C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime()
 end
@@ -305,17 +270,27 @@ function Player:updateSkills()
     end
 end
 
+function Player:getSpec(id)
+    id = id or self.activeSpec
+    self:getSpecs()[id] = self:getSpecs()[id] or {}
+    return self:getSpecs()[id]
+end
+
+function Player:getSpecs()
+    self.specs = self.specs or {}
+    return self.specs
+end
+
 function Player:updateTalents()
-    local active = LCInspector:GetActiveTalentGroup(self.guid)
-    self.specs = self.specs or { {}, {} }
-    self.activeSpec = active
+    self.activeSpec = LCInspector:GetActiveTalentGroup(self.guid)
     for i=1,2 do
         local tab1, tab2, tab3 = LCInspector:GetTalentPoints(self.guid, i)
         if tab1 ~= nil and tab2 ~= nil and tab3 ~= nil then
-            self.specs[i] = self.specs[i] or {}
+            local spec = self:getSpec(i)
+            spec.id = i
             local specialization = LCInspector:GetSpecialization(self.guid, i)
-            self.specs[i].name = specialization and LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
-            self.specs[i].tab1, self.specs[i].tab2, self.specs[i].tab3 = tab1, tab2, tab3
+            spec.name = specialization and LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
+            spec.tab1, spec.tab2, spec.tab3 = tab1, tab2, tab3
         end
     end
     self:updateGear()
@@ -323,16 +298,16 @@ function Player:updateTalents()
 end
 
 function Player:updateGlyphs()
-    self.specs = self.specs or { {}, {} }
-    for i=1,2 do 
-        self.specs[i].glyphs = {}
+    for i=1,2 do
+        local spec = self:getSpec(i)
+        spec.glyphs = {}
         for j=1,6 do
             -- This icon is transparent, we could load the item and not the spell,
             -- it lacked it's own charm as all the glyphs for the same type and class are the same.
             -- Requires using stpain's data dump.
             -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
             local enabled, type, spellId, icon = GetGlyphSocketInfo(j, i)
-            self.specs[i].glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
+            spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
         end
     end
 end
@@ -349,7 +324,7 @@ function Player:updateGear()
         if itemLink ~= nil then
             local item = {}
 
-            local details = ICT.itemLinkSplit(itemLink, ":")
+            local details = ICT:itemLinkSplit(itemLink, ":")
             -- Use link instead of id so we don't have to worry about looking up an uncached value.
             item.link = itemLink
             -- Convert to number for our table lookup, Blizzard calls handle strings vs numbers.
@@ -539,10 +514,18 @@ function Player:getClassColor()
     return classColorHex
 end
 
-function Player:isQuestAvailable()
+function Player:isQuestVisible()
     return function(quest)
-        return ICT.db.options.currency[quest.tokenId] and (self.quests.prereq[quest.key] or ICT.db.options.allQuests)
+        return quest.currency:isVisible() and (self:isQuestAvailable(quest) or ICT.db.options.allQuests)
     end
+end
+
+function Player:isQuestAvailable(quest)
+    return self.quests.prereq[quest.key]
+end
+
+function Player:isQuestCompleted(quest)
+    return self.quests.completed[quest.key]
 end
 
 function Player:isEngineer(level)
@@ -573,8 +556,16 @@ function Player:isLevelVisible()
     return self.level >= (ICT.db.options.minimumLevel or ICT.MaxLevel)
 end
 
-function Player.PlayerSort(a, b)
-    return a:getName() < b:getName()
+function Player:__eq(other)
+    return self:getName() == other:getName()
+end
+
+function Player:__lt(other)
+    return self:getName() < other:getName()
+end
+
+function Player:__tostring()
+    return self.fullName
 end
 
 function Player.GetCurrentPlayer()

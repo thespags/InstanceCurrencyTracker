@@ -15,7 +15,7 @@ ICT.ClassIcons = {
     ["DRUID"] = 625999
 }
 
-function ICT.linkSplit(link, name)
+function ICT:linkSplit(link, name)
     if not link then
         return {}
     end
@@ -29,19 +29,19 @@ function ICT.linkSplit(link, name)
     return t
 end
 
-function ICT.itemLinkSplit(link)
-    return ICT.linkSplit(link, "item")
+function ICT:itemLinkSplit(link)
+    return ICT:linkSplit(link, "item")
 end
 
-function ICT.tradeLinkSplit(link)
-    return ICT.linkSplit(link, "trade")
+function ICT:tradeLinkSplit(link)
+    return ICT:linkSplit(link, "trade")
 end
 
 -- Sorted pairs iterator determined by the table key.
-function ICT:spairs(t, comparator, filter, ...)
+function ICT:spairs(t, comparator, filter)
     local keys = {}
     for k, _ in pairs(t) do
-        if not filter or filter(k, ...) then
+        if not filter or filter(k) then
             table.insert(keys, k)
         end
     end
@@ -58,15 +58,20 @@ function ICT:spairs(t, comparator, filter, ...)
 end
 
 -- Sorted pairs iterator determined by mapping the values.
-function ICT:spairsByValue(t, comparator, filter, ...)
-    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k, ...) return filter(t[k], ...) end, ...)
+function ICT:spairsByValue(t, comparator, filter)
+    return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
+end
+
+-- Natural sorted pairs iterator.
+function ICT:nspairsByValue(t, filter)
+    return self:spairsByValue(t, function(a, b) return a < b end, filter)
 end
 
 -- Filtered pairs iterator determined by the table key with the given function.
-function ICT:fpairs(t, filter, ...)
+function ICT:fpairs(t, filter)
     local keys = {}
     for k, _ in pairs(t) do
-        if not filter or filter(k, ...) then
+        if not filter or filter(k) then
             table.insert(keys, k)
         end
     end
@@ -81,8 +86,8 @@ function ICT:fpairs(t, filter, ...)
 end
 
 -- Filtered pairs iterator determined by the table value with the given function.
-function ICT:fpairsByValue(t, f, ...)
-    return self:fpairs(t, function(k, ...) return f(t[k], ...) end, ...)
+function ICT:fpairsByValue(t, f)
+    return self:fpairs(t, function(k) return f(t[k]) end)
 end
 
 -- Sums a list by the values or a function mapping the values to a number.
@@ -141,23 +146,12 @@ function ICT:set(...)
     return t
 end
 
-function ICT:size(t)
+function ICT:size(t, f)
     if t == nil then
         return 0
     end
     local i = 0
-    for _ in pairs(t) do
-        i = i + 1
-    end
-    return i
-end
-
-function ICT:iSize(t, f)
-    if t == nil then
-        return 0
-    end
-    local i = 0
-    for _, v in t do
+    for _, v in pairs(t) do
         if not f or f(v) then
             i = i + 1
         end
@@ -200,10 +194,23 @@ function ICT:printValues(t)
     end
 end
 
-function ICT.dprint(text)
+function ICT:dprint(text)
     if false then
         print(text)
     end
+end
+
+function ICT:ConvertFrom32bitNegative(int32)
+    -- Is a 32bit negative value?
+    return int32 >= 0x80000000 / 1e3
+    -- If so then convert.
+    and int32 - 0x100000000 / 1e3
+    -- If positive return original.
+    or int32
+end
+
+function ICT:GetTime64()
+    return self:ConvertFrom32bitNegative(GetTime())
 end
 
 function ICT:DisplayTime(time)
@@ -217,13 +224,16 @@ function ICT:DisplayTime(time)
     return string.format("%d:%02d:%02d:%02d", days, hours, minutes, seconds)
 end
 
-local throttle = true;
-ICT.throttles = {};
+local throttle = true
+ICT.throttles = {}
+-- Aggregates calls, f, within a certain time span.
+-- callback is called after f for any post processing, e.g. update the display.
+-- source is simply a debug tool.
 function ICT:throttleFunction(source, time, f, callback)
     return function()
         -- Skip calling if the database/addon isn't initialized.
-        -- We handle this via "onLoad".
-        ICT.dprint(source)
+        -- We set init in the addon initialization event.
+        ICT:dprint(source)
         if ICT.db and ICT.init then
             local player = ICT.GetPlayer()
             if time > 0 and not ICT.throttles[f] then
@@ -241,6 +251,14 @@ function ICT:throttleFunction(source, time, f, callback)
     end
 end
 
-function ICT.NaturalSort(a, b)
-    return a < b
+function ICT:fWith(f, v1)
+    return function(v) return f(v, v1) end
+end
+
+function ICT:fNot(f)
+    return function(v) return not f(v) end
+end
+
+function ICT:fAnd(f, g)
+    return function(v) return f(v) and g(v) end
 end

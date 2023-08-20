@@ -1,109 +1,137 @@
 local addOnName, ICT = ...
 
-ICT.Currency = {}
-local Currency = ICT.Currency
--- Currency Id's with name helpers.
-ICT.Heroism = 101
-ICT.Valor = 102
-ICT.Conquest = 221
-ICT.Triumph = 301
-ICT.SiderealEssence = 2589
-ICT.ChampionsSeal = 241
-ICT.Epicurean = 81
-ICT.JewelcraftersToken = 61
-ICT.StoneKeepersShards = 161
-ICT.WintergraspMark = 126
--- Phase 3 dungeons grant conquest.
-ICT.DungeonEmblem = ICT.Conquest
+local Currency = {}
+-- Adds all the functions to the player.
+function Currency:new(id, unlimited)
+    local currency = { id = id, unlimited = unlimited }
+    setmetatable(currency, self)
+    self.__index = self
+    return currency
+end
 
 -- Creates a string with the icon and name of the provided currency.
-function ICT:GetCurrencyWithIcon(id)
-    local currency = C_CurrencyInfo.GetCurrencyInfo(id)
+function Currency:getNameWithIcon()
+    local currency = C_CurrencyInfo.GetCurrencyInfo(self.id)
     return string.format("|T%s:12:12|t%s", currency["iconFileID"], currency["name"])
 end
 
 -- Creates a string with the icon and name of the provided currency.
-function ICT:GetCurrencyWithIconTooltip(id)
-    local currency = C_CurrencyInfo.GetCurrencyInfo(id)
+function Currency:getNameWithIconTooltip()
+    local currency = C_CurrencyInfo.GetCurrencyInfo(self.id)
     return string.format("|T%s:14:14|t%s", currency["iconFileID"], currency["name"])
 end
 
 -- Returns the amount of currency the player has for the currency provided.
-function ICT:GetCurrencyAmount(id)
-    return C_CurrencyInfo.GetCurrencyInfo(id)["quantity"]
+function Currency:getAmount()
+    return C_CurrencyInfo.GetCurrencyInfo(self.id)["quantity"]
 end
 
 -- Returns the localized name of the currency provided.
-function ICT:GetCurrencyName(id)
-    return C_CurrencyInfo.GetCurrencyInfo(id)["name"]
+function Currency:getName()
+    return C_CurrencyInfo.GetCurrencyInfo(self.id)["name"]
 end
 
-local function calculateEmblems(instances, tokenId)
-    local emblems = 0
+function Currency:calculateAvailable(instances)
+    local sum = 0
 
     for _, instance in pairs(instances) do
-        if instance:hasTokenId(tokenId) then
-            local available = instance.available or {}
-            instance.available = available
-            instance.available[tokenId] = instance:emblems(tokenId)
-            emblems = emblems + instance.available[tokenId]
+        if instance:hasCurrency(self) then
+            instance.available = instance.available or {}
+            instance.available[self.id] = instance:availableCurrency(self)
+            sum = sum + instance.available[self.id]
         end
+    end
+    return sum
+end
+
+function Currency:calculateAvailableDungeon(player)
+    return self:calculateAvailable(player:getDungeons())
+end
+
+function Currency:calculateAvailableRaid(player)
+    return self:calculateAvailable(player:getRaids())
+end
+
+function Currency:calculateAvailableQuest(player)
+    local emblems = 0
+    for _, quest in ICT:fpairsByValue(ICT.QuestInfo, self.fromQuest) do
+        emblems = emblems + (quest.prereq(player) and not quest:isDailyCompleted() and quest.amount or 0)
     end
     return emblems
 end
 
-function Currency:CalculateDungeonEmblems(tokenId)
-    return function(player)
-        return calculateEmblems(player:getDungeons(), tokenId)
-    end
-end
-
-function Currency:CalculateRaidEmblems(tokenId)
-    return function(player)
-        return calculateEmblems(player:getRaids(), tokenId)
-    end
-end
-
-local MaxTokens = {}
-local function calculateMaxEmblems(instances, tokenId)
+local maxTokens = {}
+function Currency:calculateMax(instances)
     -- Lock the value once we calculated as it doesn't change.
     -- It probably doesn't matter for performance but let's do it.
     -- Resets on reload in case this value is updated on new version.
-    if MaxTokens[tokenId] then
-        return MaxTokens[tokenId]
+    if maxTokens[self.id] then
+        return maxTokens[self.id]
     end
-    local op = function(v) return v:maxEmblems(tokenId) end
-    local filter = function(v) return v:hasTokenId(tokenId) end
-    MaxTokens[tokenId] = ICT:sum(instances, op, filter)
-    return MaxTokens[tokenId]
+    local op = function(v) return v:maxCurrency(self) end
+    local filter = function(v) return v:hasCurrency(self) end
+    maxTokens[self.id] = ICT:sum(instances, op, filter)
+    return maxTokens[self.id]
 end
 
-function Currency:CalculateMaxDungeonEmblems(tokenId)
-    return function(player)
-        return calculateMaxEmblems(player:getDungeons(), tokenId)
-    end
+function Currency:calculateMaxDungeon(player)
+    return self:calculateMax(player:getDungeons())
 end
 
-function Currency:CalculateMaxRaidEmblems(tokenId)
-    return function(player)
-        return calculateMaxEmblems(player:getRaids(), tokenId)
-    end
+function Currency:calculateMaxRaid(player)
+    return self:calculateMax(player:getRaids())
 end
 
--- How to order currency, we sort from highest to lowest (reverse) so adding new currencies is easier.
-ICT.CurrencyInfo = {
-    [ICT.Triumph] = { order = 11 },
-    [ICT.SiderealEssence] = { order = 10 },
-    [ICT.ChampionsSeal] = { order = 9 },
-    [ICT.Conquest] = { order = 8 },
-    [ICT.Valor] = { order = 7 },
-    [ICT.Heroism] = { order = 6 },
-    [ICT.Epicurean] = { order = 5 },
-    [ICT.JewelcraftersToken] = { order = 4 },
-    [ICT.StoneKeepersShards] = { order = 3, unlimited = true},
-    [ICT.WintergraspMark] = { order = 2, unlimited = true},
+function Currency:calculateMaxQuest(player)
+    local emblems = 0
+    for _, quest in ICT:fpairsByValue(ICT.QuestInfo, self.fromQuest) do
+        emblems = emblems + (quest.prereq(player) and quest.amount or 0)
+    end
+    return emblems
+end
+
+function Currency:fromQuest()
+    return function(quest) return quest.currency == self end
+end
+
+function Currency:isVisible()
+    return ICT.db.options.currency[self.id]
+end
+
+ICT.Triumph = Currency:new(301)
+ICT.SiderealEssence = Currency:new(2589)
+ICT.ChampionsSeal = Currency:new(241)
+ICT.Conquest = Currency:new(221)
+ICT.Heroism = Currency:new(102)
+ICT.Valor = Currency:new(101)
+ICT.Epicurean = Currency:new(81)
+ICT.JewelcraftersToken = Currency:new(61)
+ICT.StoneKeepersShards = Currency:new(161)
+ICT.WintergraspMark = Currency:new(126)
+-- Phase 3 dungeons grant conquest.
+ICT.DungeonEmblem = ICT.Conquest
+
+ICT.Currencies = {
+    ICT.Triumph,
+    ICT.SiderealEssence,
+    ICT.ChampionsSeal,
+    ICT.Conquest,
+    ICT.Valor,
+    ICT.Heroism,
+    ICT.Epicurean,
+    ICT.JewelcraftersToken,
+    ICT.StoneKeepersShard,
+    ICT.WintergraspMark,
 }
 
-function ICT.CurrencySort(a, b)
-    return ICT.CurrencyInfo[a].order > ICT.CurrencyInfo[b].order
+for k, v in ipairs(ICT.Currencies) do
+    v.order = k
+end
+
+function Currency:__eq(other)
+    return self.order == other.order
+end
+
+function Currency:__lt(other)
+    return self.order < other.order
 end

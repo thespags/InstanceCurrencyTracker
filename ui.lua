@@ -234,14 +234,14 @@ function Cells:printSectionTitle(title, key)
         function()
             key = key or title
             ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
-            ICT:DisplayPlayer()
+            ICT:PrintPlayers()
         end
     )
     return self.y + 1
 end
 
 function UI:getQuestColor(player, quest)
-    return (not player.quests.prereq[quest.key] and ICT.unavailableColor) or (player.quests.completed[quest.key] and ICT.lockedColor or ICT.availableColor)
+    return (not player:isQuestAvailable(quest) and ICT.unavailableColor) or (player:isQuestCompleted(quest) and ICT.lockedColor or ICT.availableColor)
 end
 
 function UI:getSelectedColor(selected)
@@ -382,7 +382,7 @@ function UI:openDeleteFrame(player)
         delete.button:SetScript("OnClick", function ()
             ICT.WipePlayer(player.fullName)
             delete:Hide()
-            ICT:DisplayPlayer()
+            ICT:PrintPlayers()
         end)
     end
 end
