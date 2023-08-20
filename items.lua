@@ -2,6 +2,7 @@ local addOn, ICT = ...
 
 local Player = ICT.Player
 
+-- TODO check if this is available in wow db?
 ICT.CheckSlotEnchant = {
 	[INVSLOT_HEAD] = ICT:ReturnX(true),
 	[INVSLOT_NECK] = ICT:ReturnX(false),

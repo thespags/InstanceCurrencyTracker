@@ -52,6 +52,14 @@ function Instances:resetIfNecessary(timestamp)
     end
 end
 
+function Instances:resetInterval()
+    return Instances.Resets[self.id][self.size]
+end
+
+function Instances:activityId()
+    return Instances.Expansions[self.id].activityId
+end
+
 function Instances:numOfEncounters()
     return self.encounterSize
 end
@@ -68,24 +76,24 @@ function Instances:isEncounterKilled(index)
     return self.encounterKilled and self.encounterKilled[index] or false
 end
 
-function Instances:hasTokenId(tokenId)
+function Instances:hasCurrency(currency)
     local info = self.currency[self.id]
-    return info and info.tokenIds[tokenId] or false
+    return info and info.currencies[currency] or false
 end
 
-function Instances:tokenIds()
+function Instances:currencies()
     local info = self.currency[self.id]
-    return info and info.tokenIds or {}
+    return info and info.currencies or {}
 end
 
-function Instances:emblems(tokenId)
+function Instances:availableCurrency(currency)
     local info = self.currency[self.id]
-    return info and info.emblems(self, tokenId) or 0
+    return info and info.availableCurrency(self, currency) or 0
 end
 
-function Instances:maxEmblems(tokenId)
+function Instances:maxCurrency(currency)
     local info = self.currency[self.id]
-    return info and info.maxEmblems(self, tokenId) or 0
+    return info and info.maxCurrency(self, currency) or 0
 end
 
 function Instances:fromExpansion(expansion)
@@ -93,12 +101,14 @@ function Instances:fromExpansion(expansion)
     return self.expansion == expansion or self.legacy == expansion
 end
 
+-- Is this instance a raid and if provided, a raid from the expansion?
 function Instances:isRaid(expansion)
-    return self.size > 5 and (not expansion or self.expansion == expansion)
+    return self.size > 5 and (not expansion or self:fromExpansion(expansion))
 end
 
+-- Is this instance a dungeon and if provided, a dungeon from the expansion?
 function Instances:isDungeon(expansion)
-    return self.size == 5 and (not expansion or self.expansion == expansion)
+    return self.size == 5 and (not expansion or self:fromExpansion(expansion))
 end
 
 function Instances:isVisible(expansion)
@@ -108,24 +118,26 @@ function Instances:isVisible(expansion)
     return ICT.getOrCreateDisplayInstances()[self.id]
 end
 
-function ICT.InstanceSort(a, b)
+-- This comparison groups instances with the same name together across multiple sizes.
+-- This is intended for sorting with respect to dungeons and raids separately.
+function Instances:__lt(other)
     if ICT.db.options.orderLockLast then
-        if a.locked and not b.locked then
+        if self.locked and not other.locked then
             return false
         end
-        if not a.locked and b.locked then
+        if not self.locked and other.locked then
             return true
         end
     end
 
     -- Later expansions appear earlier in our lists...
-    if a.expansion == b.expansion or a.legacy == b.expansion then
-        if a.name == b.name then
-            return a.size < b.size
+    if self.expansion == other.expansion or self.legacy == other.expansion or self.expansion == other.legacy then
+        if self.name == other.name then
+            return self.size < other.size
         end
-        return a.name < b.name
+        return self.name < other.name
     end
-    return a.expansion > b.expansion
+    return self.expansion > other.expansion
 end
 
 local function compare(a, b, aSize, bSize)
@@ -138,6 +150,8 @@ local function compare(a, b, aSize, bSize)
     return aSize < bSize
 end
 
+-- This comparison sorts by size before name.
+-- This is intended for sorting with dungeons and raids togther.ß
 function ICT.InstanceOptionSort(a, b)
     -- Later expansions appear earlier in our lists...
     if a.expansion == b.expansion then
@@ -179,13 +193,8 @@ end
 
 -- Checks if the last boss in the instance is killed, using the number of encounters as the last boss index.
 local isLastBossKilled = function(instance)
-    local index
     -- Override for Gundrak as lastboss is the optional boss. 
-    if instance.id == 604 then
-        index = 4
-    else
-        index = instance:numOfEncounters()
-    end
+    local index = instance.id == 604 and 4 or instance:numOfEncounters()
     return instance:isEncounterKilled(index)
 end
 
@@ -218,8 +227,8 @@ local voaIndex = {
     [ICT.Conquest] = 2,
     [ICT.Triumph] = 3,
 }
-local voaEmblems = function(instance, tokenId)
-    return instance:isEncounterKilled(voaIndex[tokenId]) and 0 or 2
+local voaEmblems = function(instance, currency)
+    return instance:isEncounterKilled(voaIndex[currency]) and 0 or 2
 end
 
 local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
@@ -230,17 +239,17 @@ end
 
 local dungeonEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence)
 local totcEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence, ICT.ChampionsSeal)
-local availableDungeonEmblems = function(instance, tokenID)
-    if tokenID == ICT.SiderealEssence then
+local availableDungeonEmblems = function(instance, currency)
+    if currency == ICT.SiderealEssence then
         return isLastBossKilled(instance) and 0 or 1
-    elseif tokenID == ICT.DungeonEmblem or tokenID == ICT.ChampionsSeal then
+    elseif currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
         return sameEmblemsPerBoss(1)(instance)
     end
 end
-local maxDungeonEmblems = function(instance, tokenID)
-    if tokenID == ICT.SiderealEssence then
+local maxDungeonEmblems = function(instance, currency)
+    if currency == ICT.SiderealEssence then
         return 1
-    elseif tokenID == ICT.DungeonEmblem or tokenID == ICT.ChampionsSeal then
+    elseif currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
         return instance:numOfEncounters()
     end
 end
@@ -249,45 +258,45 @@ local maxNumEncountersPlusOne = function(instance) return instance:numOfEncounte
 
 Instances.currency = {
     -- Utgarde Keep
-    [574] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [574] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Utgarde Pinnacle
-    [575] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [575] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- The Culling of Stratholme
-    [595] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [595] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Drak'Tharon Keep
-    [600] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [600] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Gundrak
-    [604] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [604] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- The Nexus
-    [576] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [576] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- The Oculus
-    [578] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [578] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Violet Hold
-    [608] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [608] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Halls of Lightning
-    [602] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [602] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Halls of Stone
-    [599] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [599] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- "Azjol-Nerub
-    [601] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [601] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Ahn'kahet: The Old Kingdom
-    [619] = { tokenIds = dungeonEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [619] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Trial of the Champion"
-    [650] = { tokenIds = totcEmblems, emblems = availableDungeonEmblems, maxEmblems = maxDungeonEmblems },
+    [650] = { currencies = totcEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Vault of Archavon
-    [624] = { tokenIds = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), emblems = voaEmblems, maxEmblems = ICT:ReturnX(2) },
+    [624] = { currencies = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), availableCurrency = voaEmblems, maxCurrency = ICT:ReturnX(2) },
     -- Naxxramas
-    [533] = { tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [533] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
     -- The Obsidian Sanctum
-    [615] = { tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [615] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
     -- The Eye of Eternity
-    [616] = { tokenIds = ICT:set(ICT.Valor), emblems = onePerBossPlusOneLastBoss, maxEmblems = maxNumEncountersPlusOne },
+    [616] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
     -- Ulduar
-    [603] = { tokenIds = ICT:set(ICT.Conquest), emblems = ulduarEmblems, maxEmblems = ICT:ReturnX(Instances.MaxUlduarEmblems) },
+    [603] = { currencies = ICT:set(ICT.Conquest), availableCurrency = ulduarEmblems, maxCurrency = ICT:ReturnX(Instances.MaxUlduarEmblems) },
     -- Onyxia's Lair
-    [249] = { tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
     -- Trial of the Crusader
-    [649] = { tokenIds = ICT:set(ICT.Triumph), emblems = sameEmblemsPerBossPerSize(4, 5), maxEmblems = maxEmblemsPerSize(4, 5) },
+    [649] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
 }
 -- End Currency Helpers
 
@@ -301,7 +310,7 @@ function Instances.infos()
     for k, v in pairs(Instances.Expansions) do
         local info = Instances:new({}, v.id, v.size)
         infos[k] = info
-        -- override name
+        -- todo check if this is needed?
         info.name = GetRealZoneText(k)
         info.legacySize = Instances.Expansions[v.id].legacySize
         info.legacy = Instances.Expansions[v.id].legacy
@@ -375,95 +384,95 @@ Instances.Encounters = {
     [616] = { "Malygos" },
     [619] = { "Elder Nadox", "Prince Taldaram", "Jedoga Shadowseeker", "Herald Volazj", "Amanitar" },
     [624] = { "Archavon the Stone Watcher", "Emalon the Storm Watcher", "Koralon the Flame Watcher", "Toravon the Ice Watcher" },
-    [631] = { "Lord Marrowgar", "Lady Deathwhisper", "Icecrown Gunship Battle", "Deathbringer Saurfang", "Festergut", "Rotface", "Professor Putricide", "Blood Council", "Queen Lana'thel", "Valithria Dreamwalker", "Sindragosa", "The Lich King" },
-    [632] = { "Bronjahm", "Devourer of Souls" },
+    --[631] = { "Lord Marrowgar", "Lady Deathwhisper", "Icecrown Gunship Battle", "Deathbringer Saurfang", "Festergut", "Rotface", "Professor Putricide", "Blood Council", "Queen Lana'thel", "Valithria Dreamwalker", "Sindragosa", "The Lich King" },
+    --[632] = { "Bronjahm", "Devourer of Souls" },
     [649] = { "Northrend Beasts", "Lord Jaraxxus", "Faction Champions", "Val'kyr Twins", "Anub'arak" },
     [650] = { "Grand Champions", "Argent Champion", "The Black Knight" },
-    [658] = { "Forgemaster Garfrost", "Krick", "Overlrod Tyrannus" },
-    [668] = { "Falric", "Marwyn", "Escaped from Arthas" },
-    [724] = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" },
+    --[658] = { "Forgemaster Garfrost", "Krick", "Overlrod Tyrannus" },
+    --[668] = { "Falric", "Marwyn", "Escaped from Arthas" },
+    --[724] = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" },
 }
 
 -- Size here is the smallest for the specific raid, we use this for sorting.
 Instances.Expansions = {
-    [249] = { expansion = 2, id = 249, legacy = 0, size = 10, legacySize = 40 },
-    [269] = { expansion = 1, id = 269, size = 5, },
-    [309] = { expansion = 0, id = 309, size = 20, },
-    [409] = { expansion = 0, id = 409, size = 40, },
-    [469] = { expansion = 0, id = 469, size = 40, },
-    [509] = { expansion = 0, id = 509, size = 20, },
-    [531] = { expansion = 0, id = 531, size = 40, },
-    [532] = { expansion = 1, id = 532, size = 10, },
-    [533] = { expansion = 2, id = 533, size = 10, },
-    [534] = { expansion = 1, id = 534, size = 25, },
-    [540] = { expansion = 1, id = 540, size = 5, },
-    [542] = { expansion = 1, id = 542, size = 5, },
-    [543] = { expansion = 1, id = 543, size = 5, },
-    [544] = { expansion = 1, id = 544, size = 25, },
-    [545] = { expansion = 1, id = 545, size = 5, },
-    [546] = { expansion = 1, id = 546, size = 5, },
-    [547] = { expansion = 1, id = 547, size = 5, },
-    [548] = { expansion = 1, id = 548, size = 25, },
-    [550] = { expansion = 1, id = 550, size = 25, },
-    [552] = { expansion = 1, id = 552, size = 5, },
-    [553] = { expansion = 1, id = 553, size = 5, },
-    [554] = { expansion = 1, id = 554, size = 5, },
-    [555] = { expansion = 1, id = 555, size = 5, },
-    [556] = { expansion = 1, id = 556, size = 5, },
-    [557] = { expansion = 1, id = 557, size = 5, },
-    [558] = { expansion = 1, id = 558, size = 5, },
-    [560] = { expansion = 1, id = 560, size = 5, },
-    [564] = { expansion = 1, id = 564, size = 25, },
-    [565] = { expansion = 1, id = 565, size = 25, },
-    [568] = { expansion = 1, id = 568, size = 10, },
-    [574] = { expansion = 2, id = 574, size = 5, },
-    [575] = { expansion = 2, id = 575, size = 5, },
-    [576] = { expansion = 2, id = 576, size = 5, },
-    [578] = { expansion = 2, id = 578, size = 5, },
-    [580] = { expansion = 1, id = 580, size = 25, },
-    [585] = { expansion = 1, id = 585, size = 5, },
-    [595] = { expansion = 2, id = 595, size = 5, },
-    [599] = { expansion = 2, id = 599, size = 5, },
-    [600] = { expansion = 2, id = 600, size = 5, },
-    [601] = { expansion = 2, id = 601, size = 5, },
-    [602] = { expansion = 2, id = 602, size = 5, },
-    [603] = { expansion = 2, id = 603, size = 10, },
-    [604] = { expansion = 2, id = 604, size = 5, },
-    [608] = { expansion = 2, id = 608, size = 5, },
-    [615] = { expansion = 2, id = 615, size = 10, },
-    [616] = { expansion = 2, id = 616, size = 10, },
-    [619] = { expansion = 2, id = 619, size = 5, },
-    [624] = { expansion = 2, id = 624, size = 10, },
-    -- [631] = { expansion = 2, id = 631, size = 10, },
-    -- [632] = { expansion = 2, id = 632, size = 5, },
-    [649] = { expansion = 2, id = 649, size = 10, },
-    [650] = { expansion = 2, id = 650, size = 5, },
-    -- [658] = { expansion = 2, id = 658, size = 5, },
-    -- [668] = { expansion = 2, id = 668, size = 5, },
-    -- [724] = { expansion = 2, id = 724, size = 10, },
+    [249] = { activityId = 1156, expansion = 2, id = 249, legacy = 0, legacySize = 40, size = 10, },
+    [269] = { activityId = 907, expansion = 1, id = 269, size = 5, },
+    [309] = { activityId = 836, expansion = 0, id = 309, size = 20, },
+    [409] = { activityId = 839, expansion = 0, id = 409, size = 40, },
+    [469] = { activityId = 840, expansion = 0, id = 469, size = 40, },
+    [509] = { activityId = 842, expansion = 0, id = 509, size = 20, },
+    [531] = { activityId = 843, expansion = 0, id = 531, size = 40, },
+    [532] = { activityId = 844, expansion = 1, id = 532, size = 10, },
+    [533] = { activityId = 1098, expansion = 2, id = 533, size = 10, },
+    [534] = { activityId = 849, expansion = 1, id = 534, size = 25, },
+    [540] = { activityId = 914, expansion = 1, id = 540, size = 5, },
+    [542] = { activityId = 912, expansion = 1, id = 542, size = 5, },
+    [543] = { activityId = 913, expansion = 1, id = 543, size = 5, },
+    [544] = { activityId = 845, expansion = 1, id = 544, size = 25, },
+    [545] = { activityId = 910, expansion = 1, id = 545, size = 5, },
+    [546] = { activityId = 911, expansion = 1, id = 546, size = 5, },
+    [547] = { activityId = 1082, expansion = 1, id = 547, size = 5, },
+    [548] = { activityId = 848, expansion = 1, id = 548, size = 25, },
+    [550] = { activityId = 847, expansion = 1, id = 550, size = 25, },
+    [552] = { activityId = 915, expansion = 1, id = 552, size = 5, },
+    [553] = { activityId = 918, expansion = 1, id = 553, size = 5, },
+    [554] = { activityId = 916, expansion = 1, id = 554, size = 5, },
+    [555] = { activityId = 906, expansion = 1, id = 555, size = 5, },
+    [556] = { activityId = 905, expansion = 1, id = 556, size = 5, },
+    [557] = { activityId = 904, expansion = 1, id = 557, size = 5, },
+    [558] = { activityId = 903, expansion = 1, id = 558, size = 5, },
+    [560] = { activityId = 908, expansion = 1, id = 560, size = 5, },
+    [564] = { activityId = 850, expansion = 1, id = 564, size = 25, },
+    [565] = { activityId = 846, expansion = 1, id = 565, size = 25, },
+    [568] = { activityId = 851, expansion = 1, id = 568, size = 10, },
+    [574] = { activityId = 1225, expansion = 2, id = 574, size = 5, },
+    [575] = { activityId = 1224, expansion = 2, id = 575, size = 5, },
+    [576] = { activityId = 1227, expansion = 2, id = 576, size = 5, },
+    [578] = { activityId = 1226, expansion = 2, id = 578, size = 5, },
+    [580] = { activityId = 852, expansion = 1, id = 580, size = 25, },
+    [585] = { activityId = 917, expansion = 1, id = 585, size = 5, },
+    [595] = { activityId = 1228, expansion = 2, id = 595, size = 5, },
+    [599] = { activityId = 1229, expansion = 2, id = 599, size = 5, },
+    [600] = { activityId = 1232, expansion = 2, id = 600, size = 5, },
+    [601] = { activityId = 1233, expansion = 2, id = 601, size = 5, },
+    [602] = { activityId = 1230, expansion = 2, id = 602, size = 5, },
+    [603] = { activityId = 1107, expansion = 2, id = 603, size = 10, },
+    [604] = { activityId = 1231, expansion = 2, id = 604, size = 5, },
+    [608] = { activityId = 1223, expansion = 2, id = 608, size = 5, },
+    [615] = { activityId = 1101, expansion = 2, id = 615, size = 10, },
+    [616] = { activityId = 1102, expansion = 2, id = 616, size = 10, },
+    [619] = { activityId = 1234, expansion = 2, id = 619, size = 5, },
+    [624] = { activityId = 1096, expansion = 2, id = 624, size = 10, },
+    --[631] = { activityId = 1111, expansion = 2, id = 631, size = 10, },
+    --[632] = { activityId = 1240, expansion = 2, id = 632, size = 5, },
+    [649] = { activityId = 1105, expansion = 2, id = 649, size = 10, },
+    [650] = { activityId = 1239, expansion = 2, id = 650, size = 5, },
+    --[658] = { activityId = 1241, expansion = 2, id = 658, size = 5, },
+    --[668] = { activityId = 1242, expansion = 2, id = 668, size = 5, },
+    --[724] = { activityId = 1109, expansion = 2, id = 724, size = 10, },
 }
 
--- 1 (Daily), 2 (Weekly), 3 (3-Day), 4 (5-Day) 
+-- Corresponds to the number of days on the lockout for the size.
 Instances.Resets = {
-    [249] = { [10] = 2, [25] = 2, [40] = 4, },
+    [249] = { [10] = 7, [25] = 7, [40] = 5, },
     [269] = { [5] = 1, },
     [309] = { [20] = 3, },
-    [409] = { [40] = 2, },
-    [469] = { [40] = 2, },
+    [409] = { [40] = 7, },
+    [469] = { [40] = 7, },
     [509] = { [20] = 3, },
-    [531] = { [40] = 2, },
-    [532] = { [10] = 2, },
-    [533] = { [10] = 2, [25] = 2, },
-    [534] = { [25] = 2, },
+    [531] = { [40] = 7, },
+    [532] = { [10] = 7, },
+    [533] = { [10] = 7, [25] = 7, },
+    [534] = { [25] = 7, },
     [540] = { [5] = 1, },
     [542] = { [5] = 1, },
     [543] = { [5] = 1, },
-    [544] = { [25] = 2, },
+    [544] = { [25] = 7, },
     [545] = { [5] = 1, },
     [546] = { [5] = 1, },
     [547] = { [5] = 1, },
-    [548] = { [25] = 2, },
-    [550] = { [25] = 2, },
+    [548] = { [25] = 7, },
+    [550] = { [25] = 7, },
     [552] = { [5] = 1, },
     [553] = { [5] = 1, },
     [554] = { [5] = 1, },
@@ -472,32 +481,32 @@ Instances.Resets = {
     [557] = { [5] = 1, },
     [558] = { [5] = 1, },
     [560] = { [5] = 1, },
-    [564] = { [25] = 2, },
-    [565] = { [25] = 2, },
-    [568] = { [10] = 2, },
+    [564] = { [25] = 7, },
+    [565] = { [25] = 7, },
+    [568] = { [10] = 7, },
     [574] = { [5] = 1, },
     [575] = { [5] = 1, },
     [576] = { [5] = 1, },
     [578] = { [5] = 1, },
-    [580] = { [25] = 2, },
+    [580] = { [25] = 7, },
     [585] = { [5] = 1, },
     [595] = { [5] = 1, },
     [599] = { [5] = 1, },
     [600] = { [5] = 1, },
     [601] = { [5] = 1, },
     [602] = { [5] = 1, },
-    [603] = { [10] = 2, [25] = 2, },
+    [603] = { [10] = 7, [25] = 7, },
     [604] = { [5] = 1, },
     [608] = { [5] = 1, },
-    [615] = { [10] = 2, [25] = 2, },
-    [616] = { [10] = 2, [25] = 2, },
+    [615] = { [10] = 7, [25] = 7, },
+    [616] = { [10] = 7, [25] = 7, },
     [619] = { [5] = 1, },
-    [624] = { [10] = 2, [25] = 2, },
-    -- [631] = { [10] = 2, [25] = 2, },
-    -- [632] = { [5] = 1, },
-    [649] = { [10] = 2, [25] = 2, },
+    [624] = { [10] = 7, [25] = 7, },
+    --[631] = { [10] = 7, [25] = 7, },
+    --[632] = { [5] = 1, },
+    [649] = { [10] = 7, [25] = 7, },
     [650] = { [5] = 1, },
-    -- [658] = { [5] = 1, },
-    -- [668] = { [5] = 1, },
-    -- [724] = { [10] = 2, [25] = 2, },
+    --[658] = { [5] = 1, },
+    --[668] = { [5] = 1, },
+    --[724] = { [10] = 7, [25] = 7, },
 }

@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
 local Instances = ICT.Instances
+local Cooldowns = ICT.Cooldowns
 local Player = ICT.Player
 local Options = ICT.Options
 local Tooltips = ICT.Tooltips
@@ -81,8 +82,8 @@ function ICT:CreateFrame()
     ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
     ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
 
-    Options.CreatePlayerDropdown()
-    Options.CreateOptionDropdown()
+    Options:CreatePlayerDropdown()
+    Options:CreateOptionDropdown()
     ICT:CreatePlayerSlider()
 end
 
@@ -101,9 +102,9 @@ local function calculatePadding()
         and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0
     paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
-    paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), Options.showCooldown) end, Player.isEnabled)
+    paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), Cooldowns.isVisible) end, Player.isEnabled)
     paddings.specs = TT_GS and 6 or 2
-    paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestAvailable()) end, Player.isEnabled)
+    paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
 
 local function getPadding(offset, padding)
@@ -122,7 +123,7 @@ local function goldTooltip(player)
     local tooltip = Tooltips:new("Realm Gold")
     tooltip:printValue(string.format("[%s]", player.realm), GetCoinTextureString(realmGold[player.realm]))
 
-    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, function(p) return player.realm == p.realm end) do
+    for _, player in ICT:nspairsByValue(ICT.db.players, function(p) return player.realm == p.realm end) do
         tooltip:printValue(player:getName(), GetCoinTextureString(player.money or 0), player:getClassColor())
     end
     return tooltip:create("ICTGoldTip" .. player.fullName)
@@ -189,7 +190,7 @@ local function addGems(k, item)
     return text
 end
 
-local function specTooltip(player, specId, spec)
+local function specTooltip(player, spec)
     local tooltip = Tooltips:new(spec.name .. " Gear")
     tooltip:printLine("Item: iLvL Gems or ? if missing gem")
     tooltip:printLine("Glyph: Slot")
@@ -229,7 +230,7 @@ local function specTooltip(player, specId, spec)
     tooltip:printPlain("\nNote: Socket icons will appear if you are missing ")
     :printPlain("an item that can have an extra slot, such as your belt.")
     :printPlain("\nAlso, enchants aren't localized.")
-    return tooltip:create("ICTSpec" .. specId .. player.fullName)
+    return tooltip:create("ICTSpec" .. spec.id .. player.fullName)
 end
 
 local function printGearScore(spec, tooltip, x, offset)
@@ -246,7 +247,6 @@ local function printGearScore(spec, tooltip, x, offset)
 end
 
 local function printCharacterInfo(player, x, offset)
-    local specs = player.specs or {}
     local playerTitle = string.format("|c%s%s|r", player:getClassColor(), player:getNameWithIcon())
     local cell = Cells:get(x, offset)
     deletePlayerButton(player, cell)
@@ -265,11 +265,9 @@ local function printCharacterInfo(player, x, offset)
     offset = cell:printOptionalValue(options.player.showMoney, "Gold", GetCoinTextureString(player.money or 0))
     goldTooltip(player):attach(cell)
     if not options.player.showSpecs then
-        local spec = specs[player.activeSpec]
-        if spec then
-            local tooltip = specTooltip(player, player.activeSpec, spec)
-            offset = printGearScore(spec, tooltip, x, offset)
-        end
+        local spec = player:getSpec()
+        local tooltip = specTooltip(player, spec)
+        offset = printGearScore(spec, tooltip, x, offset)
     end
     local durabilityColor = player.durability and ICT:gradient("FF00FF00", "FFFF0000", player.durability / 100) or "FF00FF00"
     offset = Cells:get(x, offset):printOptionalValue(options.player.showDurability, "Durability", player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
@@ -299,7 +297,7 @@ local function printCharacterInfo(player, x, offset)
 
         if not ICT.db.options.collapsible["Bags"] then
             padding = getPadding(offset, paddings.bags)
-            for k, bag in ICT:spairs(bags, ICT.NaturalSort, function(k) return bags[k].total > 0 end) do
+            for k, bag in ICT:nspairsByValue(bags, function(v) return v.total > 0 end) do
                 cell = Cells:get(x, offset)
                 offset = cell:printValue(string.format("|T%s:12|t%s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                 tooltip:attach(cell)
@@ -309,7 +307,7 @@ local function printCharacterInfo(player, x, offset)
             local bankBags = player.bankBagsTotal or {}
             padding = getPadding(offset, paddings.bankBags)
             if options.player.showBankBags and ICT:sum(bankBags, function(v) return v.total end) > 0 then
-                for k, bag in ICT:spairs(bankBags, ICT.NaturalSort, function(k) return bankBags[k].total > 0 end) do
+                for k, bag in ICT:nspairsByValue(bankBags, function(v) return v.total > 0 end) do
                     cell = Cells:get(x, offset)
                     offset = cell:printValue(string.format("|T%s:12|t[Bank] %s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                     tooltip:attach(cell)
@@ -327,10 +325,10 @@ local function printCharacterInfo(player, x, offset)
 
         if not ICT.db.options.collapsible["Specs"] then
             padding = getPadding(offset, paddings.specs)
-            for k, spec in pairs(specs) do
+            for _, spec in pairs(player:getSpecs()) do
                 if not(spec.tab1 == 0 and spec.tab2 == 0 and spec.tab3 == 0) then
-                    local specColor = UI:getSelectedColor(k == player.activeSpec)
-                    local tooltip = specTooltip(player, k, spec)
+                    local specColor = UI:getSelectedColor(spec.id == player.activeSpec)
+                    local tooltip = specTooltip(player, spec)
                     cell = Cells:get(x, offset)
                     offset = cell:printValue(spec.name or "", string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
                     tooltip:attach(cell)
@@ -368,7 +366,7 @@ local function printCharacterInfo(player, x, offset)
 
         if not ICT.db.options.collapsible["Cooldowns"] then
             padding = getPadding(offset, paddings.cooldowns)
-            for _, v in ICT:spairsByValue(player.cooldowns or {}, ICT.CooldownSort, Options.showCooldown) do
+            for _, v in ICT:nspairsByValue(player.cooldowns or {}, Cooldowns.isVisible) do
                 cell = Cells:get(x, offset)
                 local name = string.format("|T%s:14|t%s", v.icon, v.name)
                 offset = cell:printTicker(name, v.expires, v.duration)
@@ -399,7 +397,7 @@ local function instanceTooltip(player, instance)
     -- You have to get at least one player to display a tooltip, so always print title.
     tooltip.shouldPrintTitle = true
     tooltip:printTitle("Locks")
-    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isEnabled) do
+    for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
         local playerInstance = player:getInstance(instance.id, instance.size) or { locked = false }
         local playerColor = UI:getSelectedColor(playerInstance.locked)
         tooltip:printLine(player:getNameWithIcon(), playerColor)
@@ -407,13 +405,13 @@ local function instanceTooltip(player, instance)
 
     -- Display all available currency for the instance.
     tooltip.shouldPrintTitle = true
-    for tokenId, _ in ICT:spairs(instance:tokenIds(), ICT.CurrencySort) do
+    for currency, _ in ICT:spairs(instance:currencies()) do
         -- Onyxia 40 is reused and has 0 emblems so skip currency.
-        local max = instance:maxEmblems(tokenId)
-        if ICT.db.options.currency[tokenId] and max ~= 0 then
+        local max = instance:maxCurrency(currency)
+        if currency:isVisible() and max ~= 0 then
             tooltip:printTitle("Currency")
-            local available = instance.available[tokenId] or max
-            tooltip:printValue(ICT:GetCurrencyWithIconTooltip(tokenId), string.format("%s/%s", available, max))
+            local available = instance.available[currency] or max
+            tooltip:printValue(currency:getNameWithIconTooltip(), string.format("%s/%s", available, max))
         end
     end
     -- This player is the original player which owns the cell.
@@ -433,6 +431,19 @@ local function instanceSectionTooltip()
     :create("ICTInstanceTooltip")
 end
 
+local queued = {}
+local function enqueue(instance)
+    return function()
+        -- todo check player level
+        if instance.locked then
+            print("[%s] Already locked to %s.", addOnName, instance.name)
+            return
+        end
+        tinsert(queued, instance:activityId())
+        C_LFGList.CreateListing(queued)
+    end
+end
+
 -- Prints all the instances with associated tooltips.
 local function printInstances(player, title, size, instances, x, offset)
     if size == 0 then
@@ -445,12 +456,16 @@ local function printInstances(player, title, size, instances, x, offset)
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
-        for _, instance in instances do
+        for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
                 local color = UI:getSelectedColor(instance.locked)
                 cell = Cells:get(x, offset)
                 offset = cell:printLine(instance.name, color)
                 instanceTooltip(player, instance):attach(cell)
+                -- TODO check if there is a way to make clickable just "dark" or inverse darkness.
+                -- if player:isCurrentPlayer() then
+                --     cell:clickable(enqueue(instance))
+                -- end
             end
         end
     end
@@ -458,26 +473,19 @@ local function printInstances(player, title, size, instances, x, offset)
 end
 
 local function printAllInstances(player, x, offset)
-    local foo = {
-        { name = ICT.WOTLK, subs = { {name = "Dungeons", filter = Instances.isDungeon }, {name = "Raids", filter = Instances.isRaid },  }, } ,
-        { name = ICT.TBC, subs = { {name = "Dungeons", filter = Instances.isDungeon }, {name = "Raids", filter = Instances.isRaid },  },  },
-        { name = ICT.VANILLA, subs = { {name = "Dungeons", filter = Instances.isDungeon }, {name = "Raids", filter = Instances.isRaid, },  }, },
-    }
-    for _, v in ipairs(foo) do
-        local expansion = ICT.Expansions[v.name]
+    local subSections =  { { name = "Dungeons", instances = Player.getDungeons }, { name = "Raids", instances = Player.getRaids },  }
+    for name, expansion in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
         local sizes = {}
-        for k, sub in ipairs(v.subs) do
-            sizes[k] = ICT:iSize(ICT:spairsByValue(player.instances, ICT.InstanceSort, sub.filter, expansion), Instances.isVisible)
+        for k, v in ipairs(subSections) do
+            sizes[k] = ICT:size(v.instances(player, expansion), Instances.isVisible)
         end
-        local sum = ICT:sum(sizes)
-        if sum > 0 then
-            offset = Cells:get(x, offset):printSectionTitle(v.name)
+        if ICT:sum(sizes) > 0 then
+            offset = Cells:get(x, offset):printSectionTitle(name)
 
-            if not ICT.db.options.collapsible[v.name] then
+            if not ICT.db.options.collapsible[name] then
                 Cells.indent = "  "
-                for k, sub in ipairs(v.subs) do
-                    local iterator = ICT:spairsByValue(player.instances, ICT.InstanceSort, sub.filter, expansion)
-                    offset = printInstances(player, sub.name, sizes[k], iterator, x, offset)
+                for k, v in ipairs(subSections) do
+                    offset = printInstances(player, v.name, sizes[k], v.instances(player, expansion), x, offset)
                 end
                 Cells.indent = ""
             else
@@ -488,30 +496,30 @@ local function printAllInstances(player, x, offset)
     return offset
 end
 
-local function printInstancesForCurrency(tooltip, title, instances, tokenId)
+local function printInstancesForCurrency(tooltip, title, instances, currency)
     -- Only print the title if there exists an instance for this token.
     tooltip.shouldPrintTitle = true
     for _, instance in pairs(instances) do
-        local max = instance:maxEmblems(tokenId)
-        -- Onyxia 40 is reused and has 0 emblems so skip currency.
-        if instance:isVisible() and instance:hasTokenId(tokenId) and max ~= 0 then
+        local max = instance:maxCurrency(currency)
+        -- Onyxia 40 is reused and has 0 currencies so skip.
+        if instance:isVisible() and instance:hasCurrency(currency) and max ~= 0 then
             tooltip:printTitle(title)
             -- Displays available currency out of the total currency for this instance.
             local color =  UI:getSelectedColor(instance.locked)
-            local available = instance.available[tokenId] or max
+            local available = instance.available[currency.id] or max
             tooltip:printValue(instance.name, string.format("%s/%s", available, max), color)
         end
     end
 end
 
-local function printQuestsForCurrency(tooltip, player, tokenId)
+local function printQuestsForCurrency(tooltip, player, currency)
     tooltip.shouldPrintTitle = true
     if ICT.db.options.showQuests then
         for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
-            if quest.tokenId == tokenId and (player.quests.prereq[quest.key] or ICT.db.options.allQuests) then
+            if currency:fromQuest()(quest) and player:isQuestVisible(quest) then
                 tooltip:printTitle("Quests")
                 local color = UI:getQuestColor(player, quest)
-                tooltip:printValue(quest.name(player), quest.seals, color)
+                tooltip:printValue(quest.name(player), quest.amount, color)
             end
         end
     end
@@ -531,34 +539,34 @@ local function currencySectionTooltip()
 end
 
 -- Tooltip for currency information upon entering the cell.
-local function currencyTooltip(selectedPlayer, tokenId)
-    local tooltip = Tooltips:new(ICT:GetCurrencyWithIconTooltip(tokenId))
+local function currencyTooltip(selectedPlayer, currency)
+    local tooltip = Tooltips:new(currency:getNameWithIconTooltip())
 
-    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isEnabled) do
-        local available = player:availableCurrency(tokenId)
-        local total = player.currency.wallet[tokenId] or 0
+    for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
+        local available = player:availableCurrency(currency)
+        local total = player.currency.wallet[currency.id] or 0
         tooltip:printValue(player:getNameWithIcon(), string.format("%s (%s)", total, available), player:getClassColor())
     end
 
     if ICT.db.options.verboseCurrencyTooltip then
-        printInstancesForCurrency(tooltip, "Dungeons", selectedPlayer:getDungeons(), tokenId)
-        printInstancesForCurrency(tooltip, "Raids", selectedPlayer:getRaids(), tokenId)
-        printQuestsForCurrency(tooltip, selectedPlayer, tokenId)
+        printInstancesForCurrency(tooltip, "Dungeons", selectedPlayer:getDungeons(), currency)
+        printInstancesForCurrency(tooltip, "Raids", selectedPlayer:getRaids(), currency)
+        printQuestsForCurrency(tooltip, selectedPlayer, currency)
     end
-    return tooltip:create("ICTCurrencyTooltip" .. selectedPlayer.fullName .. tokenId)
+    return tooltip:create("ICTCurrencyTooltip" .. selectedPlayer.fullName .. currency.id)
 end
 
 -- Prints currency with multi line information.
-local function printCurrencyVerbose(player, tokenId, x, offset)
+local function printCurrencyVerbose(player, currency, x, offset)
     local cell = Cells:get(x, offset)
-    offset = cell:printValue(ICT:GetCurrencyWithIcon(tokenId), nil, ICT.subtitleColor)
-    local tooltip = currencyTooltip(player, tokenId)
+    offset = cell:printValue(currency:getNameWithIcon(), nil, ICT.subtitleColor)
+    local tooltip = currencyTooltip(player, currency)
     tooltip:attach(cell)
-    local available = player:availableCurrency(tokenId)
+    local available = player:availableCurrency(currency)
     cell = Cells:get(x, offset)
     offset = cell:printValue("Available", available, ICT.textColor)
     tooltip:attach(cell)
-    local current = player.currency.wallet[tokenId] or 0
+    local current = player.currency.wallet[currency.id] or 0
     cell = Cells:get(x, offset)
     offset = cell:printValue("Current", current, ICT.textColor)
     tooltip:attach(cell)
@@ -566,13 +574,13 @@ local function printCurrencyVerbose(player, tokenId, x, offset)
 end
 
 -- Prints currency single line information.
-local function printCurrencyShort(player, tokenId, x, offset)
-    local current = player.currency.wallet[tokenId] or 0
-    local available = player:availableCurrency(tokenId)
+local function printCurrencyShort(player, currency, x, offset)
+    local current = player.currency.wallet[currency.id] or 0
+    local available = player:availableCurrency(currency)
     local value = string.format("%s (%s)", current, available)
     local cell = Cells:get(x, offset)
-    offset = cell:printValue(ICT:GetCurrencyWithIcon(tokenId), value)
-    currencyTooltip(player, tokenId):attach(cell)
+    offset = cell:printValue(currency:getNameWithIcon(), value)
+    currencyTooltip(player, currency):attach(cell)
     return offset
 end
 
@@ -584,9 +592,9 @@ local function printCurrency(player, x, offset)
     end
     if not ICT.db.options.collapsible["Currency"] then
         local printCurrency = ICT.db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
-        for tokenId, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
-            if ICT.db.options.currency[tokenId] then
-                offset = printCurrency(player, tokenId, x, offset)
+        for _, currency in ipairs(ICT.Currencies) do
+            if currency:isVisible() then
+                offset = printCurrency(player, currency, x, offset)
             end
         end
     end
@@ -595,10 +603,10 @@ end
 
 local function questTooltip(name, quest)
     local tooltip = Tooltips:new(name)
-    tooltip:printValue(ICT:GetCurrencyWithIconTooltip(quest.tokenId), quest.seals)
+    tooltip:printValue(quest.currency:getNameWithIconTooltip(), quest.amount)
 
-    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isEnabled) do
-        if ICT.db.options.allQuests or player.quests.prereq[quest.key] then
+    for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
+        if player:isQuestVisible(quest) then
             local color = UI:getQuestColor(player, quest)
             tooltip:printLine(player:getNameWithIcon(), color)
         end
@@ -623,7 +631,7 @@ local function printQuests(player, x, offset)
         questSectionTooltip():attach(cell)
         if not ICT.db.options.collapsible["Quests"] then
             local padding = getPadding(offset, paddings.quests)
-            for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player), player:isQuestAvailable()) do
+            for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player), player:isQuestVisible()) do
                 local color = UI:getQuestColor(player, quest)
                 local name = quest.name(player)
                 cell = Cells:get(x, offset)
@@ -694,7 +702,7 @@ local function printPlayer(player, x)
 end
 
 -- Prints out selected players with associated instances and currency infromation.
-function ICT:DisplayPlayer()
+function ICT:PrintPlayers()
     calculatePadding()
     calculateGold()
     UI:hideTickers()
@@ -705,7 +713,7 @@ function ICT:DisplayPlayer()
     local offset = 0
     local x = 0
     if ICT.db.options.multiPlayerView then
-        for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isEnabled) do
+        for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
             x = x + 1
             offset = math.max(printPlayer(player, x), offset)
         end
@@ -713,7 +721,7 @@ function ICT:DisplayPlayer()
         local player = getSelectedOrDefault()
         x = x + 1
         offset = printPlayer(player, x)
-        ICT.DDMenu:UIDropDownMenu_SetText(ICT.frame.playerDropdown, player:getName())
+        Options:SetPlayerDropDown(player)
     end
 
     UI:hideColumns(x + 1, UI.displayX, UI.displayY)
@@ -743,7 +751,7 @@ function ICT:CreatePlayerSlider()
     levelSlider:HookScript("OnValueChanged", function(self, value)
         ICT.db.options.minimumLevel = value
         levelSlider.editBox:SetText(value);
-        ICT:DisplayPlayer()
+        ICT:PrintPlayers()
     end)
     levelSlider:Hide()
 

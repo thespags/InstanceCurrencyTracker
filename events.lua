@@ -21,7 +21,7 @@ end
 local function flipFrame()
     if not ICT.frame:IsVisible() then
         -- Force display update if it's enabled.
-        ICT:DisplayPlayer()
+        ICT:PrintPlayers()
         ICT.frame:Show()
     else
         ICT.frame:Hide()
@@ -33,7 +33,7 @@ function ICT.UpdateDisplay()
     player.time = GetServerTime();
     -- Defer updating the display if it's not currently viewed.
     if ICT.frame and ICT.frame:IsVisible() then
-        ICT:DisplayPlayer()
+        ICT:PrintPlayers()
     else
         ICT.dprint("not updating frame")
     end
@@ -62,6 +62,10 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
+        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
+            print(string.format("[%s] Old version detected wiping players.", addOnName))
+            ICT:WipeAllPlayers()
+        end
         ICT.db.version = version
 
         initMinimap()
@@ -77,7 +81,7 @@ local function initEvent(self, event, eventAddOn)
         ICT.GetPlayer():onLoad()
         ICT:CreateFrame()
         print(string.format("[%s] Initialized %s...", addOnName, version))
-        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT:DisplayPlayer() ICT.frame:Show() end end)
+        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT:PrintPlayers() ICT.frame:Show() end end)
         LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.anchorLFG then ICT.frame:Hide() end end)
     end
 end
@@ -187,7 +191,7 @@ local function messageResults(player, instance)
         -- Double check amounts before messaging.
         -- It seems WOW may process oddly.
         player:update()
-        ICT:DisplayPlayer()
+        ICT:UpdateDisplay()
         for tokenId, _ in ICT:spairs(instance:tokenIds(), ICT.CurrencySort) do
             -- Onyxia 40 is reused and has 0 emblems so skip currency.
             local max = instance:maxEmblems(tokenId)
@@ -242,7 +246,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             end
         end
         -- Refresh frame
-        ICT:DisplayPlayer()
+        ICT:UpdateDisplay()
     elseif rest == "" then
         flipFrame()
     end

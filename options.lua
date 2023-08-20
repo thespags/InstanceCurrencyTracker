@@ -1,8 +1,9 @@
 local addOnName, ICT = ...
 
-ICT.DDMenu = LibStub("LibUIDropDownMenu-4.0")
+local DDM = LibStub("LibUIDropDownMenu-4.0")
 ICT.Options = {}
 local Options = ICT.Options
+local Cooldowns = ICT.Cooldowns
 local Instances = ICT.Instances
 local Player = ICT.Player
 
@@ -10,9 +11,10 @@ local Player = ICT.Player
 function ICT.getOrCreateCurrencyOptions()
     if not ICT.db.options.currency then
         ICT.db.options.currency = {}
-        for k, _ in pairs(ICT.CurrencyInfo) do
-            -- Display heroism and up (i.e. recent currency) by default.
-            ICT.db.options.currency[k] = ICT.CurrencyInfo[k].order >= ICT.CurrencyInfo[ICT.Heroism].order
+
+        for _, v in ipairs(ICT.Currencies) do
+            -- Display heroism and lower by default. (i.e. recent currency as new ones are added to the front of the table).
+            ICT.db.options.currency[v.id] = v <= ICT.Heroism
         end
     end
     return ICT.db.options.currency
@@ -33,7 +35,7 @@ end
 function ICT.getOrCreateDisplayCooldowns()
     if not ICT.db.options.displayCooldowns then
         ICT.db.options.displayCooldowns = {}
-        for k, v in pairs(ICT.Cooldowns.spells) do
+        for k, v in pairs(Cooldowns.spells) do
             ICT.db.options.displayCooldowns[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
         end
     end
@@ -56,6 +58,7 @@ end
 
 local function expansionContainsAllInstances(expansion)
     local contains = function(info)
+        -- todo check how onyxia 40 works, my attempt is that it shoudl rewrite the expansion and we don't need "legacy"
         if info.legacy == expansion then
             return ICT.getOrCreateDisplayLegacyInstances(expansion)[info.id]
         end
@@ -65,18 +68,7 @@ local function expansionContainsAllInstances(expansion)
 end
 
 local function instanceContainsAll()
-    local contains = function(info)
-        return ICT.getOrCreateDisplayInstances()[info.id] and (not info.legacy or ICT.getOrCreateDisplayLegacyInstances(info.legacy)[info.id])
-    end
-    return ICT:containsAllValues(Instances.infos(), contains)
-end
-
-function Options:showInstances(instances)
-    return ICT:containsAnyValue(instances, Instances.isVisible)
-end
-
-function Options.showCooldown(cooldown)
-    return ICT.getOrCreateDisplayCooldowns()[cooldown.id]
+    return ICT:containsAllValues(Instances.infos(), Instances.isVisible)
 end
 
 local function checkInstance(info, value, expansion)
@@ -90,13 +82,13 @@ end
 
 local function expansionContainsAllCooldowns(expansion)
     local contains = function(cooldown)
-        return cooldown.expansion ~= expansion or Options.showCooldown(cooldown)
+        return cooldown.expansion ~= expansion or cooldown:isVisible()
     end
-    return ICT:containsAllValues(ICT.Cooldowns.spells, contains)
+    return ICT:containsAllValues(Cooldowns.spells, contains)
 end
 
 local function cooldownContainsAll()
-    return ICT:containsAllValues(ICT.Cooldowns.spells, Options.showCooldown)
+    return ICT:containsAllValues(Cooldowns.spells, Cooldowns.isVisible)
 end
 
 function Options:FlipMinimapIcon()
@@ -124,7 +116,7 @@ function Options:FlipSlider()
 end
 
 local function createInfo()
-    local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
+    local info = DDM:UIDropDownMenu_CreateInfo()
     -- It seems you can't simply do not self.checked if keepShownOnClick is true
     -- otherwise on the first click the menu gets confused...
     info.keepShownOnClick = true
@@ -138,26 +130,26 @@ local function addPlayerOption(title, key, level, tooltip)
     info.checked = options.player[key]
     info.func = function(self)
         options.player[key] = not options.player[key]
-        ICT:DisplayPlayer()
+        ICT:PrintPlayers()
     end
     if tooltip then
         info.tooltipTitle = title
         info.tooltipOnButton = true
         info.tooltipText = tooltip
     end
-    ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+    DDM:UIDropDownMenu_AddButton(info, level)
 end
 
-function Options.CreateOptionDropdown()
-    local dropdown = ICT.DDMenu:Create_UIDropDownMenu("ICTOptions", ICT.frame)
+function Options:CreateOptionDropdown()
+    local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", ICT.frame)
     ICT.frame.options = dropdown
     dropdown:SetPoint("TOP", ICT.frame, "BOTTOM", 0, 2)
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    ICT.DDMenu:UIDropDownMenu_SetWidth(dropdown, 160)
-    ICT.DDMenu:UIDropDownMenu_SetText(dropdown, "Options")
+    DDM:UIDropDownMenu_SetWidth(dropdown, 160)
+    DDM:UIDropDownMenu_SetText(dropdown, "Options")
     local options = ICT.db.options
     options.player = options.player or {}
     ICT.getOrCreateDisplayInstances()
@@ -190,7 +182,7 @@ function Options.CreateOptionDropdown()
     ICT:putIfAbsent(options.player, "showGearScores", true)
     ICT:putIfAbsent(options.player, "showProfessions", true)
 
-    ICT.DDMenu:UIDropDownMenu_Initialize(
+    DDM:UIDropDownMenu_Initialize(
         dropdown,
         function(self, level, menuList)
             if (level or 1) == 1 then
@@ -204,9 +196,9 @@ function Options.CreateOptionDropdown()
                 realmName.tooltipText = "Shows [{realm name}] {player name} versus {player name}."
                 realmName.func = function(self)
                     options.verboseName = not options.verboseName
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(realmName)
+                DDM:UIDropDownMenu_AddButton(realmName)
 
                 -- Switches between a single character and multiple characters to view.
                 local multiPlayerView = createInfo()
@@ -219,10 +211,10 @@ function Options.CreateOptionDropdown()
                 multiPlayerView.tooltipText = "Displays all selected characters in the frame or a single character selected with the drop down list."
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
-                    Options:FlipOptionsMenu()
-                    ICT:DisplayPlayer()
+                    self:FlipOptionsMenu()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(multiPlayerView)
+                DDM:UIDropDownMenu_AddButton(multiPlayerView)
 
                 -- Turn on/off sending messages when leaving an instance.
                 local groupMessage = createInfo()
@@ -235,7 +227,7 @@ function Options.CreateOptionDropdown()
                 groupMessage.func = function(self)
                     options.groupMessage = not options.groupMessage
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(groupMessage)
+                DDM:UIDropDownMenu_AddButton(groupMessage)
 
                 local characterInfo = createInfo()
                 characterInfo.text = "Character Info"
@@ -251,26 +243,26 @@ function Options.CreateOptionDropdown()
                     for k, _ in pairs(options.player) do
                         options.player[k] = not wasChecked
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(characterInfo)
+                DDM:UIDropDownMenu_AddButton(characterInfo)
 
                 local players = createInfo()
                 players.text = "Characters"
                 players.menuList = players.text
-                players.checked = ICT:containsAllValues(ICT.db.players, function(v) return not v.isDisabled end)
+                players.checked = ICT:containsAllValues(ICT.db.players, Player.isEnabled)
                 players.hasArrow = true
                 players.tooltipTitle = players.text
                 players.tooltipOnButton = true
                 players.tooltipText = "Enables and disables characters from view in the drop down selection (single view) or frame (multi character view)."
                 players.func = function(self)
-                    local wasDisabled = ICT:containsAnyValue(ICT.db.players, function(v) return v.isDisabled end)
+                    local wasDisabled = ICT:containsAnyValue(ICT.db.players, Player.isEnabled)
                     for _, player in pairs(ICT.db.players) do
                         player.isDisabled = not wasDisabled
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(players)
+                DDM:UIDropDownMenu_AddButton(players)
 
                 local reset = createInfo()
                 reset.text = "Reset Timers"
@@ -282,9 +274,9 @@ function Options.CreateOptionDropdown()
                     for k, _ in pairs(ICT.ResetInfo) do
                         resets[k] = not wasChecked
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(reset)
+                DDM:UIDropDownMenu_AddButton(reset)
 
                 local instances = createInfo()
                 instances.text = "Instances"
@@ -296,9 +288,9 @@ function Options.CreateOptionDropdown()
                     for _, v in pairs(Instances.infos()) do
                         checkInstance(v, not wasChecked)
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(instances)
+                DDM:UIDropDownMenu_AddButton(instances)
 
                 local quests = createInfo()
                 quests.text = "Quests"
@@ -309,24 +301,24 @@ function Options.CreateOptionDropdown()
                     local wasChecked = options.allQuests and options.showQuests
                     options.allQuests = not wasChecked
                     options.showQuests = not wasChecked
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(quests)
+                DDM:UIDropDownMenu_AddButton(quests)
 
                 -- Create the currency options.
-                local currencyInfo = createInfo()
-                currencyInfo.text = "Currency"
-                currencyInfo.menuList = currencyInfo.text
-                currencyInfo.hasArrow = true
-                currencyInfo.checked = ICT:containsAllValues(currency)
-                currencyInfo.func = function(self)
+                local currencies = createInfo()
+                currencies.text = "Currency"
+                currencies.menuList = currencies.text
+                currencies.hasArrow = true
+                currencies.checked = ICT:containsAllValues(currency)
+                currencies.func = function(self)
                     local wasChecked = ICT:containsAllValues(currency)
-                    for k, _ in pairs(ICT.CurrencyInfo) do
-                        currency[k] = not wasChecked
+                    for _, v in ipairs(ICT.Currencies) do
+                        currency[v.id] = not wasChecked
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(currencyInfo)
+                DDM:UIDropDownMenu_AddButton(currencies)
 
                 local cooldowns = createInfo()
                 cooldowns.text = "Cooldowns"
@@ -335,14 +327,14 @@ function Options.CreateOptionDropdown()
                 cooldowns.hasArrow = true
                 cooldowns.func = function(self)
                     local wasChecked = cooldownContainsAll()
-                    for k, _ in pairs(ICT.Cooldowns.spells) do
+                    for k, _ in pairs(Cooldowns.spells) do
                         ICT.getOrCreateDisplayCooldowns()[k] = not wasChecked
                     end
-                    ICT:DisplayPlayer()
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(cooldowns)
+                DDM:UIDropDownMenu_AddButton(cooldowns)
 
-                ICT.DDMenu:UIDropDownMenu_AddSeparator()
+                DDM:UIDropDownMenu_AddSeparator()
 
                 -- Indent to make up for missing icon.
                 local display = createInfo()
@@ -351,19 +343,19 @@ function Options.CreateOptionDropdown()
                 display.midWidth = 1000
                 display.notCheckable = true
                 display.hasArrow = true
-                ICT.DDMenu:UIDropDownMenu_AddButton(display)
+                DDM:UIDropDownMenu_AddButton(display)
             elseif level == 2 then
                 if menuList == "Characters" then
-                    for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isLevelVisible) do
+                    for _, player in ICT:nspairsByValue(ICT.db.players, Player.isLevelVisible) do
                         local info = createInfo()
                         info.text = player:getName()
                         info.value = player.fullName
                         info.checked = not player.isDisabled
                         info.func = function(self)
                             player.isDisabled = not player.isDisabled
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Reset Timers" then
                     for k, v in ICT:spairs(ICT.ResetInfo) do
@@ -372,9 +364,9 @@ function Options.CreateOptionDropdown()
                         info.checked = resets[k]
                         info.func = function(self)
                             resets[k] = not resets[k]
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
@@ -386,12 +378,12 @@ function Options.CreateOptionDropdown()
                         info.checked = expansionContainsAllInstances(v)
                         info.func = function(self)
                             local wasChecked = expansionContainsAllInstances(v)
-                            for _, instance in ICT:fpairsByValue(Instances.infos(), Instances.fromExpansion, v) do
+                            for _, instance in ICT:fpairsByValue(Instances.infos(), ICT:fWith(Instances.fromExpansion, v)) do
                                 checkInstance(instance, not wasChecked, ICT.Expansions[expansion])
                             end
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Quests" then
                     -- Switches between all quests or only those available to the player.
@@ -400,28 +392,28 @@ function Options.CreateOptionDropdown()
                     allAvailableQuests.checked = options.allQuests
                     allAvailableQuests.func = function(self)
                         options.allQuests = not options.allQuests
-                        ICT:DisplayPlayer()
+                        ICT:PrintPlayers()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(allAvailableQuests, level)
+                    DDM:UIDropDownMenu_AddButton(allAvailableQuests, level)
 
                     local showQuests = createInfo()
                     showQuests.text = "Show Quests"
                     showQuests.checked = options.showQuests
                     showQuests.func = function(self)
                         options.showQuests = not options.showQuests
-                        ICT:DisplayPlayer()
+                        ICT:PrintPlayers()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(showQuests, level)
+                    DDM:UIDropDownMenu_AddButton(showQuests, level)
                 elseif menuList == "Currency" then
-                    for k, _ in ICT:spairs(ICT.CurrencyInfo, ICT.CurrencySort) do
+                    for _, v in ipairs(ICT.Currencies) do
                         local info = createInfo()
-                        info.text = ICT:GetCurrencyName(k)
-                        info.checked = currency[k]
+                        info.text = v:getName()
+                        info.checked = currency[v.id]
                         info.func = function(self)
-                            currency[k] = not currency[k]
-                            ICT:DisplayPlayer()
+                            currency[v.id] = not currency[v.id]
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Cooldowns" then
                     -- Create a level for the expansions, then the specific cooldown.
@@ -433,12 +425,12 @@ function Options.CreateOptionDropdown()
                         info.checked = expansionContainsAllCooldowns(v)
                         info.func = function(self)
                             local wasChecked = expansionContainsAllCooldowns(v)
-                            for k, _ in ICT:fpairsByValue(ICT.Cooldowns.spells, ICT.Cooldowns.fromExpansion, v) do
+                            for k, _ in ICT:fpairsByValue(Cooldowns.spells, ICT:fWith(Cooldowns.fromExpansion, v)) do
                                 ICT.getOrCreateDisplayCooldowns()[k] = not wasChecked
                             end
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Frame" then
                     local anchorLFG = createInfo()
@@ -450,7 +442,7 @@ function Options.CreateOptionDropdown()
                     anchorLFG.func = function(self)
                         options.anchorLFG = not options.anchorLFG
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(anchorLFG, level)
+                    DDM:UIDropDownMenu_AddButton(anchorLFG, level)
 
                     local minimap = createInfo()
                     minimap.text = "Show Minimap Icon"
@@ -458,9 +450,9 @@ function Options.CreateOptionDropdown()
                     minimap.func = function(self)
                         options.showMinimapIcon = not options.showMinimapIcon
                         ICT.db.minimap.hide = not options.showMinimapIcon
-                        Options:FlipMinimapIcon()
+                        self:FlipMinimapIcon()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(minimap, level)
+                    DDM:UIDropDownMenu_AddButton(minimap, level)
 
                     -- Switches between short and long forms of currency.
                     local order = createInfo()
@@ -473,9 +465,9 @@ function Options.CreateOptionDropdown()
                     order.tooltipText = "Orders locked instances and completed quests after available instances and quests."
                     order.func = function(self)
                         options.orderLockLast = not options.orderLockLast
-                        ICT:DisplayPlayer()
+                        ICT:PrintPlayers()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(order, level)
+                    DDM:UIDropDownMenu_AddButton(order, level)
 
                     -- Switches between short and long forms of currency.
                     local verboseCurrency = createInfo()
@@ -488,9 +480,9 @@ function Options.CreateOptionDropdown()
                     verboseCurrency.tooltipText = "Multiline currency view or a single line currency view."
                     verboseCurrency.func = function(self)
                         options.verboseCurrency = not options.verboseCurrency
-                        ICT:DisplayPlayer()
+                        ICT:PrintPlayers()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrency, level)
+                    DDM:UIDropDownMenu_AddButton(verboseCurrency, level)
 
                     -- Turns on/off instance and quest information in currency.
                     local verboseCurrencyTooltip = createInfo()
@@ -502,9 +494,9 @@ function Options.CreateOptionDropdown()
                     verboseCurrencyTooltip.tooltipText = "Shows instances and quests currency available and total currency for the hovered over currency."
                     verboseCurrencyTooltip.func = function(self)
                         options.verboseCurrencyTooltip = not options.verboseCurrencyTooltip
-                        ICT:DisplayPlayer()
+                        ICT:PrintPlayers()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(verboseCurrencyTooltip, level)
+                    DDM:UIDropDownMenu_AddButton(verboseCurrencyTooltip, level)
 
                     local levelSlider = createInfo()
                     levelSlider.text = "Show Minimum Level Slider"
@@ -515,9 +507,9 @@ function Options.CreateOptionDropdown()
                     levelSlider.tooltipText = "Displays the slider bar to control minimum character level."
                     levelSlider.func = function(self)
                         options.showLevelSlider = not options.showLevelSlider
-                        Options:FlipSlider()
+                        self:FlipSlider()
                     end
-                    ICT.DDMenu:UIDropDownMenu_AddButton(levelSlider, level)
+                    DDM:UIDropDownMenu_AddButton(levelSlider, level)
                 elseif menuList == "Character Info" then
                     addPlayerOption("Show Level", "showLevel", level)
                     addPlayerOption("Show Guild", "showGuild", level)
@@ -540,10 +532,10 @@ function Options.CreateOptionDropdown()
                 expansion = ICT.Expansions[expansion]
                 if subList == "Instances" then
                     local lastSize
-                    for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, Instances.fromExpansion, expansion) do
+                    for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, ICT:fWith(Instances.fromExpansion, expansion)) do
                         local size =  v.legacy == expansion and v.legacySize or v.size
                         if lastSize and lastSize ~= size then
-                            ICT.DDMenu:UIDropDownMenu_AddSeparator(level)
+                            DDM:UIDropDownMenu_AddSeparator(level)
                         end
                         lastSize = size
                         local info = createInfo()
@@ -552,16 +544,16 @@ function Options.CreateOptionDropdown()
                         info.checked = v:isVisible(expansion)
                         info.func = function(self, instance)
                             checkInstance(instance, not v:isVisible(expansion), expansion)
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif subList == "Cooldowns" then
                     -- Now create a level for all the cooldowns of that expansion.
                     local lastSkill
-                    for _, v in ICT:spairsByValue(ICT.Cooldowns.spells, ICT.CooldownSort, ICT.Cooldowns.fromExpansion, expansion) do
+                    for _, v in ICT:nspairsByValue(Cooldowns.spells, ICT:fWith(Cooldowns.fromExpansion, expansion)) do
                         if lastSkill and lastSkill ~= v.skillId then
-                            ICT.DDMenu:UIDropDownMenu_AddSeparator(level)
+                            DDM:UIDropDownMenu_AddSeparator(level)
                         end
                         lastSkill = v.skillId
                         local info = createInfo()
@@ -570,9 +562,9 @@ function Options.CreateOptionDropdown()
                         info.checked = ICT.getOrCreateDisplayCooldowns()[v.id]
                         info.func = function(self, cooldown)
                             ICT.getOrCreateDisplayCooldowns()[cooldown.id] = not ICT.getOrCreateDisplayCooldowns()[cooldown.id]
-                            ICT:DisplayPlayer()
+                            ICT:PrintPlayers()
                         end
-                        ICT.DDMenu:UIDropDownMenu_AddButton(info, level)
+                        DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 end
             end
@@ -589,31 +581,35 @@ function Options:PrintMessage(text)
     end
 end
 
-function Options.CreatePlayerDropdown()
-    local playerDropdown = ICT.DDMenu:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
+function Options:SetPlayerDropdown(player)
+    DDM:UIDropDownMenu_SetText(ICT.frame.playerDropdown, player:getName())
+end
+
+function Options:CreatePlayerDropdown()
+    local playerDropdown = DDM:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
     ICT.frame.playerDropdown = playerDropdown
     playerDropdown:SetPoint("TOP", ICT.frame, 0, -30)
     playerDropdown:SetAlpha(1)
     playerDropdown:SetIgnoreParentAlpha(true)
     -- Width set to slightly smaller than parent frame.
-    ICT.DDMenu:UIDropDownMenu_SetWidth(playerDropdown, 160)
+    DDM:UIDropDownMenu_SetWidth(playerDropdown, 160)
 
-    ICT.DDMenu:UIDropDownMenu_Initialize(
+    DDM:UIDropDownMenu_Initialize(
         playerDropdown,
         function()
-            local info = ICT.DDMenu:UIDropDownMenu_CreateInfo()
-            for _, player in ICT:spairsByValue(ICT.db.players, Player.PlayerSort, Player.isPlayerEnabled) do
+            local info = DDM:UIDropDownMenu_CreateInfo()
+            for _, player in ICT:nspairsByValue(ICT.db.players, Player.isPlayerEnabled) do
                 info.text = player:getNameWithIcon()
                 info.value = player.fullName
                 info.checked = ICT.selectedPlayer == player.fullName
                 info.func = function(self)
                     ICT.selectedPlayer = self.value
-                    ICT.DDMenu:UIDropDownMenu_SetText(playerDropdown, player:getName())
-                    ICT:DisplayPlayer()
+                    DDM:UIDropDownMenu_SetText(playerDropdown, player:getName())
+                    ICT:PrintPlayers()
                 end
-                ICT.DDMenu:UIDropDownMenu_AddButton(info)
+                DDM:UIDropDownMenu_AddButton(info)
             end
         end
     )
-    Options:FlipOptionsMenu()
+    self:FlipOptionsMenu()
 end

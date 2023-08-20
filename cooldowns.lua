@@ -141,7 +141,6 @@ local Cooldowns = {
 }
 ICT.Cooldowns = Cooldowns
 
-
 -- Adds all the functions to the player.
 function Cooldowns:new(spell)
     setmetatable(spell, self)
@@ -177,24 +176,11 @@ for k, v in pairs(Cooldowns.items) do
     -- print(string.format("|T%s:14|t egg = %s", v.icon, v.duration))
 end
 
-function Cooldowns:ConvertFrom32bitNegative(int32)
-    -- Is a 32bit negative value?
-    return int32 >= 0x80000000 / 1e3
-    -- If so then convert.
-    and int32 - 0x100000000 / 1e3
-    -- If positive return original.
-    or int32
-end
-
-function Cooldowns:GetTime64()
-    return self:ConvertFrom32bitNegative(GetTime())
-end
-
 function Cooldowns:GetTimeLeft(start, duration)
-    local now = self:GetTime64()
+    local now = ICT:GetTime64()
     local serverNow = GetServerTime()
     -- since start is relative to computer uptime it can be a negative if the cooldown started before you restarted your pc.
-    start = self:ConvertFrom32bitNegative(start)
+    start = ICT:ConvertFrom32bitNegative(start)
     if start > now then -- start negative 32b overflow while now is still negative (over 24d 20h 31m PC uptime)
         start = start - 0x100000000 / 1e3 -- adjust relative to negative now
     end
@@ -246,12 +232,16 @@ function Cooldowns:fromExpansion(expansion)
     return self.expansion == expansion
 end
 
-function ICT.CooldownSort(a, b)
-    if a.skillId == b.skillId then
-        if a.expansion == b.expansion then
-            return a.name < b.name
+function Cooldowns:isVisible()
+    return ICT.getOrCreateDisplayCooldowns()[self.id]
+end
+
+function Cooldowns:__lt(other)
+    if self.skillId == other.skillId then
+        if self.expansion == other.expansion then
+            return self.name < other.name
         end
-        return a.expansion > b.expansion
+        return self.expansion > other.expansion
     end
-    return a.skillId < b.skillId
+    return self.skillId < other.skillId
 end
