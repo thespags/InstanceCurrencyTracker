@@ -63,7 +63,7 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
-            print(string.format("[%s] Old version detected wiping players.", addOnName))
+            print(string.format("[%s] Incompatible old version detected, wiping players. Please relog into each character, sorry.", addOnName))
             ICT:WipeAllPlayers()
         end
         ICT.db.version = version
