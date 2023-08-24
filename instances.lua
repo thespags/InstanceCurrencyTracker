@@ -56,8 +56,29 @@ function Instances:resetInterval()
     return Instances.Resets[self.id][self.size]
 end
 
-function Instances:activityId()
-    return Instances.Expansions[self.id].activityId
+function Instances:activityId(difficulty)
+    difficulty = difficulty or self:isDungeon() and #Instances.Difficulty or 1
+    -- Finds the type of activity, beta rune or raid 10 id, for an instance.
+    local activityId = Instances.ActivityIdLookups[self.expansion][self.size][difficulty]
+    -- Now find the instances specific id for that type.
+    return Instances.Activities[self.id][activityId]
+end
+
+-- Is any difficulty of this instance queued?
+function Instances:queued()
+    local info = C_LFGList.GetActiveEntryInfo()
+    local queuedIds = info and info.activityIDs or {}
+    return #queuedIds > 0 and ICT:containsAnyKey(Instances.Difficulty, function(k) return tContains(queuedIds, self:activityId(k)) end)
+end
+
+function Instances:enqueue(queuedIds)
+    local difficulties = self:isDungeon() and Instances.Difficulty or {1}
+    --     UIDropDownMenu_SetSelectedValue(LFGBrowseFrame.CategoryDropDown, categoryID);
+    for k, _ in ipairs(difficulties) do
+        local activityId = self:activityId(k)
+        local f = (not ICT.getOrCreateDifficultyOptions()[k] or tContains(queuedIds, activityId)) and tDeleteItem or table.insert
+        f(queuedIds, activityId)
+    end
 end
 
 function Instances:numOfEncounters()
@@ -65,7 +86,7 @@ function Instances:numOfEncounters()
 end
 
 function Instances:encounters()
-    return self.Encounters[self.id]
+    return self.Encounters[self.id] or {}
 end
 
 function Instances:encountersLeft()
@@ -173,6 +194,26 @@ ICT.Expansions = {
     [ICT.TBC] = 1,
     [ICT.WOTLK] = 2
 }
+
+-- Difficulty = {}
+
+-- function Difficulty:new(name)
+--     local difficulty = { name = name }
+--     setmetatable(difficulty, self)
+--     self.__index = self
+--     return difficulty
+-- end
+
+-- function Difficulty:isVisible()
+--     return ICT.getOrCreateDifficultyOptions()[self.index]
+-- end
+
+-- Difficulty = {
+--     Difficulty("Normal"),
+--     Difficulty("Heroic"),
+--     Difficulty("Titan Runed: Alpha"),
+--     Difficulty("Titan Runed: Beta")
+-- }
 
 function ICT.ExpansionSort(a, b)
     return ICT.Expansions[a] > ICT.Expansions[b]
@@ -395,61 +436,61 @@ Instances.Encounters = {
 
 -- Size here is the smallest for the specific raid, we use this for sorting.
 Instances.Expansions = {
-    [249] = { activityId = 1156, expansion = 2, id = 249, legacy = 0, legacySize = 40, size = 10, },
-    [269] = { activityId = 907, expansion = 1, id = 269, size = 5, },
-    [309] = { activityId = 836, expansion = 0, id = 309, size = 20, },
-    [409] = { activityId = 839, expansion = 0, id = 409, size = 40, },
-    [469] = { activityId = 840, expansion = 0, id = 469, size = 40, },
-    [509] = { activityId = 842, expansion = 0, id = 509, size = 20, },
-    [531] = { activityId = 843, expansion = 0, id = 531, size = 40, },
-    [532] = { activityId = 844, expansion = 1, id = 532, size = 10, },
-    [533] = { activityId = 1098, expansion = 2, id = 533, size = 10, },
-    [534] = { activityId = 849, expansion = 1, id = 534, size = 25, },
-    [540] = { activityId = 914, expansion = 1, id = 540, size = 5, },
-    [542] = { activityId = 912, expansion = 1, id = 542, size = 5, },
-    [543] = { activityId = 913, expansion = 1, id = 543, size = 5, },
-    [544] = { activityId = 845, expansion = 1, id = 544, size = 25, },
-    [545] = { activityId = 910, expansion = 1, id = 545, size = 5, },
-    [546] = { activityId = 911, expansion = 1, id = 546, size = 5, },
-    [547] = { activityId = 1082, expansion = 1, id = 547, size = 5, },
-    [548] = { activityId = 848, expansion = 1, id = 548, size = 25, },
-    [550] = { activityId = 847, expansion = 1, id = 550, size = 25, },
-    [552] = { activityId = 915, expansion = 1, id = 552, size = 5, },
-    [553] = { activityId = 918, expansion = 1, id = 553, size = 5, },
-    [554] = { activityId = 916, expansion = 1, id = 554, size = 5, },
-    [555] = { activityId = 906, expansion = 1, id = 555, size = 5, },
-    [556] = { activityId = 905, expansion = 1, id = 556, size = 5, },
-    [557] = { activityId = 904, expansion = 1, id = 557, size = 5, },
-    [558] = { activityId = 903, expansion = 1, id = 558, size = 5, },
-    [560] = { activityId = 908, expansion = 1, id = 560, size = 5, },
-    [564] = { activityId = 850, expansion = 1, id = 564, size = 25, },
-    [565] = { activityId = 846, expansion = 1, id = 565, size = 25, },
-    [568] = { activityId = 851, expansion = 1, id = 568, size = 10, },
-    [574] = { activityId = 1225, expansion = 2, id = 574, size = 5, },
-    [575] = { activityId = 1224, expansion = 2, id = 575, size = 5, },
-    [576] = { activityId = 1227, expansion = 2, id = 576, size = 5, },
-    [578] = { activityId = 1226, expansion = 2, id = 578, size = 5, },
-    [580] = { activityId = 852, expansion = 1, id = 580, size = 25, },
-    [585] = { activityId = 917, expansion = 1, id = 585, size = 5, },
-    [595] = { activityId = 1228, expansion = 2, id = 595, size = 5, },
-    [599] = { activityId = 1229, expansion = 2, id = 599, size = 5, },
-    [600] = { activityId = 1232, expansion = 2, id = 600, size = 5, },
-    [601] = { activityId = 1233, expansion = 2, id = 601, size = 5, },
-    [602] = { activityId = 1230, expansion = 2, id = 602, size = 5, },
-    [603] = { activityId = 1107, expansion = 2, id = 603, size = 10, },
-    [604] = { activityId = 1231, expansion = 2, id = 604, size = 5, },
-    [608] = { activityId = 1223, expansion = 2, id = 608, size = 5, },
-    [615] = { activityId = 1101, expansion = 2, id = 615, size = 10, },
-    [616] = { activityId = 1102, expansion = 2, id = 616, size = 10, },
-    [619] = { activityId = 1234, expansion = 2, id = 619, size = 5, },
-    [624] = { activityId = 1096, expansion = 2, id = 624, size = 10, },
-    --[631] = { activityId = 1111, expansion = 2, id = 631, size = 10, },
-    --[632] = { activityId = 1240, expansion = 2, id = 632, size = 5, },
-    [649] = { activityId = 1105, expansion = 2, id = 649, size = 10, },
-    [650] = { activityId = 1239, expansion = 2, id = 650, size = 5, },
-    --[658] = { activityId = 1241, expansion = 2, id = 658, size = 5, },
-    --[668] = { activityId = 1242, expansion = 2, id = 668, size = 5, },
-    --[724] = { activityId = 1109, expansion = 2, id = 724, size = 10, },
+    [249] = { expansion = 2, id = 249, legacy = 0, legacySize = 40, size = 10, },
+    [269] = { expansion = 1, id = 269, size = 5, },
+    [309] = { expansion = 0, id = 309, size = 20, },
+    [409] = { expansion = 0, id = 409, size = 40, },
+    [469] = { expansion = 0, id = 469, size = 40, },
+    [509] = { expansion = 0, id = 509, size = 20, },
+    [531] = { expansion = 0, id = 531, size = 40, },
+    [532] = { expansion = 1, id = 532, size = 10, },
+    [533] = { expansion = 2, id = 533, size = 10, },
+    [534] = { expansion = 1, id = 534, size = 25, },
+    [540] = { expansion = 1, id = 540, size = 5, },
+    [542] = { expansion = 1, id = 542, size = 5, },
+    [543] = { expansion = 1, id = 543, size = 5, },
+    [544] = { expansion = 1, id = 544, size = 25, },
+    [545] = { expansion = 1, id = 545, size = 5, },
+    [546] = { expansion = 1, id = 546, size = 5, },
+    [547] = { expansion = 1, id = 547, size = 5, },
+    [548] = { expansion = 1, id = 548, size = 25, },
+    [550] = { expansion = 1, id = 550, size = 25, },
+    [552] = { expansion = 1, id = 552, size = 5, },
+    [553] = { expansion = 1, id = 553, size = 5, },
+    [554] = { expansion = 1, id = 554, size = 5, },
+    [555] = { expansion = 1, id = 555, size = 5, },
+    [556] = { expansion = 1, id = 556, size = 5, },
+    [557] = { expansion = 1, id = 557, size = 5, },
+    [558] = { expansion = 1, id = 558, size = 5, },
+    [560] = { expansion = 1, id = 560, size = 5, },
+    [564] = { expansion = 1, id = 564, size = 25, },
+    [565] = { expansion = 1, id = 565, size = 25, },
+    [568] = { expansion = 1, id = 568, size = 10, },
+    [574] = { expansion = 2, id = 574, size = 5, },
+    [575] = { expansion = 2, id = 575, size = 5, },
+    [576] = { expansion = 2, id = 576, size = 5, },
+    [578] = { expansion = 2, id = 578, size = 5, },
+    [580] = { expansion = 1, id = 580, size = 25, },
+    [585] = { expansion = 1, id = 585, size = 5, },
+    [595] = { expansion = 2, id = 595, size = 5, },
+    [599] = { expansion = 2, id = 599, size = 5, },
+    [600] = { expansion = 2, id = 600, size = 5, },
+    [601] = { expansion = 2, id = 601, size = 5, },
+    [602] = { expansion = 2, id = 602, size = 5, },
+    [603] = { expansion = 2, id = 603, size = 10, },
+    [604] = { expansion = 2, id = 604, size = 5, },
+    [608] = { expansion = 2, id = 608, size = 5, },
+    [615] = { expansion = 2, id = 615, size = 10, },
+    [616] = { expansion = 2, id = 616, size = 10, },
+    [619] = { expansion = 2, id = 619, size = 5, },
+    [624] = { expansion = 2, id = 624, size = 10, },
+    --[631] = { expansion = 2, id = 631, size = 10, },
+    --[632] = { expansion = 2, id = 632, size = 5, },
+    [649] = { expansion = 2, id = 649, size = 10, },
+    [650] = { expansion = 2, id = 650, size = 5, },
+    --[658] = { expansion = 2, id = 658, size = 5, },
+    --[668] = { expansion = 2, id = 668, size = 5, },
+    --[724] = { expansion = 2, id = 724, size = 10, },
 }
 
 -- Corresponds to the number of days on the lockout for the size.
@@ -509,4 +550,89 @@ Instances.Resets = {
     --[658] = { [5] = 1, },
     --[668] = { [5] = 1, },
     --[724] = { [10] = 7, [25] = 7, },
+}
+
+-- How to find the activity id for a specific zone, size and difficulty.
+Instances.ActivityIdLookups = {
+    [0] = { [5] = { 285 }, [20] = { 290 }, [40] = { 290 }, },
+    [1] = { [5] = { 286 }, [10] = { 291 }, [25] = { 291 }, },
+    [2] = { [5] = { 287, 289, 311, 312, 314 }, [10] = { 292 }, [25] = { 293 }, },
+}
+
+-- The id for LFG selection.
+Instances.Activities = {
+    [33] = { [285] = 800, [294] = 1084, },
+    [34] = { [285] = 802, },
+    [36] = { [285] = 799, },
+    [43] = { [285] = 796, },
+    [47] = { [285] = 804, },
+    [48] = { [285] = 801, },
+    [70] = { [285] = 807, },
+    [90] = { [285] = 803, },
+    [109] = { [285] = 810, },
+    [129] = { [285] = 806, },
+    [189] = { [285] = 829, [294] = 1081, },
+    [209] = { [285] = 808, },
+    [229] = { [285] = 812, [290] = 837, },
+    [230] = { [285] = 811, [294] = 1083, },
+    [249] = { [290] = 838, [292] = 1156, [293] = 1099, },
+    [269] = { [286] = 831, [288] = 907, },
+    [289] = { [285] = 797, },
+    [309] = { [290] = 836, },
+    [329] = { [285] = 816, },
+    [349] = { [285] = 809, },
+    [389] = { [285] = 798, },
+    [409] = { [290] = 839, },
+    [429] = { [285] = 815, },
+    [469] = { [290] = 840, },
+    [509] = { [290] = 842, },
+    [531] = { [290] = 843, },
+    [532] = { [291] = 844, },
+    [533] = { [292] = 841, [293] = 1098, },
+    [534] = { [291] = 849, },
+    [540] = { [286] = 819, [288] = 914, },
+    [542] = { [286] = 818, [288] = 912, },
+    [543] = { [286] = 817, [288] = 913, },
+    [544] = { [291] = 845, },
+    [545] = { [286] = 822, [288] = 910, },
+    [546] = { [286] = 821, [288] = 911, },
+    [547] = { [286] = 820, [288] = 909, [294] = 1082, },
+    [548] = { [291] = 848, },
+    [550] = { [291] = 847, },
+    [552] = { [286] = 834, [288] = 915, },
+    [553] = { [286] = 833, [288] = 918, },
+    [554] = { [286] = 832, [288] = 916, },
+    [555] = { [286] = 826, [288] = 906, },
+    [556] = { [286] = 825, [288] = 905, },
+    [557] = { [286] = 823, [288] = 904, },
+    [558] = { [286] = 824, [288] = 903, },
+    [560] = { [286] = 830, [288] = 908, },
+    [564] = { [291] = 850, },
+    [565] = { [291] = 846, },
+    [568] = { [291] = 851, },
+    [574] = { [287] = 1074, [289] = 1122, [311] = 1207, [312] = 1211, [314] = 1225, },
+    [575] = { [287] = 1075, [289] = 1125, [311] = 1204, [312] = 1210, [314] = 1224, },
+    [576] = { [287] = 1077, [289] = 1132, [311] = 1197, [312] = 1213, [314] = 1227, },
+    [578] = { [287] = 1067, [289] = 1124, [311] = 1205, [312] = 1212, [314] = 1226, },
+    [580] = { [291] = 852, },
+    [585] = { [286] = 835, [288] = 917, },
+    [595] = { [287] = 1065, [289] = 1126, [311] = 1203, [312] = 1214, [314] = 1228, },
+    [599] = { [287] = 1069, [289] = 1128, [311] = 1201, [312] = 1215, [314] = 1229, },
+    [600] = { [287] = 1070, [289] = 1129, [311] = 1200, [312] = 1218, [314] = 1232, },
+    [601] = { [287] = 1066, [289] = 1121, [311] = 1208, [312] = 1219, [314] = 1233, },
+    [602] = { [287] = 1068, [289] = 1127, [311] = 1202, [312] = 1216, [314] = 1230, },
+    [603] = { [292] = 1106, [293] = 1107, },
+    [604] = { [287] = 1071, [289] = 1130, [311] = 1199, [312] = 1217, [314] = 1231, },
+    [608] = { [287] = 1073, [289] = 1123, [311] = 1206, [312] = 1209, [314] = 1223, },
+    [615] = { [292] = 1101, [293] = 1097, },
+    [616] = { [292] = 1102, [293] = 1094, },
+    [619] = { [287] = 1072, [289] = 1131, [311] = 1198, [312] = 1220, [314] = 1234, },
+    [624] = { [292] = 1095, [293] = 1096, },
+    --[631] = { [292] = 1110, [293] = 1111, },
+    --[632] = { [287] = 1078, [289] = 1134, [314] = 1240, },
+    [649] = { [292] = 1103, [293] = 1105, },
+    [650] = { [287] = 1076, [289] = 1133, [312] = 1238, [314] = 1239, },
+    --[658] = { [287] = 1079, [289] = 1135, [314] = 1241, },
+    --[668] = { [287] = 1080, [289] = 1136, [314] = 1242, },
+    --[724] = { [292] = 1108, [293] = 1109, },
 }

@@ -63,7 +63,7 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
-            print(string.format("[%s] Incompatible old version detected, wiping players. Please relog into each character, sorry.", addOnName))
+            print(string.format("[%s] Old version detected wiping players.", addOnName))
             ICT:WipeAllPlayers()
         end
         ICT.db.version = version
@@ -192,14 +192,14 @@ local function messageResults(player, instance)
         -- It seems WOW may process oddly.
         player:update()
         ICT:UpdateDisplay()
-        for tokenId, _ in ICT:spairs(instance:tokenIds(), ICT.CurrencySort) do
+        for currency, _ in ICT:spairs(instance:currencies()) do
             -- Onyxia 40 is reused and has 0 emblems so skip currency.
-            local max = instance:maxEmblems(tokenId)
-            if ICT.db.options.currency[tokenId] and max ~= 0 then
-                local available = instance.available[tokenId]
+            local max = instance:maxCurrency(currency)
+            if currency:isVisible() and max ~= 0 then
+                local available = instance:availableCurrency(currency)
                 local collected = max - available
-                local total = player.currency.wallet[tokenId]
-                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, ICT:GetCurrencyWithIcon(tokenId), collected, max, total)
+                local total = player:totalCurrency(currency)
+                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, currency:getNameWithIcon(), collected, max, total)
                 Options:PrintMessage(text)
             end
         end
