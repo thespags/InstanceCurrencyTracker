@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local Instances = ICT.Instances
 local Cooldowns = ICT.Cooldowns
+local Colors = ICT.Colors
 local Player = ICT.Player
 local Options = ICT.Options
 local Tooltips = ICT.Tooltips
@@ -153,18 +154,6 @@ local function bagTooltip(player)
     return tooltip:create("ICTBagTooltip" .. player.fullName)
 end
 
-local deleteButtons = {}
-local function deletePlayerButton(player, cell)
-    local button = deleteButtons[player.fullName] or CreateFrame("Button", "ICTDelete" .. player.fullName, cell.frame, "UIPanelButtonTemplate")
-    deleteButtons[player.fullName] = button
-    button:SetParent(cell.frame)
-    button:SetSize(12, 12)
-    button:SetPoint("RIGHT", cell.frame, "RIGHT")
-    button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
-    button:SetScript("OnClick", UI:openDeleteFrame(player))
-    button:Show()
-end
-
 local function specsSectionTooltip()
     return Tooltips:new("Specs")
     :printPlain("Displays specs, glyphs. If TacoTip is available, displays gearscore and iLvl as well.")
@@ -201,7 +190,7 @@ local function specTooltip(player, spec)
         tooltip:printTitle("Items")
         local text = item.level .. " " .. addGems(k, item)
         -- This may have to be relocalized, but that's true for some other info (e.g. bags), so just use the link.
-        local color = ICT:getItemScoreHex(item.link)
+        local color = Colors:getItemScoreHex(item.link)
         tooltip:printValue(string.format("|T%s:14|t%s", item.icon, item.link), text, nil, color)
     end
 
@@ -235,7 +224,7 @@ end
 
 local function printGearScore(spec, tooltip, x, offset)
     if TT_GS and ICT.db.options.player.showGearScores then
-        local scoreColor = spec.gearScore and ICT:rgbPercentage2hex(TT_GS:GetQuality(spec.gearScore)) or nil
+        local scoreColor = spec.gearScore and Colors:rgbPercentage2hex(TT_GS:GetQuality(spec.gearScore)) or nil
         local cell = Cells:get(x, offset)
         offset = cell:get(x, offset):printValue("GearScore", spec.gearScore, nil, scoreColor)
         tooltip:attach(cell)
@@ -249,7 +238,7 @@ end
 local function printCharacterInfo(player, x, offset)
     local playerTitle = string.format("|c%s%s|r", player:getClassColor(), player:getNameWithIcon())
     local cell = Cells:get(x, offset)
-    deletePlayerButton(player, cell)
+    cell:deletePlayerButton(player)
     offset = cell:printSectionTitle(playerTitle, "Info")
     local options = ICT.db.options
     Cells.indent = "  "
@@ -269,7 +258,7 @@ local function printCharacterInfo(player, x, offset)
         local tooltip = specTooltip(player, spec)
         offset = printGearScore(spec, tooltip, x, offset)
     end
-    local durabilityColor = player.durability and ICT:gradient("FF00FF00", "FFFF0000", player.durability / 100) or "FF00FF00"
+    local durabilityColor = player.durability and Colors:gradient("FF00FF00", "FFFF0000", player.durability / 100) or "FF00FF00"
     offset = Cells:get(x, offset):printOptionalValue(options.player.showDurability, "Durability", player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
     offset = UI:hideRows(x, offset, padding)
 
@@ -410,7 +399,7 @@ local function instanceTooltip(player, instance)
         local max = instance:maxCurrency(currency)
         if currency:isVisible() and max ~= 0 then
             tooltip:printTitle("Currency")
-            local available = instance.available[currency] or max
+            local available = instance:availableCurrency(currency)
             tooltip:printValue(currency:getNameWithIconTooltip(), string.format("%s/%s", available, max))
         end
     end
@@ -431,16 +420,39 @@ local function instanceSectionTooltip()
     :create("ICTInstanceTooltip")
 end
 
-local queued = {}
+local function enqueueAll(instances)
+    return function()
+        local info = C_LFGList.GetActiveEntryInfo()
+        if info == nil then            
+            local queuedIds = {}
+            for _, instance in pairs(instances) do
+                instance:enqueue(queuedIds)
+            end
+            ICT:printValues(queuedIds)
+            C_LFGList.CreateListing(queuedIds)
+        else
+            C_LFGList.RemoveListing()
+        end
+        ICT:PrintPlayers()
+    end
+end
+
 local function enqueue(instance)
     return function()
-        -- todo check player level
-        if instance.locked then
-            print("[%s] Already locked to %s.", addOnName, instance.name)
+        local info = C_LFGList.GetActiveEntryInfo()
+        local queuedIds = info and info.activityIDs or {}
+        instance:enqueue(queuedIds)
+
+        if #queuedIds == 0 then
+            print("delisting")
+            C_LFGList.RemoveListing()
+            ICT:PrintPlayers()
             return
+        else
         end
-        tinsert(queued, instance:activityId())
-        C_LFGList.CreateListing(queued)
+        local f = queuedIds == {} and C_LFGList.RemoveListing or info == nil and C_LFGList.CreateListing or C_LFGList.UpdateListing
+        f(queuedIds)
+        ICT:PrintPlayers()
     end
 end
 
@@ -453,6 +465,14 @@ local function printInstances(player, title, size, instances, x, offset)
     local cell = Cells:get(x, offset)
     offset = cell:printSectionTitle(title)
     instanceSectionTooltip():attach(cell)
+    -- if player:isCurrentPlayer() then
+    --     local button = CreateFrame("Button", nil, cell.frame, "UIPanelButtonTemplate")
+    --     button:SetParent(cell.frame)
+    --     button:SetSize(12, 12)
+    --     button:SetPoint("RIGHT", cell.frame, "RIGHT")
+    --     button:SetNormalTexture("spell-holy-summonchampion")
+    --     button:SetScript("OnClick", enqueueAll(instances))
+    -- end
 
     -- If the section is collapsible then short circuit here.
     if not ICT.db.options.collapsible[title] then
@@ -460,12 +480,12 @@ local function printInstances(player, title, size, instances, x, offset)
             if instance:isVisible() then
                 local color = UI:getSelectedColor(instance.locked)
                 cell = Cells:get(x, offset)
-                offset = cell:printLine(instance.name, color)
-                instanceTooltip(player, instance):attach(cell)
-                -- TODO check if there is a way to make clickable just "dark" or inverse darkness.
                 -- if player:isCurrentPlayer() then
                 --     cell:clickable(enqueue(instance))
+                --     color = instance:queued() and Colors:flipHex(color) or color
                 -- end
+                offset = cell:printLine(instance.name, color)
+                instanceTooltip(player, instance):attach(cell)
             end
         end
     end
@@ -544,7 +564,7 @@ local function currencyTooltip(selectedPlayer, currency)
 
     for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
         local available = player:availableCurrency(currency)
-        local total = player.currency.wallet[currency.id] or 0
+        local total = player:totalCurrency(currency)
         tooltip:printValue(player:getNameWithIcon(), string.format("%s (%s)", total, available), player:getClassColor())
     end
 
@@ -566,7 +586,7 @@ local function printCurrencyVerbose(player, currency, x, offset)
     cell = Cells:get(x, offset)
     offset = cell:printValue("Available", available, ICT.textColor)
     tooltip:attach(cell)
-    local current = player.currency.wallet[currency.id] or 0
+    local current = player:totalCurrency(currency)
     cell = Cells:get(x, offset)
     offset = cell:printValue("Current", current, ICT.textColor)
     tooltip:attach(cell)
@@ -575,7 +595,7 @@ end
 
 -- Prints currency single line information.
 local function printCurrencyShort(player, currency, x, offset)
-    local current = player.currency.wallet[currency.id] or 0
+    local current = player:totalCurrency(currency)
     local available = player:availableCurrency(currency)
     local value = string.format("%s (%s)", current, available)
     local cell = Cells:get(x, offset)
@@ -707,9 +727,6 @@ function ICT:PrintPlayers()
     calculateGold()
     UI:hideTickers()
     Options:FlipSlider()
-    for _, v in pairs(deleteButtons) do
-        v:Hide()
-    end
     local offset = 0
     local x = 0
     if ICT.db.options.multiPlayerView then

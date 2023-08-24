@@ -169,6 +169,15 @@ function ICT:containsAllValues(t, op)
     return true
 end
 
+function ICT:containsAnyKey(t, op)
+    for k, _ in pairs(t) do
+        if op and op(k) or not op and k then
+            return true
+        end
+    end
+    return false
+end
+
 -- Returns true if any value or mapped value in the table are true, otherwise false.
 function ICT:containsAnyValue(t, op)
     for _, v in pairs(t) do

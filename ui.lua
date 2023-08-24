@@ -1,14 +1,15 @@
 local addOnName, ICT = ...
 
+local Colors = ICT.Colors
 local green = "FF00FF00"
 local red = "FFFF0000"
 ICT.tooltipTitleColor = green
 ICT.availableColor = "FFFFFFFF"
 ICT.sectionColor = "FFFFFF00"
-ICT.selectedSectionColor = "FF484800"
 ICT.subtitleColor = "FFFFCC00"
 ICT.textColor = "FF9CD6DE"
 ICT.lockedColor = "FFFF00FF"
+ICT.lockedHighlightColor = "FF880088"
 ICT.unavailableColor = red
 
 local UI = {
@@ -117,7 +118,7 @@ ICT.Cells = Cells
 
 -- Gets the associated cell or create it if it doesn't exist yet.
 function Cells:get(x, y)
-    local name = string.format("ICTcell(%s, %s)", x, y)
+    local name = string.format("ICTCell(%s, %s)", x, y)
     local cell = ICT.content.cells[name]
 
     if not cell then
@@ -127,6 +128,7 @@ function Cells:get(x, y)
         cell.frame = CreateFrame("Button", name, ICT.content, "InsecureActionButtonTemplate")
         cell.frame:SetSize(UI.cellWidth, UI.cellHeight)
         cell.frame:SetPoint("TOPLEFT", (x - 1) * UI.cellWidth, -(y - 1) * UI.cellHeight)
+        cell.buttons = {}
         ICT.content.cells[name] = cell
 
         -- Create the string if necessary.
@@ -148,6 +150,9 @@ function Cells:get(x, y)
 end
 
 function Cells:hide()
+    for _, button in pairs(self.buttons) do
+        button:Hide()
+    end
     self.frame:Hide()
     return self.y + 1
 end
@@ -157,7 +162,7 @@ local function countdown(expires, duration, startColor, endColor)
         local timeLeft = math.max(expires - GetServerTime(), 0)
         startColor = startColor or green
         endColor = endColor or red
-        local color = duration and duration > 0 and ICT:gradient(startColor, endColor, timeLeft / duration) or endColor
+        local color = duration and duration > 0 and Colors:gradient(startColor, endColor, timeLeft / duration) or endColor
         return timeLeft == 0 and "Ready" or ICT:DisplayTime(timeLeft), color
     end
     return "N/A"
@@ -186,7 +191,7 @@ function Cells:printValue(leftText, rightText, leftColor, rightColor)
     self.leftText = leftText or ""
     self.leftColor = leftColor or ICT.subtitleColor
     -- Handle if we were rewriting the cell while hovering over it.
-    local remap = self.hover and ICT.selectedSectionColor or self.leftColor
+    local remap = self.hover and Colors:flipHex(self.leftColor) or self.leftColor
     leftText = string.format("%s|c%s%s|r", self.indent, remap, self.leftText)
     self.left:SetText(leftText)
     self.left:Show()
@@ -205,7 +210,7 @@ function Cells:clickable(f)
     self.frame:HookScript("OnEnter", function()
         Cells.indent = indent
         self.hover = true
-        self:printValue(self.leftText, self.rightText, ICT.selectedSectionColor, self.rightColor)
+        self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         Cells.indent = ""
     end)
     self.frame:HookScript("OnLeave", function()
@@ -238,6 +243,21 @@ function Cells:printSectionTitle(title, key)
         end
     )
     return self.y + 1
+end
+
+function Cells:deletePlayerButton(player)
+    local name = string.format("ICTDeletePlayer(%s, %s)", self.x, self.y)
+    local button = self.buttons[name]
+    if not button then
+        button = CreateFrame("Button", name , self.frame, "UIPanelButtonTemplate")
+        self.deleteButton = button
+        button:SetParent(self.frame)
+        button:SetSize(12, 12)
+        button:SetPoint("RIGHT", self.frame, "RIGHT")
+        button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
+    end
+    button:SetScript("OnClick", UI:openDeleteFrame(player))
+    button:Show()
 end
 
 function UI:getQuestColor(player, quest)
@@ -346,14 +366,14 @@ function UI:printMultiViewResetTicker(x, title, expires, duration)
     return x + 60, frame
 end
 
-local delete = CreateFrame("Frame", "ICTDeletePlayer", UIParent, "BasicFrameTemplateWithInset");
-delete:SetToplevel(true);
-delete:SetHeight(125);
-delete:SetWidth(250);
+local delete = CreateFrame("Frame", "ICTDeletePlayer", UIParent, "BasicFrameTemplateWithInset")
+delete:SetToplevel(true)
+delete:SetHeight(125)
+delete:SetWidth(250)
 delete:Show()
 delete:SetPoint("CENTER", UIParent, 0, 200)
-delete:SetFrameStrata("HIGH");
-tinsert(UISpecialFrames, "ICTDeletePlayer");
+delete:SetFrameStrata("HIGH")
+table.insert(UISpecialFrames, "ICTDeletePlayer")
 
 local title = delete:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 title:SetText("Confirm Character Deletion")

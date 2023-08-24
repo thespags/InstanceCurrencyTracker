@@ -24,8 +24,7 @@ def key_string(v):
 # A complicated thing of sorting and new lines to print a python map as a lua map.
 # Some things we want sorted for readability, map keys, number lists.
 # Other things we don't want sorted like encounter order.
-ignored = {631, 632, 658, 668, 724}
-
+ignored_zones = {631, 632, 658, 668, 724}
 
 def to_string(v, newline=True, sort=True):
     if type(v) is dict:
@@ -34,7 +33,7 @@ def to_string(v, newline=True, sort=True):
         output = "{"
         indent = "\n    " if newline else " "
         for key in keys:
-            comment = "--" if key in ignored else ""
+            comment = "--" if key in ignored_zones else ""
             output += indent + "{2}{0} = {1},".format(
                 key_string(v=key),
                 to_string(v=v[key], newline=False, sort=sort),
@@ -114,17 +113,32 @@ with open("MapDifficulty.csv") as file:
         maxPlayers = int(row[maxPlayersIndex])
         resets[id][maxPlayers] = resetIntervals[reset]
 
+activityIdLookups = {
+    0: {5: [285], 20: [290], 40: [290]},
+    1: {5: [286], 20: [291], 40: [291]},
+    2: {5: [287, 289, 311, 312, 314], 20: [292], 40: [293]},
+}
+
+ignore_lfg_category = {116, 118, 120}
 activities = {}
 with open("GroupFinderActivity.csv") as file:
     csvreader = csv.reader(file)
     header = next(csvreader)
     idIndex = get_key(header, "MapID")
     valueIndex = get_key(header, "ID")
+    difficultyIndex = get_key(header, "Field_3_4_0_43659_004")
+    categoryIndex = get_key(header, "GroupFinderCategoryID")
 
     for row in csvreader:
+        category = int(row[categoryIndex])
+        # Ignore outdoor zones, pvp, and customer
+        if category in ignore_lfg_category:
+            continue
         id = int(row[idIndex])
-        value = int(row[valueIndex])
-        activities[id] = value
+        if id not in activities:
+            activities[id] = {}
+        difficulty = int(row[difficultyIndex])
+        activities[id][difficulty] = int(row[valueIndex])
 
 expansions = {}
 with open("LFGDungeons.csv") as file:
@@ -148,7 +162,6 @@ with open("LFGDungeons.csv") as file:
         size = difficulties[difficulty]
         prev = expansions[id].get("size", size)
         expansions[id]["size"] = min(prev, size)
-        expansions[id]["activityId"] = activities[id]
     expansions[249]["legacy"] = 0
     expansions[249]["legacySize"] = 40
 
@@ -158,6 +171,10 @@ f.write("\n\n-- Size here is the smallest for the specific raid, we use this for
 f.write("\nInstances.Expansions = " + to_string(expansions))
 f.write("\n\n-- Corresponds to the number of days on the lockout for the size.")
 f.write("\nInstances.Resets = " + to_string(resets))
+f.write("\n\n-- How to find the activity id for a specific zone, size and difficulty.")
+f.write("\nInstances.ActivityIdLookups = " + to_string(activityIdLookups))
+f.write("\n\n-- The id for LFG selection.")
+f.write("\nInstances.Activities = " + to_string(activities))
 f.close()
 
 f = open("items.lua", "w")

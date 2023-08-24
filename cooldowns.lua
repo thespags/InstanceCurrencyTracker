@@ -233,7 +233,12 @@ function Cooldowns:fromExpansion(expansion)
 end
 
 function Cooldowns:isVisible()
-    return ICT.getOrCreateDisplayCooldowns()[self.id]
+    return ICT.db.options.displayCooldowns[self.id]
+end
+
+function Cooldowns:setVisible(v)
+    local prev = ICT.db.options.displayCooldowns[self.id]
+    ICT.db.options.displayCooldowns[self.id] = v or not prev
 end
 
 function Cooldowns:__lt(other)

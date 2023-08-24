@@ -175,6 +175,10 @@ function Player:availableCurrency(currency)
     return self.currency.weekly[id] + self.currency.daily[id]
 end
 
+function Player:totalCurrency(currency)
+    return self.currency.wallet[currency.id] or 0
+end
+
 function Player:calculateQuest()
     for k, quest in pairs(ICT.QuestInfo) do
         self.quests.prereq[k] = quest.prereq(self)

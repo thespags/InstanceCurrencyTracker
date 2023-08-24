@@ -98,6 +98,11 @@ function Currency:isVisible()
     return ICT.db.options.currency[self.id]
 end
 
+function Currency:setVisible(v)
+    local prev = ICT.db.options.currency[self.id]
+    ICT.db.options.currency[self.id] = v or not prev
+end
+
 ICT.Triumph = Currency:new(301)
 ICT.SiderealEssence = Currency:new(2589)
 ICT.ChampionsSeal = Currency:new(241)
