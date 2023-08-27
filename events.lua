@@ -66,14 +66,19 @@ local function initEvent(self, event, eventAddOn)
             print(string.format("[%s] Incompatible old version detected, wiping players. Please relog into each character, sorry.", addOnName))
             ICT:WipeAllPlayers()
         end
+        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.1") then
+            ICT.db.options.displayInstances = nil
+        end
+
         ICT.db.version = version
 
         initMinimap()
         for k, player in pairs(ICT.db.players) do
             -- Recreate the player with any new functions.
             ICT.db.players[k] = Player:new(player)
-            -- Player may have already been created but we added new instances.
+            -- Player may have already been created but we added new instances or new functions.
             player:createInstances()
+            ICT.Cooldowns:recreate(player)
         end
         -- Check if we need to delay this part.
         ICT.CreateCurrentPlayer()
@@ -182,6 +187,12 @@ local cooldownFrame = CreateFrame("Frame")
 cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
 cooldownFrame:RegisterEvent("CHAT_MSG_TRADESKILLS")
 cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
+
+-- We can't update the color of instances until we know we've been queued or dequeued.
+-- So this simply updates the page performing no function.
+local queueFrame = CreateFrame("Frame")
+queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
+queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
 -- message and add option
 local function messageResults(player, instance)

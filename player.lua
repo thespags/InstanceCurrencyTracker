@@ -109,30 +109,7 @@ function Player:weeklyReset()
     end
 end
 
-ICT.ResetInfo = {
-    [1] = { name = "Daily", func = Player.dailyReset },
-    [3] = { name = "3 Day", func = function() end },
-    [5] = { name = "5 Day", func = function() end },
-    [7] = { name = "Weekly", func = Player.weeklyReset },
-}
-
 function Player:resetInstances()
-    local timestamp = GetServerTime()
-    for k, v in pairs(ICT.db.reset) do
-        if v < timestamp then
-            print(string.format("[%s] %s reset, updating info.", addOnName, ICT.ResetInfo[k].name))
-            for _, player in pairs(ICT.db.players) do
-                ICT.ResetInfo[k].func(player)
-            end
-            -- There doesn't seem to be an API to get 3 or 5 day reset so recalculate from the last known piece.
-            -- Keep going until we have a time in the future, the player may have not logged in a while.
-            -- Less math to avoid an off by 1 error.
-            while (ICT.db.reset[k] < timestamp) do
-                ICT.db.reset[k] = ICT.db.reset[k] + k * ICT.OneDay
-            end
-        end
-    end
-
     for _, instance in pairs(self.instances) do
         instance:resetIfNecessary(GetServerTime())
     end
@@ -189,7 +166,12 @@ end
 -- Updates instances and currencies.
 -- We may want to decouple these things in the future.
 function Player:update()
-    self:resetInstances()
+    for _, v in pairs(ICT.ResetInfo) do
+        v:reset()
+    end
+    for _, player in pairs(ICT.db.players) do
+        player:resetInstances()
+    end
     self:updateInstance()
     self:calculateCurrency()
     self:calculateQuest()
@@ -466,7 +448,7 @@ end
 
 function Player:updateCooldowns()
     self.cooldowns = self.cooldowns or {}
-    ICT.Cooldowns:updateCooldowns(self)
+    ICT.Cooldowns:update(self)
 end
 
 function Player:getInstance(id, maxPlayers)

@@ -67,6 +67,10 @@ function ICT:nspairsByValue(t, filter)
     return self:spairsByValue(t, function(a, b) return a < b end, filter)
 end
 
+function ICT.reverseSort(a, b)
+    return b < a
+end
+
 -- Filtered pairs iterator determined by the table key with the given function.
 function ICT:fpairs(t, filter)
     local keys = {}

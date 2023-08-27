@@ -5,11 +5,13 @@ local green = "FF00FF00"
 local red = "FFFF0000"
 ICT.tooltipTitleColor = green
 ICT.availableColor = "FFFFFFFF"
+ICT.queuedAvailableColor = "FF90C0FF"
 ICT.sectionColor = "FFFFFF00"
 ICT.subtitleColor = "FFFFCC00"
 ICT.textColor = "FF9CD6DE"
 ICT.lockedColor = "FFFF00FF"
-ICT.lockedHighlightColor = "FF880088"
+ICT.lockedColor = "FF800080"
+ICT.queuedLockedColor = "FFFFC0FF"
 ICT.unavailableColor = red
 
 local UI = {
@@ -143,6 +145,9 @@ function Cells:get(x, y)
         cell.right:SetFont("Fonts\\FRIZQT__.TTF", 10)
     end
     -- Remove any cell action so we can reuse the cell.
+    for _, button in pairs(cell.buttons) do
+        button:Hide()
+    end
     cell.frame:SetScript("OnEnter", nil)
     cell.frame:SetScript("OnLeave", nil)
     cell.frame:SetScript("OnClick", nil)
@@ -250,13 +255,37 @@ function Cells:deletePlayerButton(player)
     local button = self.buttons[name]
     if not button then
         button = CreateFrame("Button", name , self.frame, "UIPanelButtonTemplate")
-        self.deleteButton = button
+        self.buttons[name] = button
         button:SetParent(self.frame)
         button:SetSize(12, 12)
         button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
+        Tooltips:new("Delete Player")
+        :printPlain("Brings up a confirmation menu to delete the given player.")
+        :create(name .. "Tooltip")
+        :attachFrame(button)
     end
     button:SetScript("OnClick", UI:openDeleteFrame(player))
+    button:Show()
+end
+
+function Cells:enqueueAllButton(f)
+    local name = string.format("ICTEnqueueAll(%s, %s)", self.x, self.y)
+    local button = self.buttons[name]
+    if not button then
+        button = CreateFrame("Button", name, self.frame, "UIPanelButtonTemplate")
+        self.buttons[name] = button
+        button:SetParent(self.frame)
+        button:SetSize(12, 12)
+        button:SetPoint("RIGHT", self.frame, "RIGHT")
+        button:SetNormalTexture(134396)
+        Tooltips:new("Enqueue Instances")
+        :printPlain("Enqueues all non locked instances for the given category.")
+        :printPlain("Dequeues if already queued.")
+        :create(name .. "Tooltip")
+        :attachFrame(button)
+    end
+    button:SetScript("OnClick", f)
     button:Show()
 end
 
@@ -266,6 +295,10 @@ end
 
 function UI:getSelectedColor(selected)
     return selected and ICT.lockedColor or ICT.availableColor
+end
+
+function UI:getSelectedQueueColor(selected)
+    return selected and ICT.queuedLockedColor or ICT.queuedAvailableColor
 end
 
 function UI:hideTickers()
