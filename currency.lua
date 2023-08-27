@@ -99,8 +99,7 @@ function Currency:isVisible()
 end
 
 function Currency:setVisible(v)
-    local prev = ICT.db.options.currency[self.id]
-    ICT.db.options.currency[self.id] = v or not prev
+    ICT.db.options.currency[self.id] = v
 end
 
 ICT.Triumph = Currency:new(301)

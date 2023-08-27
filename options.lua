@@ -23,8 +23,8 @@ end
 function ICT.getOrCreateDifficultyOptions()
     if not ICT.db.options.difficulty then
         ICT.db.options.difficulty = {}
-        local size = #Instances.Difficulty
-        for k, _ in ipairs(Instances.Difficulty) do
+        local size = #ICT.DifficultyInfo
+        for k, _ in ipairs(ICT.DifficultyInfo) do
             ICT.db.options.difficulty[k] = k == size
         end
     end
@@ -34,9 +34,9 @@ end
 -- Defaults WOTLK instances as shown and old content as off.
 function ICT.getOrCreateDisplayInstances()
     if not ICT.db.options.displayInstances then
-        ICT.db.options.displayInstances = {}
-        for k, v in pairs(Instances.infos()) do
-            ICT.db.options.displayInstances[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
+        ICT.db.options.displayInstances = { [0] = {}, [1] = {}, [2] = {}, }
+        for _, v in pairs(Instances.infos()) do
+            ICT.db.options.displayInstances[v.expansion][v.id] = v.expansion == ICT.WOTLK
         end
     end
     return ICT.db.options.displayInstances
@@ -47,7 +47,7 @@ function ICT.getOrCreateDisplayCooldowns()
     if not ICT.db.options.displayCooldowns then
         ICT.db.options.displayCooldowns = {}
         for k, v in pairs(Cooldowns.spells) do
-            ICT.db.options.displayCooldowns[k] = v.expansion == ICT.Expansions[ICT.WOTLK]
+            ICT.db.options.displayCooldowns[k] = v.expansion == ICT.WOTLK
         end
     end
     return ICT.db.options.displayCooldowns
@@ -65,41 +65,6 @@ function ICT.getOrCreateResetTimerOptions()
         ICT.db.options.reset = { [1] = true, [3] = false, [5] = false, [7] = true}
     end
     return ICT.db.options.reset
-end
-
-local function expansionContainsAllInstances(expansion)
-    local contains = function(info)
-        -- todo check how onyxia 40 works, my attempt is that it shoudl rewrite the expansion and we don't need "legacy"
-        if info.legacy == expansion then
-            return ICT.getOrCreateDisplayLegacyInstances(expansion)[info.id]
-        end
-        return info.expansion ~= expansion or ICT.getOrCreateDisplayInstances()[info.id]
-    end
-    return ICT:containsAllValues(Instances.infos(), contains)
-end
-
-local function instanceContainsAll()
-    return ICT:containsAllValues(Instances.infos(), Instances.isVisible)
-end
-
-local function checkInstance(info, value, expansion)
-    if not expansion or info.expansion == expansion then
-        ICT.getOrCreateDisplayInstances()[info.id] = value
-    end
-    if (not expansion and info.legacy) or (expansion and info.legacy == expansion) then
-        ICT.getOrCreateDisplayLegacyInstances(info.legacy)[info.id] = value
-    end
-end
-
-local function expansionContainsAllCooldowns(expansion)
-    local contains = function(cooldown)
-        return cooldown.expansion ~= expansion or cooldown:isVisible()
-    end
-    return ICT:containsAllValues(Cooldowns.spells, contains)
-end
-
-local function cooldownContainsAll()
-    return ICT:containsAllValues(Cooldowns.spells, Cooldowns.isVisible)
 end
 
 function Options:FlipMinimapIcon()
@@ -135,12 +100,58 @@ local function createInfo(text)
     return info
 end
 
+local function createInfoObject(o)
+    local info = createInfo(o:getName())
+    info.checked = o:isVisible()
+    info.func = function(self)
+        o:setVisible(not o:isVisible())
+        ICT:PrintPlayers()
+    end
+    return info
+end
+
+local function createInfoObjectsExpansion(name, objects, menuList, expansion)
+    local info = createInfo(name)
+    local contains = function(v)
+        -- v is visible or it's not from that expansion.
+        return v:isVisible() or not v:fromExpansion(expansion)
+    end
+    info.checked = ICT:containsAllValues(objects, contains)
+    info.menuList = menuList .. ":" .. expansion
+    info.hasArrow = true
+
+    info.func = function(self)
+        local wasChecked = ICT:containsAllValues(objects, contains)
+        for _, o in ICT:fpairsByValue(objects, function(v) return v:fromExpansion(expansion) end ) do
+            o:setVisible(not wasChecked)
+        end
+        ICT:PrintPlayers()
+    end
+    return info
+end
+
+local function createInfoObjects(name, objects)
+    local info = createInfo(name)
+    local contains = function(v) return v:isVisible() end
+    info.checked = ICT:containsAllValues(objects, contains)
+    info.menuList = info.text
+    info.hasArrow = true
+
+    info.func = function(self)
+        local wasChecked =  ICT:containsAllValues(objects, contains)
+        for _, o in pairs(objects) do
+            o:setVisible(not wasChecked)
+        end
+        ICT:PrintPlayers()
+    end
+    return info
+end
+
 local function addPlayerOption(title, key, level, tooltip)
     local info = createInfo(title)
-    info.arg1 = ICT.db.options
     info.checked = ICT.db.options.player[key]
-    info.func = function(self, options)
-        options.player[key] = not options.player[key]
+    info.func = function(self)
+        ICT.db.options.player[key] = not ICT.db.options.player[key]
         ICT:PrintPlayers()
     end
     if tooltip then
@@ -165,9 +176,9 @@ function Options:CreateOptionDropdown()
     options.player = options.player or {}
     ICT.getOrCreateDisplayInstances()
     ICT.getOrCreateDisplayCooldowns()
-    local currency = ICT.getOrCreateCurrencyOptions()
-    local resets = ICT.getOrCreateResetTimerOptions()
-    --local difficulty = ICT.getOrCreateDifficultyOptions()
+    ICT.getOrCreateCurrencyOptions()
+    ICT.getOrCreateResetTimerOptions()
+    ICT.getOrCreateDifficultyOptions()
 
     ICT:putIfAbsent(options, "verboseName", false)
     ICT:putIfAbsent(options, "multiPlayerView", false)
@@ -271,44 +282,14 @@ function Options:CreateOptionDropdown()
                 end
                 DDM:UIDropDownMenu_AddButton(players)
 
-                local reset = createInfo("Reset Timers")
-                reset.menuList = reset.text
-                reset.checked = ICT:containsAllValues(resets)
-                reset.hasArrow = true
-                reset.func = function(self)
-                    local wasChecked = ICT:containsAllValues(resets)
-                    for k, _ in pairs(ICT.ResetInfo) do
-                        resets[k] = not wasChecked
-                    end
-                    ICT:PrintPlayers()
-                end
+                local reset = createInfoObjects("Reset Timers", ICT.ResetInfo)
                 DDM:UIDropDownMenu_AddButton(reset)
 
-                local instances = createInfo("Instances")
-                instances.menuList = instances.text
-                instances.checked = instanceContainsAll()
-                instances.hasArrow = true
-                instances.func = function(self)
-                    local wasChecked = instanceContainsAll()
-                    for _, v in pairs(Instances.infos()) do
-                        checkInstance(v, not wasChecked)
-                    end
-                    ICT:PrintPlayers()
-                end
+                local instances = createInfoObjects("Instances", Instances.infos())
                 DDM:UIDropDownMenu_AddButton(instances)
 
-                -- local difficulties = createInfo("Difficulty")
-                -- difficulties.menuList = difficulties.text
-                -- difficulties.checked = ICT:containsAllValues(difficulty)
-                -- difficulties.hasArrow = true
-                -- difficulties.func = function(self)
-                --     local wasChecked = ICT:containsAllValues(difficulty)
-                --     for k, _ in ipairs(Instances.difficulty) do
-                --         difficulty[k] = not wasChecked
-                --     end
-                --     ICT:PrintPlayers()
-                -- end
-                -- DDM:UIDropDownMenu_AddButton(difficulties)
+                local difficulty = createInfoObjects("Difficulty", ICT.DifficultyInfo )
+                DDM:UIDropDownMenu_AddButton(difficulty)
 
                 local quests = createInfo("Quests")
                 quests.menuList = quests.text
@@ -322,31 +303,10 @@ function Options:CreateOptionDropdown()
                 end
                 DDM:UIDropDownMenu_AddButton(quests)
 
-                -- Create the currency options.
-                local currencies = createInfo("Currency")
-                currencies.menuList = currencies.text
-                currencies.hasArrow = true
-                currencies.checked = ICT:containsAllValues(currency)
-                currencies.func = function(self)
-                    local wasChecked = ICT:containsAllValues(currency)
-                    for _, v in ipairs(ICT.Currencies) do
-                        v:setVisible(not wasChecked)
-                    end
-                    ICT:PrintPlayers()
-                end
-                DDM:UIDropDownMenu_AddButton(currencies)
+                local currency = createInfoObjects("Currency", ICT.Currencies)
+                DDM:UIDropDownMenu_AddButton(currency)
 
-                local cooldowns = createInfo("Cooldowns")
-                cooldowns.menuList = cooldowns.text
-                cooldowns.checked = cooldownContainsAll()
-                cooldowns.hasArrow = true
-                cooldowns.func = function(self)
-                    local wasChecked = cooldownContainsAll()
-                    for _, cooldown in pairs(Cooldowns.spells) do
-                        cooldown:setVisible(not wasChecked)
-                    end
-                    ICT:PrintPlayers()
-                end
+                local cooldowns = createInfoObjects("Cooldowns", Cooldowns.spells)
                 DDM:UIDropDownMenu_AddButton(cooldowns)
 
                 DDM:UIDropDownMenu_AddSeparator()
@@ -371,41 +331,21 @@ function Options:CreateOptionDropdown()
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Reset Timers" then
-                    for k, v in ICT:spairs(ICT.ResetInfo) do
-                        local info = createInfo(v.name)
-                        info.checked = resets[k]
-                        info.func = function(self)
-                            resets[k] = not resets[k]
-                            ICT:PrintPlayers()
-                        end
+                    for _, v in ICT:spairs(ICT.ResetInfo) do
+                        local info = createInfoObject(v)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Instances" then
                     -- Create a level for the expansions, then the specific instances.
-                    for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
-                        local info = createInfo(expansion)
-                        info.menuList = menuList .. ":" .. expansion
-                        info.hasArrow = true
-                        info.checked = expansionContainsAllInstances(v)
-                        info.func = function(self)
-                            local wasChecked = expansionContainsAllInstances(v)
-                            for _, instance in ICT:fpairsByValue(Instances.infos(), ICT:fWith(Instances.fromExpansion, v)) do
-                                checkInstance(instance, not wasChecked, ICT.Expansions[expansion])
-                            end
-                            ICT:PrintPlayers()
-                        end
+                    for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+                        local info = createInfoObjectsExpansion(name, Instances.infos(), menuList, expansion)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Difficulty" then
-                    -- for k, v in ipairs(Instances.Difficulty) do
-                    --     local info = createInfo(v)
-                    --     info.checked = difficulty[k]
-                    --     info.func = function(self)
-                    --         difficulty[k] = not difficulty[k]
-                    --         ICT:PrintPlayers()
-                    --     end
-                    --     DDM:UIDropDownMenu_AddButton(info, level)
-                    -- end
+                    for _, v in ipairs(ICT.DifficultyInfo) do
+                        local info = createInfoObject(v)
+                        DDM:UIDropDownMenu_AddButton(info, level)
+                    end
                 elseif menuList == "Quests" then
                     -- Switches between all quests or only those available to the player.
                     local allAvailableQuests = createInfo("Show Unavailable Quests")
@@ -425,28 +365,13 @@ function Options:CreateOptionDropdown()
                     DDM:UIDropDownMenu_AddButton(showQuests, level)
                 elseif menuList == "Currency" then
                     for _, v in ipairs(ICT.Currencies) do
-                        local info = createInfo(v:getName())
-                        info.checked = v:isVisible()
-                        info.func = function(self)
-                            v:setVisible()
-                            ICT:PrintPlayers()
-                        end
+                        local info = createInfoObject(v)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Cooldowns" then
                     -- Create a level for the expansions, then the specific cooldown.
-                    for expansion, v in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
-                        local info = createInfo(expansion)
-                        info.menuList = menuList .. ":" .. expansion
-                        info.hasArrow = true
-                        info.checked = expansionContainsAllCooldowns(v)
-                        info.func = function(self)
-                            local wasChecked = expansionContainsAllCooldowns(v)
-                            for _, cooldown in ICT:fpairsByValue(Cooldowns.spells, ICT:fWith(Cooldowns.fromExpansion, v)) do
-                                cooldown:setVisible(not wasChecked)
-                            end
-                            ICT:PrintPlayers()
-                        end
+                    for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+                        local info = createInfoObjectsExpansion(name, Cooldowns.spells, menuList, expansion)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif menuList == "Frame" then
@@ -538,22 +463,16 @@ function Options:CreateOptionDropdown()
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
                 -- Now create a level for all the instances of that expansion.
                 local subList, expansion = menuList:match("([%w%s]+):([%w%s]+)")
-                expansion = ICT.Expansions[expansion]
+                expansion = tonumber(expansion)
                 if subList == "Instances" then
                     local lastSize
                     for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, ICT:fWith(Instances.fromExpansion, expansion)) do
-                        local size =  v.legacy == expansion and v.legacySize or v.size
+                        local size = v.legacy == expansion and v.legacySize or v.size
                         if lastSize and lastSize ~= size then
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end
                         lastSize = size
-                        local info = createInfo(GetRealZoneText(v.id))
-                        info.arg1 = v
-                        info.checked = v:isVisible(expansion)
-                        info.func = function(self, instance)
-                            checkInstance(instance, not v:isVisible(expansion), expansion)
-                            ICT:PrintPlayers()
-                        end
+                        local info = createInfoObject(v)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 elseif subList == "Cooldowns" then
@@ -564,13 +483,7 @@ function Options:CreateOptionDropdown()
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end
                         lastSkill = v.skillId
-                        local info = createInfo(v.name)
-                        info.arg1 = v
-                        info.checked = v:isVisible()
-                        info.func = function(self, cooldown)
-                            cooldown:setVisible()
-                            ICT:PrintPlayers()
-                        end
+                        local info = createInfoObject(v)
                         DDM:UIDropDownMenu_AddButton(info, level)
                     end
                 end

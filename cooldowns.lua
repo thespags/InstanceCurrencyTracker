@@ -187,7 +187,7 @@ function Cooldowns:GetTimeLeft(start, duration)
     return start - now + serverNow + duration
 end
 
-function Cooldowns:updateCooldowns(player)
+function Cooldowns:update(player)
     for spellId, info in pairs(Cooldowns.spells) do
         -- local spellData = player.cooldowns[spellId] or {}
         local spellKnown = IsPlayerSpell(spellId)
@@ -208,6 +208,13 @@ function Cooldowns:updateCooldowns(player)
             -- Handles case if spell was known and no longer is.
             player.cooldowns[spellId] = nil
         end
+    end
+end
+
+-- Ensures cooldowns have new functions.
+function Cooldowns:recreate(player)
+    for spellId, info in pairs(player.cooldowns or {}) do
+        player.cooldowns[spellId] = Cooldowns:new(info)
     end
 end
 
@@ -232,13 +239,24 @@ function Cooldowns:fromExpansion(expansion)
     return self.expansion == expansion
 end
 
+function Cooldowns:getName()
+    return self.name
+end
+
+function Cooldowns:getNameWithIcon()
+    return string.format("|T%s:14|t%s", self.icon, self.name)
+end
+
 function Cooldowns:isVisible()
     return ICT.db.options.displayCooldowns[self.id]
 end
 
 function Cooldowns:setVisible(v)
-    local prev = ICT.db.options.displayCooldowns[self.id]
-    ICT.db.options.displayCooldowns[self.id] = v or not prev
+    ICT.db.options.displayCooldowns[self.id] = v
+end
+
+function Cooldowns:__eq(other)
+    return self.name == other.name
 end
 
 function Cooldowns:__lt(other)

@@ -115,24 +115,27 @@ with open("MapDifficulty.csv") as file:
 
 activityIdLookups = {
     0: {5: [285], 20: [290], 40: [290]},
-    1: {5: [286], 20: [291], 40: [291]},
-    2: {5: [287, 289, 311, 312, 314], 20: [292], 40: [293]},
+    1: {5: [286], 10: [291], 25: [291]},
+    2: {5: [287, 289, 311, 312, 314], 10: [292], 25: [293]},
 }
 
 ignore_lfg_category = {116, 118, 120}
+ignore_names = {"Trial of the Grand Crusader"}
 activities = {}
 with open("GroupFinderActivity.csv") as file:
     csvreader = csv.reader(file)
     header = next(csvreader)
     idIndex = get_key(header, "MapID")
     valueIndex = get_key(header, "ID")
+    nameIndex = get_key(header, "FullName_lang")
     difficultyIndex = get_key(header, "Field_3_4_0_43659_004")
     categoryIndex = get_key(header, "GroupFinderCategoryID")
 
     for row in csvreader:
         category = int(row[categoryIndex])
+        name = row[nameIndex]
         # Ignore outdoor zones, pvp, and customer
-        if category in ignore_lfg_category:
+        if category in ignore_lfg_category or name in ignore_names:
             continue
         id = int(row[idIndex])
         if id not in activities:

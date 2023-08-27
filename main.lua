@@ -4,6 +4,7 @@ local Instances = ICT.Instances
 local Cooldowns = ICT.Cooldowns
 local Colors = ICT.Colors
 local Player = ICT.Player
+local Reset = ICT.Reset
 local Options = ICT.Options
 local Tooltips = ICT.Tooltips
 local Cells = ICT.Cells
@@ -357,7 +358,7 @@ local function printCharacterInfo(player, x, offset)
             padding = getPadding(offset, paddings.cooldowns)
             for _, v in ICT:nspairsByValue(player.cooldowns or {}, Cooldowns.isVisible) do
                 cell = Cells:get(x, offset)
-                local name = string.format("|T%s:14|t%s", v.icon, v.name)
+                local name = v:getNameWithIcon()
                 offset = cell:printTicker(name, v.expires, v.duration)
                 if player:isCurrentPlayer() then
                     cell:clickable(function() v:cast(player) end)
@@ -410,7 +411,9 @@ end
 local function instanceSectionTooltip()
     return Tooltips:new("Instance Format")
     :printLine("Available", ICT.availableColor)
+    :printLine("Queued Available", ICT.queuedAvailableColor)
     :printLine("Locked", ICT.lockedColor)
+    :printLine("Queued Locked", ICT.queuedLockedColor)
     :printValue("\nEncounters", "Available / Total")
     :printPlain("Shows the available boss fights for the current lock out,")
     :printPlain("out of the total for any given lockout.")
@@ -420,20 +423,20 @@ local function instanceSectionTooltip()
     :create("ICTInstanceTooltip")
 end
 
-local function enqueueAll(instances)
+local function enqueueAll(title, subTitle, instances)
     return function()
         local info = C_LFGList.GetActiveEntryInfo()
-        if info == nil then            
+        if info == nil then
             local queuedIds = {}
             for _, instance in pairs(instances) do
-                instance:enqueue(queuedIds)
+                instance:enqueue(queuedIds, false)
             end
-            ICT:printValues(queuedIds)
             C_LFGList.CreateListing(queuedIds)
+            print(string.format("[%s] Enqueued all non lock %s %s.", addOnName, ICT.Expansions[title], subTitle))
         else
             C_LFGList.RemoveListing()
+            print(string.format("[%s] Listing removed.", addOnName))
         end
-        ICT:PrintPlayers()
     end
 end
 
@@ -441,51 +444,44 @@ local function enqueue(instance)
     return function()
         local info = C_LFGList.GetActiveEntryInfo()
         local queuedIds = info and info.activityIDs or {}
-        instance:enqueue(queuedIds)
+        instance:enqueue(queuedIds, true)
 
         if #queuedIds == 0 then
-            print("delisting")
+            print(string.format("[%s] No more instances queued, delisting.", addOnName))
             C_LFGList.RemoveListing()
             ICT:PrintPlayers()
             return
-        else
         end
         local f = queuedIds == {} and C_LFGList.RemoveListing or info == nil and C_LFGList.CreateListing or C_LFGList.UpdateListing
         f(queuedIds)
-        ICT:PrintPlayers()
     end
 end
 
 -- Prints all the instances with associated tooltips.
-local function printInstances(player, title, size, instances, x, offset)
+local function printInstances(player, title, subTitle, size, instances, x, offset)
     if size == 0 then
         return offset
     end
 
     local cell = Cells:get(x, offset)
-    offset = cell:printSectionTitle(title)
+    local key = title .. subTitle
+    offset = cell:printSectionTitle(subTitle, key)
     instanceSectionTooltip():attach(cell)
-    -- if player:isCurrentPlayer() then
-    --     local button = CreateFrame("Button", nil, cell.frame, "UIPanelButtonTemplate")
-    --     button:SetParent(cell.frame)
-    --     button:SetSize(12, 12)
-    --     button:SetPoint("RIGHT", cell.frame, "RIGHT")
-    --     button:SetNormalTexture("spell-holy-summonchampion")
-    --     button:SetScript("OnClick", enqueueAll(instances))
-    -- end
+    if player:isCurrentPlayer() then
+        cell:enqueueAllButton(enqueueAll(title, subTitle, instances))
+    end
 
     -- If the section is collapsible then short circuit here.
-    if not ICT.db.options.collapsible[title] then
+    if not ICT.db.options.collapsible[key] then
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
-                local color = UI:getSelectedColor(instance.locked)
+                local color = player:isCurrentPlayer() and instance:queued() and UI:getSelectedQueueColor(instance.locked) or UI:getSelectedColor(instance.locked)
                 cell = Cells:get(x, offset)
-                -- if player:isCurrentPlayer() then
-                --     cell:clickable(enqueue(instance))
-                --     color = instance:queued() and Colors:flipHex(color) or color
-                -- end
-                offset = cell:printLine(instance.name, color)
+                offset = cell:printLine(instance:getName(), color)
                 instanceTooltip(player, instance):attach(cell)
+                if player:isCurrentPlayer() then
+                    cell:clickable(enqueue(instance))
+                end
             end
         end
     end
@@ -494,7 +490,7 @@ end
 
 local function printAllInstances(player, x, offset)
     local subSections =  { { name = "Dungeons", instances = Player.getDungeons }, { name = "Raids", instances = Player.getRaids },  }
-    for name, expansion in ICT:spairs(ICT.Expansions, ICT.ExpansionSort) do
+    for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
         local sizes = {}
         for k, v in ipairs(subSections) do
             sizes[k] = ICT:size(v.instances(player, expansion), Instances.isVisible)
@@ -505,7 +501,7 @@ local function printAllInstances(player, x, offset)
             if not ICT.db.options.collapsible[name] then
                 Cells.indent = "  "
                 for k, v in ipairs(subSections) do
-                    offset = printInstances(player, v.name, sizes[k], v.instances(player, expansion), x, offset)
+                    offset = printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, offset)
                 end
                 Cells.indent = ""
             else
@@ -679,11 +675,9 @@ local function printResetTimers(x, offset)
         if ICT.db.options.multiPlayerView then
             local start = 32 + -60 * count / 2
             local frame = nil
-            for k, v in ICT:spairs(ICT.db.reset) do
-                if ICT.db.options.reset[k] then
-                    start, frame = UI:printMultiViewResetTicker(start, ICT.ResetInfo[k].name, v, k * ICT.OneDay)
-                    tooltip:attachFrame(frame)
-                end
+            for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
+                start, frame = UI:printMultiViewResetTicker(start, v:getName(), v:expires(), v:duration())
+                tooltip:attachFrame(frame)
             end
         else
             local cell = Cells:get(x, offset)
@@ -691,10 +685,8 @@ local function printResetTimers(x, offset)
             tooltip:attach(cell)
 
             if not ICT.db.options.collapsible["Reset"] then
-                for k, v in ICT:spairs(ICT.db.reset) do
-                    if ICT.db.options.reset[k] then
-                        offset = Cells:get(x, offset):printTicker(ICT.ResetInfo[k].name, v, k * ICT.OneDay, ICT.textColor)
-                    end
+                for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
+                    offset = Cells:get(x, offset):printTicker(v:getName(), v:expires(), v:duration())
                 end
             end
             offset = Cells:get(x, offset):hide()

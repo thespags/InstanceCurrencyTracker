@@ -22,6 +22,10 @@ function Instances:key(v, size)
     return string.format("%s (%s)", v, size)
 end
 
+function Instances:getName()
+    return self.name
+end
+
 function Instances:localizeName()
     local name = GetRealZoneText(self.id)
     local sizes = ICT:size(Instances.Resets[self.id])
@@ -57,7 +61,8 @@ function Instances:resetInterval()
 end
 
 function Instances:activityId(difficulty)
-    difficulty = difficulty or self:isDungeon() and #Instances.Difficulty or 1
+    -- Use the provided difficulty or default to the highest. 
+    difficulty = difficulty or self:isDungeon() and #ICT.DifficultyInfo or #ICT.RaidDifficulty
     -- Finds the type of activity, beta rune or raid 10 id, for an instance.
     local activityId = Instances.ActivityIdLookups[self.expansion][self.size][difficulty]
     -- Now find the instances specific id for that type.
@@ -66,18 +71,32 @@ end
 
 -- Is any difficulty of this instance queued?
 function Instances:queued()
+    local difficulties = self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
     local info = C_LFGList.GetActiveEntryInfo()
     local queuedIds = info and info.activityIDs or {}
-    return #queuedIds > 0 and ICT:containsAnyKey(Instances.Difficulty, function(k) return tContains(queuedIds, self:activityId(k)) end)
+    return #queuedIds > 0 and ICT:containsAnyValue(difficulties, function(v) return tContains(queuedIds, self:activityId(v.id)) end)
 end
 
-function Instances:enqueue(queuedIds)
-    local difficulties = self:isDungeon() and Instances.Difficulty or {1}
+function Instances:enqueue(queuedIds, shouldMessage)
+    local difficulties = self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
+    local isDungeonQueue = Instances.isDungeonQueue()
+    if isDungeonQueue ~= nil and isDungeonQueue ~= self:isDungeon() then
+        print(string.format("[%s] Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together.", addOnName, self:getName()))
+        return
+    end
     --     UIDropDownMenu_SetSelectedValue(LFGBrowseFrame.CategoryDropDown, categoryID);
-    for k, _ in ipairs(difficulties) do
-        local activityId = self:activityId(k)
-        local f = (not ICT.getOrCreateDifficultyOptions()[k] or tContains(queuedIds, activityId)) and tDeleteItem or table.insert
+    for _, difficulty in pairs(difficulties) do
+        local activityId = self:activityId(difficulty.id)
+        local remove = tContains(queuedIds, activityId)
+        local ignore = not difficulty:isVisible()
+        local f = (remove or ignore) and tDeleteItem or table.insert
         f(queuedIds, activityId)
+        -- Response back to the user to see what was queued/dequeued.
+        if shouldMessage then
+            local message = ignore and "" or remove and "[%s] Dequeuing %s" or "[%s] Enqueuing %s"
+            local name = self:getName() .. (self:isDungeon() and ", " .. difficulty:getName() or "")
+            print(string.format(message, addOnName, name))
+        end
     end
 end
 
@@ -132,11 +151,12 @@ function Instances:isDungeon(expansion)
     return self.size == 5 and (not expansion or self:fromExpansion(expansion))
 end
 
-function Instances:isVisible(expansion)
-    if expansion and expansion == self.legacy or self.legacy then
-        return ICT.getOrCreateDisplayLegacyInstances(expansion or self.legacy)[self.id]
-    end
-    return ICT.getOrCreateDisplayInstances()[self.id]
+function Instances:isVisible()
+    return ICT.getOrCreateDisplayInstances()[self.expansion][self.id]
+end
+
+function Instances:setVisible(v)
+    ICT.getOrCreateDisplayInstances()[self.expansion][self.id] = v
 end
 
 -- This comparison groups instances with the same name together across multiple sizes.
@@ -183,40 +203,6 @@ function ICT.InstanceOptionSort(a, b)
         return compare(a, b, a.size, b.legacySize)
     end
     return a.expansion > b.expansion
-end
-
--- How to order expansions, we sort from highest to lowest (reverse) so adding new currencies is easier.
-ICT.WOTLK = "Wrath of the Lich King"
-ICT.TBC = "The Burning Crusade"
-ICT.VANILLA = "Vanilla"
-ICT.Expansions = {
-    [ICT.VANILLA] = 0,
-    [ICT.TBC] = 1,
-    [ICT.WOTLK] = 2
-}
-
--- Difficulty = {}
-
--- function Difficulty:new(name)
---     local difficulty = { name = name }
---     setmetatable(difficulty, self)
---     self.__index = self
---     return difficulty
--- end
-
--- function Difficulty:isVisible()
---     return ICT.getOrCreateDifficultyOptions()[self.index]
--- end
-
--- Difficulty = {
---     Difficulty("Normal"),
---     Difficulty("Heroic"),
---     Difficulty("Titan Runed: Alpha"),
---     Difficulty("Titan Runed: Beta")
--- }
-
-function ICT.ExpansionSort(a, b)
-    return ICT.Expansions[a] > ICT.Expansions[b]
 end
 
 -- Start currency helpers
@@ -341,6 +327,15 @@ Instances.currency = {
 }
 -- End Currency Helpers
 
+ICT.WOTLK = 2
+ICT.TBC = 1
+ICT.VANILLA = 0
+ICT.Expansions = {
+    [ICT.WOTLK] = "Wrath of the Lich King",
+    [ICT.TBC] = "The Burning Crusade",
+    [ICT.VANILLA] = "Vanilla"
+}
+
 -- Attaches the localize name to info for sorting in the options menu.
 local infos
 function Instances.infos()
@@ -350,13 +345,43 @@ function Instances.infos()
     infos = {}
     for k, v in pairs(Instances.Expansions) do
         local info = Instances:new({}, v.id, v.size)
-        infos[k] = info
+        -- Drop size from name.
+        info.name = GetRealZoneText(info.id)
+        tinsert(infos, info)
+
         -- todo check if this is needed?
-        info.name = GetRealZoneText(k)
-        info.legacySize = Instances.Expansions[v.id].legacySize
-        info.legacy = Instances.Expansions[v.id].legacy
+        if v.legacy then
+            info = Instances:new({}, v.id, v.legacySize)
+            info.name = GetRealZoneText(info.id)
+            tinsert(infos, info)
+        end
     end
     return infos
+end
+
+function Instances.isDungeonQueue()
+    local info = C_LFGList.GetActiveEntryInfo()
+    local activityId = info and info.activityIDs[1] or nil
+    if activityId then
+        local instanceId = Instances.inverseActivityIds()[activityId]
+        -- A bit silly but to make infos easier to handle legacies we don't allow key lookups.
+        return Instances.Resets[instanceId][5] ~= nil
+    end
+    return nil
+end
+
+local inverseActivityIds
+function Instances.inverseActivityIds()
+    if inverseActivityIds then
+        return inverseActivityIds
+    end
+    inverseActivityIds = {}
+    for instanceId, v in pairs(Instances.Activities) do
+        for _, activityId in pairs(v) do
+            inverseActivityIds[activityId] = instanceId
+        end
+    end
+    return inverseActivityIds
 end
 
 Instances.Encounters = {
@@ -630,7 +655,7 @@ Instances.Activities = {
     [624] = { [292] = 1095, [293] = 1096, },
     --[631] = { [292] = 1110, [293] = 1111, },
     --[632] = { [287] = 1078, [289] = 1134, [314] = 1240, },
-    [649] = { [292] = 1103, [293] = 1105, },
+    [649] = { [292] = 1100, [293] = 1104, },
     [650] = { [287] = 1076, [289] = 1133, [312] = 1238, [314] = 1239, },
     --[658] = { [287] = 1079, [289] = 1135, [314] = 1241, },
     --[668] = { [287] = 1080, [289] = 1136, [314] = 1242, },

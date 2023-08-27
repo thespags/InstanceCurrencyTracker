@@ -88,6 +88,10 @@
         "IsPlayerSpell",
         "GetTime",
         "GetItemInfoInstant",
-        "GetSpellBaseCooldown"
+        "GetSpellBaseCooldown",
+        "C_LFGList",
+        "tContains",
+        "tDeleteItem",
+        "GetAddOnMetadata"
     ]
 }
