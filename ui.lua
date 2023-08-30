@@ -359,7 +359,7 @@ function UI:resetFrameButton()
     button:SetScript("OnClick", function()
         self:drawFrame(self.defaultX, self.defaultY, self.cellWidth * self.displayX + 40, math.max(self.defaultHeight, self.cellHeight * self.displayY))
     end)
-    Tooltips:new("Reset size and position"):create("ICTResetFrame"):attachFrame(button)
+    Tooltips:new("Reset size and position"):create("ICTResetFrameTooltip"):attachFrame(button)
 end
 
 function UI:updateFrameSizes(x, offset)
@@ -399,27 +399,32 @@ function UI:printMultiViewResetTicker(x, title, expires, duration)
     return x + 60, frame
 end
 
-local delete = CreateFrame("Frame", "ICTDeletePlayer", UIParent, "BasicFrameTemplateWithInset")
-delete:SetToplevel(true)
-delete:SetHeight(125)
-delete:SetWidth(250)
-delete:Show()
-delete:SetPoint("CENTER", UIParent, 0, 200)
-delete:SetFrameStrata("HIGH")
-table.insert(UISpecialFrames, "ICTDeletePlayer")
+local function createDialogWindow(name, titleText, bodyText, buttonText)
+    local frame = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+    frame:SetToplevel(true)
+    frame:SetHeight(125)
+    frame:SetWidth(250)
+    frame:Show()
+    frame:SetPoint("CENTER", UIParent, 0, 200)
+    frame:SetFrameStrata("HIGH")
+    table.insert(UISpecialFrames, name)
 
-local title = delete:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-title:SetText("Confirm Character Deletion")
-title:SetPoint("TOP", -10, -6)
+    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetText(titleText)
+    title:SetPoint("TOP", -10, -6)
 
-delete.name = delete:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-delete.name:SetPoint("CENTER", 0, 10)
+    frame.name = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.name:SetText(string.format("|c%s%s|r", "FFFFFFFF", bodyText))
+    frame.name:SetPoint("CENTER", 0, 10)
 
-delete.button = CreateFrame("Button", nil, delete, "UIPanelButtonTemplate")
-delete.button:SetSize(80 ,22) -- width, height
-delete.button:SetText("Delete")
-delete.button:SetPoint("CENTER", 0, -30)
+    frame.button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.button:SetSize(80 ,22)
+    frame.button:SetText(buttonText)
+    frame.button:SetPoint("CENTER", 0, -30)
+    return frame
+end
 
+local delete = createDialogWindow("ICTDeletePlayer", "Confirm Character Deletion", "", "Delete")
 local lastPlayer;
 function UI:openDeleteFrame(player)
     return function()
@@ -438,4 +443,29 @@ function UI:openDeleteFrame(player)
             ICT:PrintPlayers()
         end)
     end
+end
+
+local options = createDialogWindow("ICTResetOptionsDialog", "Confirm Reset Options", "Set all options to their default value?", "Confirm")
+function UI:openResetOptionsFrame()
+    return function()
+        options:Show()
+        options.button:SetScript("OnClick", function ()
+            ICT.Options:setDefaultOptions(true)
+            options:Hide()
+        end)
+    end
+end
+
+function UI:resetOptionsButton()
+    local button = CreateFrame("Button", "ICTResetOptions", ICT.frame, "UIPanelButtonTemplate")
+    button:SetSize(24, 24)
+    button:SetAlpha(1)
+    button:SetIgnoreParentAlpha(true)
+    button:SetNormalTexture("Interface/common/help-i")
+    button:SetPoint("TOPRIGHT", ICT.frame.options, "TOPLEFT", 18, -2)
+    button:SetScript("OnClick", UI:openResetOptionsFrame())
+    Tooltips:new("Reset Options")
+    :printPlain("Opens a dialog to confirm to reset options to their default value.")
+    :create("ICTResetOptionsTooltip")
+    :attachFrame(button)
 end

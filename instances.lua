@@ -39,7 +39,7 @@ function Instances:lock(reset, encounterProgress, i)
     self.encounterProgress = encounterProgress
     self.instanceIndex = i
     self.encounterKilled = {}
-    for k, _ in pairs(Instances.Encounters[self.id]) do
+    for k, _ in pairs(Instances.Encounters[self.id].names) do
         self.encounterKilled[k] = select(3, GetSavedInstanceEncounterInfo(self.instanceIndex, k))
     end
 end
@@ -71,31 +71,39 @@ end
 
 -- Is any difficulty of this instance queued?
 function Instances:queued()
-    local difficulties = self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
     local info = C_LFGList.GetActiveEntryInfo()
     local queuedIds = info and info.activityIDs or {}
-    return #queuedIds > 0 and ICT:containsAnyValue(difficulties, function(v) return tContains(queuedIds, self:activityId(v.id)) end)
+    return #queuedIds > 0 and ICT:containsAnyValue(self:difficulties(), function(v) return tContains(queuedIds, self:activityId(v.id)) end)
+end
+
+function Instances:difficulties()
+    return self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
 end
 
 function Instances:enqueue(queuedIds, shouldMessage)
-    local difficulties = self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
-    local isDungeonQueue = Instances.isDungeonQueue()
-    if isDungeonQueue ~= nil and isDungeonQueue ~= self:isDungeon() then
-        print(string.format("[%s] Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together.", addOnName, self:getName()))
+    local queueCategory = queuedIds[1] and C_LFGList.GetActivityInfoTable(queuedIds[1]).categoryID
+    local instanceCategory = C_LFGList.GetActivityInfoTable(self:activityId()).categoryID
+
+    if queueCategory and queueCategory ~= instanceCategory then
+        ICT:oprint("Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together.", "lfg", self:getName())
         return
     end
-    --     UIDropDownMenu_SetSelectedValue(LFGBrowseFrame.CategoryDropDown, categoryID);
-    for _, difficulty in pairs(difficulties) do
+
+    for _, difficulty in pairs(self:difficulties()) do
         local activityId = self:activityId(difficulty.id)
         local remove = tContains(queuedIds, activityId)
         local ignore = not difficulty:isVisible()
         local f = (remove or ignore) and tDeleteItem or table.insert
+        -- Don't initiate a search if we weren't already searching. This seems to work but sometimes doesn't and I'm not sure why yet.
+        if ICT.searching then
+            LFGBrowseActivityDropDown_ValueSetSelected(LFGBrowseFrame.ActivityDropDown, activityId, not (remove or ignore));
+        end
         f(queuedIds, activityId)
         -- Response back to the user to see what was queued/dequeued.
-        if shouldMessage then
-            local message = ignore and "" or remove and "[%s] Dequeuing %s" or "[%s] Enqueuing %s"
+        if shouldMessage and not ignore then
+            local message = remove and "Dequeuing %s" or "Enqueuing %s"
             local name = self:getName() .. (self:isDungeon() and ", " .. difficulty:getName() or "")
-            print(string.format(message, addOnName, name))
+            ICT:oprint(message, "lfg", name)
         end
     end
 end
@@ -105,7 +113,7 @@ function Instances:numOfEncounters()
 end
 
 function Instances:encounters()
-    return self.Encounters[self.id] or {}
+    return Instances.Encounters[self.id].names or {}
 end
 
 function Instances:encountersLeft()
@@ -152,17 +160,17 @@ function Instances:isDungeon(expansion)
 end
 
 function Instances:isVisible()
-    return ICT.getOrCreateDisplayInstances()[self.expansion][self.id]
+    return ICT.db.options.displayInstances[self.expansion][self.id]
 end
 
 function Instances:setVisible(v)
-    ICT.getOrCreateDisplayInstances()[self.expansion][self.id] = v
+    ICT.db.options.displayInstances[self.expansion][self.id] = v
 end
 
 -- This comparison groups instances with the same name together across multiple sizes.
 -- This is intended for sorting with respect to dungeons and raids separately.
 function Instances:__lt(other)
-    if ICT.db.options.orderLockLast then
+    if ICT.db.options.frame.orderLockLast then
         if self.locked and not other.locked then
             return false
         end
@@ -220,8 +228,7 @@ end
 
 -- Checks if the last boss in the instance is killed, using the number of encounters as the last boss index.
 local isLastBossKilled = function(instance)
-    -- Override for Gundrak as lastboss is the optional boss. 
-    local index = instance.id == 604 and 4 or instance:numOfEncounters()
+    local index = Instances.Encounters[instance.id].lastBossIndex
     return instance:isEncounterKilled(index)
 end
 
@@ -343,7 +350,7 @@ function Instances.infos()
         return infos
     end
     infos = {}
-    for k, v in pairs(Instances.Expansions) do
+    for _, v in pairs(Instances.Expansions) do
         local info = Instances:new({}, v.id, v.size)
         -- Drop size from name.
         info.name = GetRealZoneText(info.id)
@@ -359,104 +366,79 @@ function Instances.infos()
     return infos
 end
 
-function Instances.isDungeonQueue()
-    local info = C_LFGList.GetActiveEntryInfo()
-    local activityId = info and info.activityIDs[1] or nil
-    if activityId then
-        local instanceId = Instances.inverseActivityIds()[activityId]
-        -- A bit silly but to make infos easier to handle legacies we don't allow key lookups.
-        return Instances.Resets[instanceId][5] ~= nil
-    end
-    return nil
-end
-
-local inverseActivityIds
-function Instances.inverseActivityIds()
-    if inverseActivityIds then
-        return inverseActivityIds
-    end
-    inverseActivityIds = {}
-    for instanceId, v in pairs(Instances.Activities) do
-        for _, activityId in pairs(v) do
-            inverseActivityIds[activityId] = instanceId
-        end
-    end
-    return inverseActivityIds
-end
-
 Instances.Encounters = {
-    [33] = { "Rethilgore", "Razorclaw the Butcher", "Baron Silverlaine", "Commander Springvale", "Odo the Blindwatcher", "Fenrus the Devourer", "Wolf Master Nandos", "Archmage Arugal" },
-    [36] = { "Rhahk'zor", "Sneed", "Gilnid", "Mr. Smite", "Cookie", "Captain Greenskin", "Edwin VanCleef" },
-    [43] = { "Lady Anacondra", "Lord Cobrahn", "Kresh", "Lord Pythas", "Skum", "Lord Serpentis", "Verdan the Everliving", "Mutanus the Devourer" },
-    [47] = { "Roogug", "Death Speaker Jargba", "Aggem Thorncurse", "Overlord Ramtusk", "Agathelos the Raging", "Charlga Razorflank" },
-    [48] = { "Ghamoo-ra", "Lady Sarevess", "Gelihast", "Lorgus Jett", "Old Serra'kis", "Twilight Lord Kelris", "Aku'mai" },
-    [70] = { "Revelosh", "The Lost Dwarves", "Ironaya", "Ancient Stone Keeper", "Galgann Firehammer", "Grimlok", "Archaedas" },
-    [90] = { "Grubbis", "Viscous Fallout", "Electrocutioner 6000", "Crowd Pummeler 9-60", "Mekgineer Thermaplugg" },
-    [109] = { "Avatar of Hakkar", "Jammal'an the Prophet", "Dreamscythe", "Weaver", "Morphaz", "Hazzas", "Shade of Eranikus" },
-    [129] = { "Tuten'kash", "Mordresh Fire Eye", "Glutton", "Amnennar the Coldbringer" },
-    [189] = { "Interrogator Vishas", "Bloodmage Thalnos", "Houndmaster Loksey", "Arcanist Doan", "Herod", "High Inquisitor Fairbanks", "High Inquisitor Whitemane" },
-    [209] = { "Hydromancer Velratha", "Ghaz'rilla", "Antu'sul", "Theka the Martyr", "Witch Doctor Zum'rah", "Nekrum Gutchewer", "Shadowpriest Sezz'ziz", "Chief Ukorz Sandscalp" },
-    [229] = { "Highlord Omokk", "Shadow Hunter Vosh'gajin", "War Master Voone", "Mother Smolderweb", "Urok Doomhowl", "Quartermaster Zigris", "Halycon", "Gizrul the Slavener", "Overlord Wyrmthalak", "Pyroguard Emberseer", "Solakar Flamewreath", "Warchief Rend Blackhand", "The Beast", "General Drakkisath" },
-    [230] = { "High Interrogator Gerstahn", "Lord Roccor", "Houndmaster Grebmar", "Ring of Law", "Pyromancer Loregrain", "Lord Incendius", "Warder Stilgiss", "Fineous Darkvire", "Bael'Gar", "General Angerforge", "Golem Lord Argelmach", "Hurley Blackbreath", "Phalanx", "Ribbly Screwspigot", "Plugger Spazzring", "Ambassador Flamelash", "The Seven", "Magmus", "Emperor Dagran Thaurissan" },
-    [249] = { "Onyxia" },
-    [269] = { "Aeonus", "Chrono Lord Deja", "Temporus" },
-    [309] = { "High Priestess Jeklik", "High Priest Venoxis", "High Priestess Mar'li", "Bloodlord Mandokir", "Edge of Madness", "High Priest Thekal", "Gahz'ranka", "High Priestess Arlokk", "Jin'do the Hexxer", "Hakkar" },
-    [329] = { "Hearthsinger Forresten", "Timmy the Cruel", "Commander Malor", "Willey Hopebreaker", "Instructor Galford", "Balnazzar", "The Unforgiven", "Baroness Anastari", "Nerub'enkan", "Maleki the Pallid", "Magistrate Barthilas", "Ramstein the Gorger", "Lord Aurius Rivendare" },
-    [349] = { "Noxxion", "Razorlash", "Tinkerer Gizlock", "Lord Vyletongue", "Celebras the Cursed", "Landslide", "Rotgrip", "Princess Theradras" },
-    [389] = { "Oggleflint", "Jergosh the Invoker", "Bazzalan", "Taragaman the Hungerer" },
-    [409] = { "Lucifron", "Magmadar", "Gehennas", "Garr", "Shazzrah", "Baron Geddon", "Sulfuron Harbinger", "Golemagg the Incinerator", "Majordomo Executus", "Ragnaros" },
-    [429] = { "Zevrim Thornhoof", "Hydrospawn", "Lethtendris", "Alzzin the Wildshaper", "Tendris Warpwood", "Illyanna Ravenoak", "Magister Kalendris", "Immol'thar", "Prince Tortheldrin", "Guard Mol'dar", "Stomper Kreeg", "Guard Fengus", "Guard Slip'kik", "Captain Kromcrush", "Cho'Rush the Observer", "King Gordok" },
-    [469] = { "Razorgore the Untamed", "Vaelastrasz the Corrupt", "Broodlord Lashlayer", "Firemaw", "Ebonroc", "Flamegor", "Chromaggus", "Nefarian" },
-    [509] = { "Kurinnaxx", "General Rajaxx", "Moam", "Buru the Gorger", "Ayamiss the Hunter", "Ossirian the Unscarred" },
-    [531] = { "The Prophet Skeram", "Silithid Royalty", "Battleguard Sartura", "Fankriss the Unyielding", "Viscidus", "Princess Huhuran", "Twin Emperors", "Ouro", "C'thun" },
-    [532] = { "Attumen the Huntsman", "Moroes", "Maiden of Virtue", "Opera Hall", "The Curator", "Terestian Illhoof", "Shade of Aran", "Netherspite", "Chess Event", "Prince Malchezaar", "Nightbane" },
-    [533] = { "Anub'Rekhan", "Grand Widow Faerlina", "Maexxna", "Noth the Plaguebringer", "Heigan the Unclean", "Loatheb", "Instructor Razuvious", "Gothik the Harvester", "The Four Horsemen", "Patchwerk", "Grobbulus", "Gluth", "Thaddius", "Sapphiron", "Kel'Thuzad" },
-    [534] = { "Rage Winterchill", "Anetheron", "Kaz'rogal", "Azgalor", "Archimonde" },
-    [540] = { "Blood Guard Porung", "Grand Warlock Nethekurse", "Warbringer O'mrogg", "Warchief Kargath Bladefist" },
-    [542] = { "The Maker", "Keli'dan the Breaker", "Broggok" },
-    [543] = { "Omor the Unscarred", "Vazruden the Herald", "Watchkeeper Gargolmar" },
-    [544] = { "Magtheridon" },
-    [545] = { "Hydromancer Thespia", "Mekgineer Steamrigger", "Warlord Kalithresh" },
-    [546] = { "Ghaz'an", "Hungarfen", "Swamplord Musel'ek", "The Black Stalker" },
-    [547] = { "Mennu the Betrayer", "Quagmirran", "Rokmar the Crackler" },
-    [548] = { "Hydross the Unstable", "The Lurker Below", "Leotheras the Blind", "Fathom-Lord Karathress", "Morogrim Tidewalker", "Lady Vashj" },
-    [550] = { "Al'ar", "Void Reaver", "High Astromancer Solarian", "Kael'thas Sunstrider" },
-    [552] = { "Dalliah the Doomsayer", "Harbinger Skyriss", "Wrath-Scryer Soccothrates", "Zereketh the Unbound" },
-    [553] = { "Commander Sarannis", "High Botanist Freywinn", "Laj", "Thorngrin the Tender", "Warp Splinter" },
-    [554] = { "Nethermancer Sepethrea", "Pathaleon the Calculator", "Mechano-Lord Capacitus", "Gatewatcher Gyro-Kill", "Gatewatcher Iron-Hand" },
-    [555] = { "Ambassador Hellmaw", "Blackheart the Inciter", "Murmur", "Grandmaster Vorpil" },
-    [556] = { "Talon King Ikiss", "Darkweaver Syth", "Anzu" },
-    [557] = { "Nexus-Prince Shaffar", "Pandemonius", "Yor", "Tavarok" },
-    [558] = { "Exarch Maladaar", "Shirrak the Dead Watcher" },
-    [560] = { "Lieutenant Drake", "Epoch Hunter", "Captain Skarloc" },
-    [564] = { "High Warlord Naj'entus", "Supremus", "Shade of Akama", "Teron Gorefiend", "Gurtogg Bloodboil", "Reliquary of Souls", "Mother Shahraz", "The Illidari Council", "Illidan Stormrage" },
-    [565] = { "High King Maulgar", "Gruul the Dragonkiller" },
-    [568] = { "Akil'zon", "Nalorakk", "Jan'alai", "Halazzi", "Hex Lord Malacrass", "Zul'jin" },
-    [574] = { "Prince Keleseth", "Skarvold & Dalronn", "Ingvar the Plunderer" },
-    [575] = { "Svala Sorrowgrave", "Gortok Palehoof", "Skadi the Ruthless", "King Ymiron" },
-    [576] = { "Grand Magus Telestra", "Anomalus", "Ormorok the Tree-Shaper", "Keristrasza" },
-    [578] = { "Drakos the Interrogator", "Varos Cloudstrider", "Mage-Lord Urom", "Ley-Guardian Eregos" },
-    [580] = { "Kalecgos", "Brutallus", "Felmyst", "Eredar Twins", "M'uru", "Kil'jaeden" },
-    [585] = { "Kael'thas Sunstrider", "Priestess Delrissa", "Selin Fireheart", "Vexallus" },
-    [595] = { "Meathook", "Salram the Fleshcrafter", "Chrono-Lord Epoch", "Mal'ganis" },
-    [599] = { "Krystallus", "Maiden of Grief", "Tribunal of Ages", "Sjonnir the Ironshaper" },
-    [600] = { "Trollgore", "Novos the Summoner", "King Dred", "The Prophet Tharon'ja" },
-    [601] = { "Krik'thir the Gatewatcher", "Hadronox", "Anub'arak" },
-    [602] = { "General Bjarngrim", "Volkhan", "Ionar", "Loken" },
-    [603] = { "Flame Leviathan", "Ignis the Furnace Master", "Razorscale", "XT-002 Deconstructor", "The Iron Council", "Kologarn", "Auriaya", "Hodir", "Thorim", "Freya", "Mimiron", "General Vezax", "Yogg-Saron", "Algalon the Observer" },
-    [604] = { "Slad'ran", "Drakkari Colossus", "Moorabi", "Gal'darah", "Eck the Ferocious" },
-    [608] = { "First Prisoner", "Second Prisoner", "Erekem", "Moragg", "Ichoron", "Xevozz", "Lavanthor", "Zuramat", "Cyanigosa" },
-    [615] = { "Vesperon", "Tenebron", "Shadron", "Sartharion" },
-    [616] = { "Malygos" },
-    [619] = { "Elder Nadox", "Prince Taldaram", "Jedoga Shadowseeker", "Herald Volazj", "Amanitar" },
-    [624] = { "Archavon the Stone Watcher", "Emalon the Storm Watcher", "Koralon the Flame Watcher", "Toravon the Ice Watcher" },
-    --[631] = { "Lord Marrowgar", "Lady Deathwhisper", "Icecrown Gunship Battle", "Deathbringer Saurfang", "Festergut", "Rotface", "Professor Putricide", "Blood Council", "Queen Lana'thel", "Valithria Dreamwalker", "Sindragosa", "The Lich King" },
-    --[632] = { "Bronjahm", "Devourer of Souls" },
-    [649] = { "Northrend Beasts", "Lord Jaraxxus", "Faction Champions", "Val'kyr Twins", "Anub'arak" },
-    [650] = { "Grand Champions", "Argent Champion", "The Black Knight" },
-    --[658] = { "Forgemaster Garfrost", "Krick", "Overlrod Tyrannus" },
-    --[668] = { "Falric", "Marwyn", "Escaped from Arthas" },
-    --[724] = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" },
+    [33] = { lastBossIndex = 8, names = { "Rethilgore", "Razorclaw the Butcher", "Baron Silverlaine", "Commander Springvale", "Odo the Blindwatcher", "Fenrus the Devourer", "Wolf Master Nandos", "Archmage Arugal" }, },
+    [36] = { lastBossIndex = 7, names = { "Rhahk'zor", "Sneed", "Gilnid", "Mr. Smite", "Cookie", "Captain Greenskin", "Edwin VanCleef" }, },
+    [43] = { lastBossIndex = 8, names = { "Lady Anacondra", "Lord Cobrahn", "Kresh", "Lord Pythas", "Skum", "Lord Serpentis", "Verdan the Everliving", "Mutanus the Devourer" }, },
+    [47] = { lastBossIndex = 6, names = { "Roogug", "Death Speaker Jargba", "Aggem Thorncurse", "Overlord Ramtusk", "Agathelos the Raging", "Charlga Razorflank" }, },
+    [48] = { lastBossIndex = 7, names = { "Ghamoo-ra", "Lady Sarevess", "Gelihast", "Lorgus Jett", "Old Serra'kis", "Twilight Lord Kelris", "Aku'mai" }, },
+    [70] = { lastBossIndex = 7, names = { "Revelosh", "The Lost Dwarves", "Ironaya", "Ancient Stone Keeper", "Galgann Firehammer", "Grimlok", "Archaedas" }, },
+    [90] = { lastBossIndex = 5, names = { "Grubbis", "Viscous Fallout", "Electrocutioner 6000", "Crowd Pummeler 9-60", "Mekgineer Thermaplugg" }, },
+    [109] = { lastBossIndex = 7, names = { "Avatar of Hakkar", "Jammal'an the Prophet", "Dreamscythe", "Weaver", "Morphaz", "Hazzas", "Shade of Eranikus" }, },
+    [129] = { lastBossIndex = 4, names = { "Tuten'kash", "Mordresh Fire Eye", "Glutton", "Amnennar the Coldbringer" }, },
+    [189] = { lastBossIndex = 7, names = { "Interrogator Vishas", "Bloodmage Thalnos", "Houndmaster Loksey", "Arcanist Doan", "Herod", "High Inquisitor Fairbanks", "High Inquisitor Whitemane" }, },
+    [209] = { lastBossIndex = 8, names = { "Hydromancer Velratha", "Ghaz'rilla", "Antu'sul", "Theka the Martyr", "Witch Doctor Zum'rah", "Nekrum Gutchewer", "Shadowpriest Sezz'ziz", "Chief Ukorz Sandscalp" }, },
+    [229] = { lastBossIndex = 14, names = { "Highlord Omokk", "Shadow Hunter Vosh'gajin", "War Master Voone", "Mother Smolderweb", "Urok Doomhowl", "Quartermaster Zigris", "Halycon", "Gizrul the Slavener", "Overlord Wyrmthalak", "Pyroguard Emberseer", "Solakar Flamewreath", "Warchief Rend Blackhand", "The Beast", "General Drakkisath" }, },
+    [230] = { lastBossIndex = 19, names = { "High Interrogator Gerstahn", "Lord Roccor", "Houndmaster Grebmar", "Ring of Law", "Pyromancer Loregrain", "Lord Incendius", "Warder Stilgiss", "Fineous Darkvire", "Bael'Gar", "General Angerforge", "Golem Lord Argelmach", "Hurley Blackbreath", "Phalanx", "Ribbly Screwspigot", "Plugger Spazzring", "Ambassador Flamelash", "The Seven", "Magmus", "Emperor Dagran Thaurissan" }, },
+    [249] = { lastBossIndex = 1, names = { "Onyxia" }, },
+    [269] = { lastBossIndex = 3, names = { "Aeonus", "Chrono Lord Deja", "Temporus" }, },
+    [309] = { lastBossIndex = 10, names = { "High Priestess Jeklik", "High Priest Venoxis", "High Priestess Mar'li", "Bloodlord Mandokir", "Edge of Madness", "High Priest Thekal", "Gahz'ranka", "High Priestess Arlokk", "Jin'do the Hexxer", "Hakkar" }, },
+    [329] = { lastBossIndex = 13, names = { "Hearthsinger Forresten", "Timmy the Cruel", "Commander Malor", "Willey Hopebreaker", "Instructor Galford", "Balnazzar", "The Unforgiven", "Baroness Anastari", "Nerub'enkan", "Maleki the Pallid", "Magistrate Barthilas", "Ramstein the Gorger", "Lord Aurius Rivendare" }, },
+    [349] = { lastBossIndex = 8, names = { "Noxxion", "Razorlash", "Tinkerer Gizlock", "Lord Vyletongue", "Celebras the Cursed", "Landslide", "Rotgrip", "Princess Theradras" }, },
+    [389] = { lastBossIndex = 4, names = { "Oggleflint", "Jergosh the Invoker", "Bazzalan", "Taragaman the Hungerer" }, },
+    [409] = { lastBossIndex = 10, names = { "Lucifron", "Magmadar", "Gehennas", "Garr", "Shazzrah", "Baron Geddon", "Sulfuron Harbinger", "Golemagg the Incinerator", "Majordomo Executus", "Ragnaros" }, },
+    [429] = { lastBossIndex = 16, names = { "Zevrim Thornhoof", "Hydrospawn", "Lethtendris", "Alzzin the Wildshaper", "Tendris Warpwood", "Illyanna Ravenoak", "Magister Kalendris", "Immol'thar", "Prince Tortheldrin", "Guard Mol'dar", "Stomper Kreeg", "Guard Fengus", "Guard Slip'kik", "Captain Kromcrush", "Cho'Rush the Observer", "King Gordok" }, },
+    [469] = { lastBossIndex = 8, names = { "Razorgore the Untamed", "Vaelastrasz the Corrupt", "Broodlord Lashlayer", "Firemaw", "Ebonroc", "Flamegor", "Chromaggus", "Nefarian" }, },
+    [509] = { lastBossIndex = 6, names = { "Kurinnaxx", "General Rajaxx", "Moam", "Buru the Gorger", "Ayamiss the Hunter", "Ossirian the Unscarred" }, },
+    [531] = { lastBossIndex = 9, names = { "The Prophet Skeram", "Silithid Royalty", "Battleguard Sartura", "Fankriss the Unyielding", "Viscidus", "Princess Huhuran", "Twin Emperors", "Ouro", "C'thun" }, },
+    [532] = { lastBossIndex = 11, names = { "Attumen the Huntsman", "Moroes", "Maiden of Virtue", "Opera Hall", "The Curator", "Terestian Illhoof", "Shade of Aran", "Netherspite", "Chess Event", "Prince Malchezaar", "Nightbane" }, },
+    [533] = { lastBossIndex = 15, names = { "Anub'Rekhan", "Grand Widow Faerlina", "Maexxna", "Noth the Plaguebringer", "Heigan the Unclean", "Loatheb", "Instructor Razuvious", "Gothik the Harvester", "The Four Horsemen", "Patchwerk", "Grobbulus", "Gluth", "Thaddius", "Sapphiron", "Kel'Thuzad" }, },
+    [534] = { lastBossIndex = 5, names = { "Rage Winterchill", "Anetheron", "Kaz'rogal", "Azgalor", "Archimonde" }, },
+    [540] = { lastBossIndex = 4, names = { "Blood Guard Porung", "Grand Warlock Nethekurse", "Warbringer O'mrogg", "Warchief Kargath Bladefist" }, },
+    [542] = { lastBossIndex = 3, names = { "The Maker", "Keli'dan the Breaker", "Broggok" }, },
+    [543] = { lastBossIndex = 3, names = { "Omor the Unscarred", "Vazruden the Herald", "Watchkeeper Gargolmar" }, },
+    [544] = { lastBossIndex = 1, names = { "Magtheridon" }, },
+    [545] = { lastBossIndex = 3, names = { "Hydromancer Thespia", "Mekgineer Steamrigger", "Warlord Kalithresh" }, },
+    [546] = { lastBossIndex = 4, names = { "Ghaz'an", "Hungarfen", "Swamplord Musel'ek", "The Black Stalker" }, },
+    [547] = { lastBossIndex = 3, names = { "Mennu the Betrayer", "Quagmirran", "Rokmar the Crackler" }, },
+    [548] = { lastBossIndex = 6, names = { "Hydross the Unstable", "The Lurker Below", "Leotheras the Blind", "Fathom-Lord Karathress", "Morogrim Tidewalker", "Lady Vashj" }, },
+    [550] = { lastBossIndex = 4, names = { "Al'ar", "Void Reaver", "High Astromancer Solarian", "Kael'thas Sunstrider" }, },
+    [552] = { lastBossIndex = 4, names = { "Dalliah the Doomsayer", "Harbinger Skyriss", "Wrath-Scryer Soccothrates", "Zereketh the Unbound" }, },
+    [553] = { lastBossIndex = 5, names = { "Commander Sarannis", "High Botanist Freywinn", "Laj", "Thorngrin the Tender", "Warp Splinter" }, },
+    [554] = { lastBossIndex = 5, names = { "Nethermancer Sepethrea", "Pathaleon the Calculator", "Mechano-Lord Capacitus", "Gatewatcher Gyro-Kill", "Gatewatcher Iron-Hand" }, },
+    [555] = { lastBossIndex = 4, names = { "Ambassador Hellmaw", "Blackheart the Inciter", "Murmur", "Grandmaster Vorpil" }, },
+    [556] = { lastBossIndex = 3, names = { "Talon King Ikiss", "Darkweaver Syth", "Anzu" }, },
+    [557] = { lastBossIndex = 4, names = { "Nexus-Prince Shaffar", "Pandemonius", "Yor", "Tavarok" }, },
+    [558] = { lastBossIndex = 2, names = { "Exarch Maladaar", "Shirrak the Dead Watcher" }, },
+    [560] = { lastBossIndex = 3, names = { "Lieutenant Drake", "Epoch Hunter", "Captain Skarloc" }, },
+    [564] = { lastBossIndex = 9, names = { "High Warlord Naj'entus", "Supremus", "Shade of Akama", "Teron Gorefiend", "Gurtogg Bloodboil", "Reliquary of Souls", "Mother Shahraz", "The Illidari Council", "Illidan Stormrage" }, },
+    [565] = { lastBossIndex = 2, names = { "High King Maulgar", "Gruul the Dragonkiller" }, },
+    [568] = { lastBossIndex = 6, names = { "Akil'zon", "Nalorakk", "Jan'alai", "Halazzi", "Hex Lord Malacrass", "Zul'jin" }, },
+    [574] = { lastBossIndex = 3, names = { "Prince Keleseth", "Skarvold & Dalronn", "Ingvar the Plunderer" }, },
+    [575] = { lastBossIndex = 4, names = { "Svala Sorrowgrave", "Gortok Palehoof", "Skadi the Ruthless", "King Ymiron" }, },
+    [576] = { lastBossIndex = 4, names = { "Grand Magus Telestra", "Anomalus", "Ormorok the Tree-Shaper", "Keristrasza" }, },
+    [578] = { lastBossIndex = 4, names = { "Drakos the Interrogator", "Varos Cloudstrider", "Mage-Lord Urom", "Ley-Guardian Eregos" }, },
+    [580] = { lastBossIndex = 6, names = { "Kalecgos", "Brutallus", "Felmyst", "Eredar Twins", "M'uru", "Kil'jaeden" }, },
+    [585] = { lastBossIndex = 4, names = { "Kael'thas Sunstrider", "Priestess Delrissa", "Selin Fireheart", "Vexallus" }, },
+    [595] = { lastBossIndex = 4, names = { "Meathook", "Salram the Fleshcrafter", "Chrono-Lord Epoch", "Mal'ganis" }, },
+    [599] = { lastBossIndex = 4, names = { "Krystallus", "Maiden of Grief", "Tribunal of Ages", "Sjonnir the Ironshaper" }, },
+    [600] = { lastBossIndex = 4, names = { "Trollgore", "Novos the Summoner", "King Dred", "The Prophet Tharon'ja" }, },
+    [601] = { lastBossIndex = 3, names = { "Krik'thir the Gatewatcher", "Hadronox", "Anub'arak" }, },
+    [602] = { lastBossIndex = 4, names = { "General Bjarngrim", "Volkhan", "Ionar", "Loken" }, },
+    [603] = { lastBossIndex = 14, names = { "Flame Leviathan", "Ignis the Furnace Master", "Razorscale", "XT-002 Deconstructor", "The Iron Council", "Kologarn", "Auriaya", "Hodir", "Thorim", "Freya", "Mimiron", "General Vezax", "Yogg-Saron", "Algalon the Observer" }, },
+    [604] = { lastBossIndex = 4, names = { "Slad'ran", "Drakkari Colossus", "Moorabi", "Gal'darah", "Eck the Ferocious" }, },
+    [608] = { lastBossIndex = 3, names = { "First Prisoner", "Second Prisoner", "Cyanigosa" }, },
+    [615] = { lastBossIndex = 4, names = { "Vesperon", "Tenebron", "Shadron", "Sartharion" }, },
+    [616] = { lastBossIndex = 1, names = { "Malygos" }, },
+    [619] = { lastBossIndex = 4, names = { "Elder Nadox", "Prince Taldaram", "Jedoga Shadowseeker", "Herald Volazj", "Amanitar" }, },
+    [624] = { lastBossIndex = 4, names = { "Archavon the Stone Watcher", "Emalon the Storm Watcher", "Koralon the Flame Watcher", "Toravon the Ice Watcher" }, },
+    --[631] = { lastBossIndex = 12, names = { "Lord Marrowgar", "Lady Deathwhisper", "Icecrown Gunship Battle", "Deathbringer Saurfang", "Festergut", "Rotface", "Professor Putricide", "Blood Council", "Queen Lana'thel", "Valithria Dreamwalker", "Sindragosa", "The Lich King" }, },
+    --[632] = { lastBossIndex = 2, names = { "Bronjahm", "Devourer of Souls" }, },
+    [649] = { lastBossIndex = 5, names = { "Northrend Beasts", "Lord Jaraxxus", "Faction Champions", "Val'kyr Twins", "Anub'arak" }, },
+    [650] = { lastBossIndex = 3, names = { "Grand Champions", "Argent Champion", "The Black Knight" }, },
+    --[658] = { lastBossIndex = 3, names = { "Forgemaster Garfrost", "Krick", "Overlrod Tyrannus" }, },
+    --[668] = { lastBossIndex = 3, names = { "Falric", "Marwyn", "Escaped from Arthas" }, },
+    --[724] = { lastBossIndex = 4, names = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" }, },
 }
 
 -- Size here is the smallest for the specific raid, we use this for sorting.

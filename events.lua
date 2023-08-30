@@ -63,11 +63,12 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
-            print(string.format("[%s] Incompatible old version detected, wiping players. Please relog into each character, sorry.", addOnName))
+            ICT:print("Incompatible old version detected, wiping players. Please relog into each character, sorry.")
             ICT:WipeAllPlayers()
         end
-        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.1") then
-            ICT.db.options.displayInstances = nil
+        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.2") then
+            ICT.Options:setDefaultOptions(true)
+            ICT:print("Old version detected, reseting options to default...")
         end
 
         ICT.db.version = version
@@ -85,9 +86,9 @@ local function initEvent(self, event, eventAddOn)
         ICT.init = true
         ICT.GetPlayer():onLoad()
         ICT:CreateFrame()
-        print(string.format("[%s] Initialized %s...", addOnName, version))
-        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.anchorLFG then ICT:PrintPlayers() ICT.frame:Show() end end)
-        LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.anchorLFG then ICT.frame:Hide() end end)
+        ICT:print("Initialized %s...", version)
+        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then ICT:PrintPlayers() ICT.frame:Show() end end)
+        LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)
     end
 end
 local initFrame = CreateFrame("Frame")
@@ -194,6 +195,18 @@ local queueFrame = CreateFrame("Frame")
 queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
+local function setSearching(self, event, value)
+    if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" then
+        ICT.searching = ICT.searching and value ~= nil
+    elseif event == "LFG_LIST_SEARCH_RESULTS_RECEIVED" then
+        ICT.searching = true
+    end
+end
+local fooFrame = CreateFrame("Frame")
+fooFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
+fooFrame:RegisterEvent("LFG_LIST_SEARCH_RESULTS_RECEIVED")
+fooFrame:SetScript("OnEvent", setSearching)
+
 -- message and add option
 local function messageResults(player, instance)
     -- Only broadcast if we are locked and collected something...
@@ -253,7 +266,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             elseif command == "player" then
                 ICT.WipePlayer(rest)
             else
-                print("Invalid command")
+                ICT:print("Invalid command")
             end
         end
         -- Refresh frame
@@ -266,9 +279,9 @@ end
 function ICT.WipePlayer(playerName)
     if ICT.db.players[playerName] then
         ICT.db.players[playerName] = nil
-        print(string.format("[%s] Wiped player: %s", addOnName, playerName))
+        ICT:print("Wiped player: %s", playerName)
     else
-        print(string.format("[%s] Unknown player: %s", addOnName, playerName))
+        ICT:print("Unknown player: %s", playerName)
     end
     ICT.CreateCurrentPlayer()
 end
@@ -279,13 +292,13 @@ function ICT.WipeRealm(realmName)
         count = count + 1
         ICT.db.players[name] = nil
     end
-    print(string.format("[%s] Wiped %s players on realm: %s", addOnName , count, realmName))
+    ICT:print("Wiped %s players on realm: %s", count, realmName)
     ICT.CreateCurrentPlayer()
 end
 
 function ICT.WipeAllPlayers()
     local count = ICT:sum(ICT.db.players, ICT:ReturnX(1))
     ICT.db.players = {}
-    print(string.format("[%s] Wiped %s players", addOnName, count))
+    ICT:print("Wiped %s players", count)
     ICT.CreateCurrentPlayer()
 end

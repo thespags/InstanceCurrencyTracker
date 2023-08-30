@@ -1,7 +1,4 @@
 import csv
-import pprint
-import sys
-import urllib.request
 from collections import OrderedDict
 
 
@@ -65,23 +62,43 @@ with open("SpellItemEnchantment.csv") as file:
 
 encounters = {}
 with open("DungeonEncounter.csv") as file:
+    nameToDifficulty = {}
     csvreader = csv.reader(file)
     header = next(csvreader)
     idIndex = get_key(header, "MapID")
+    difficultyIndex = get_key(header, "DifficultyID")
     orderIndex = get_key(header, "OrderIndex")
     nameIndex = get_key(header, "Name_lang")
+    flagsIndex = get_key(header, "Flags")
 
     for row in csvreader:
+        # Ignore Violet Hold bosses as they are random for the first 2 encounters.
+        # Flags is probably a bit vector and this may be different in later expansions.
+        flags = int(row[flagsIndex])
+        if flags == 20:
+            continue
+
         key = int(row[idIndex])
         if key not in encounters:
-            encounters[key] = OrderedDict()
-        encounters[key][int(row[orderIndex])] = row[nameIndex]
+            encounters[key] = {"names": OrderedDict()}
+        order = int(row[orderIndex])
+        name = row[nameIndex]
+        encounters[key]["names"][order] = name
+        difficulty = int(row[difficultyIndex])
+        nameToDifficulty[name] = difficulty
+
     # sort by order index
     for k, v in encounters.items():
         sortedV = []
-        for _, encounter in sorted(v.items()):
+        for _, encounter in sorted(v["names"].items()):
             sortedV.append(encounter)
-        encounters[k] = sortedV
+        encounters[k]["names"] = sortedV
+        index = len(sortedV)
+        difficulty = 2
+        while difficulty == 2:
+            index -= 1
+            difficulty = nameToDifficulty[sortedV[index]]
+        encounters[k]["lastBossIndex"] = index + 1
 
 difficulties = {}
 with open("Difficulty.csv") as file:
