@@ -86,6 +86,7 @@ function ICT:CreateFrame()
 
     Options:CreatePlayerDropdown()
     Options:CreateOptionDropdown()
+    UI:resetOptionsButton()
     ICT:CreatePlayerSlider()
 end
 
@@ -432,10 +433,10 @@ local function enqueueAll(title, subTitle, instances)
                 instance:enqueue(queuedIds, false)
             end
             C_LFGList.CreateListing(queuedIds)
-            print(string.format("[%s] Enqueued all non lock %s %s.", addOnName, ICT.Expansions[title], subTitle))
+            ICT:oprint("Enqueued all non lock %s %s.", "lfg", ICT.Expansions[title], subTitle)
         else
             C_LFGList.RemoveListing()
-            print(string.format("[%s] Listing removed.", addOnName))
+            ICT:oprint("Listing removed.", "lfg")
         end
     end
 end
@@ -447,7 +448,7 @@ local function enqueue(instance)
         instance:enqueue(queuedIds, true)
 
         if #queuedIds == 0 then
-            print(string.format("[%s] No more instances queued, delisting.", addOnName))
+            ICT:oprint("No more instances queued, delisting.", "lfg")
             C_LFGList.RemoveListing()
             ICT:PrintPlayers()
             return
@@ -529,8 +530,8 @@ local function printInstancesForCurrency(tooltip, title, instances, currency)
 end
 
 local function printQuestsForCurrency(tooltip, player, currency)
-    tooltip.shouldPrintTitle = true
-    if ICT.db.options.showQuests then
+    if ICT.db.options.quests.show then
+        tooltip.shouldPrintTitle = true
         for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
             if currency:fromQuest()(quest) and player:isQuestVisible(quest) then
                 tooltip:printTitle("Quests")
@@ -564,7 +565,7 @@ local function currencyTooltip(selectedPlayer, currency)
         tooltip:printValue(player:getNameWithIcon(), string.format("%s (%s)", total, available), player:getClassColor())
     end
 
-    if ICT.db.options.verboseCurrencyTooltip then
+    if ICT.db.options.frame.verboseCurrencyTooltip then
         printInstancesForCurrency(tooltip, "Dungeons", selectedPlayer:getDungeons(), currency)
         printInstancesForCurrency(tooltip, "Raids", selectedPlayer:getRaids(), currency)
         printQuestsForCurrency(tooltip, selectedPlayer, currency)
@@ -607,7 +608,7 @@ local function printCurrency(player, x, offset)
         currencySectionTooltip():attach(cell)
     end
     if not ICT.db.options.collapsible["Currency"] then
-        local printCurrency = ICT.db.options.verboseCurrency and printCurrencyVerbose or printCurrencyShort
+        local printCurrency = ICT.db.options.frame.verboseCurrency and printCurrencyVerbose or printCurrencyShort
         for _, currency in ipairs(ICT.Currencies) do
             if currency:isVisible() then
                 offset = printCurrency(player, currency, x, offset)
@@ -641,7 +642,7 @@ local function questSectionTooltip()
 end
 
 local function printQuests(player, x, offset)
-    if ICT.db.options.showQuests then
+    if ICT.db.options.quests.show then
         local cell = Cells:get(x, offset)
         offset = cell:printSectionTitle("Quests")
         questSectionTooltip():attach(cell)

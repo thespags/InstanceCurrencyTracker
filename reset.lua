@@ -34,7 +34,7 @@ end
 function Reset:reset()
     local timestamp = GetServerTime()
     if self:expires() < timestamp then
-        print(string.format("[%s] %s reset, updating info.", addOnName, self:getName()))
+        ICT:print("%s reset, updating info.", self:getName())
         for _, player in pairs(ICT.db.players) do
             self.func(player)
         end
@@ -80,7 +80,7 @@ function Difficulty:getName()
 end
 
 function Difficulty:isVisible()
-    return self.visible and self.visible() or ICT.db.options.difficulty[self.id]
+    return (self.visible and self.visible()) or ICT.db.options.difficulty[self.id]
 end
 
 function Difficulty:setVisible(v)

@@ -172,11 +172,11 @@ end
 -- If we had enough users we could share the specific quest id, but that isn't the same across realms (and probably not factions).
 function ICT.QuestSort(player)
     return function(a, b)
-        if ICT.db.options.orderLockLast then
-            if player:isQuestCompleted(a) and not player:isQuestcompleted(b) then
+        if ICT.db.options.frame.orderLockLast then
+            if player:isQuestCompleted(a) and not player:isQuestCompleted(b) then
                 return false
             end
-            if not player:isQuestCompleted(a) and player:isQuestcompleted(b) then
+            if not player:isQuestCompleted(a) and player:isQuestCompleted(b) then
                 return true
             end
         end

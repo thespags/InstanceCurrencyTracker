@@ -124,6 +124,11 @@ function ICT:max(t, op, f)
     return max
 end
 
+--- Creates a function adding the result of two functions.
+---@generic T : any
+---@param left fun(self: T): number
+---@param right fun(self: T): number
+---@return fun(self: T): number
 function ICT:add(left, right)
     return function(v) return left(v) + right(v) end
 end
@@ -164,6 +169,10 @@ function ICT:size(t, f)
 end
 
 -- Returns true if all values or mapped values in the table are true, otherwise false.
+---@generic V : any
+---@param t table<any, V>
+---@param op? fun(self: V): boolean
+---@return boolean
 function ICT:containsAllValues(t, op)
     for _, v in pairs(t) do
         if op and not op(v) or not op and not v then
@@ -182,7 +191,11 @@ function ICT:containsAnyKey(t, op)
     return false
 end
 
--- Returns true if any value or mapped value in the table are true, otherwise false.
+--- Returns true if any value or mapped value in the table are true, otherwise false.
+---@generic V : any
+---@param t table<any, V>
+---@param op? fun(self: V): boolean
+---@return boolean
 function ICT:containsAnyValue(t, op)
     for _, v in pairs(t) do
         if op and op(v) or not op and v then
@@ -210,6 +223,25 @@ end
 function ICT:dprint(text)
     if false then
         print(text)
+    end
+end
+
+--- Prints the string with our prefix and color.
+---@param text string
+---@param ... string
+function ICT:print(text, ...)
+    local color = "FF40FF60"
+    text = string.format(text, ...)
+    print(string.format("|c%s[ICT] %s|r", color, text))
+end
+
+--- Prints the string if the option is set to print.
+---@param text string
+---@param key string
+---@param ... string
+function ICT:oprint(text, key, ...)
+    if ICT.db.options.messages[key] then
+        self:print(text, ...)
     end
 end
 
@@ -268,10 +300,20 @@ function ICT:fWith(f, v1)
     return function(v) return f(v, v1) end
 end
 
+--- Creates a function that negates the provided function.
+---@generic T : any
+---@param f fun(self: T): boolean
+---@return fun(self: T): boolean
 function ICT:fNot(f)
     return function(v) return not f(v) end
 end
 
+
+--- Creates a function that and's two functions together with the same input.
+---@generic T : any
+---@param f fun(self: T): boolean
+---@param g fun(self: T): boolean
+---@return fun(self: T): boolean
 function ICT:fAnd(f, g)
     return function(v) return f(v) and g(v) end
 end

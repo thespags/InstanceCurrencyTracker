@@ -13,7 +13,7 @@ function ICT.CreateCurrentPlayer()
     if ICT.db.players[fullName] then
         return
     end
-    print(string.format("[%s] Creating player: %s", addOnName, fullName))
+    ICT:print("Creating player: %s", fullName)
     local player = Player:new()
     player.fullName = fullName
     player.name = UnitName("Player")
@@ -371,7 +371,7 @@ local function addBags(index, bags, bagsTotal)
 
         -- Handle cases if new bag types are added.
         if not ICT.BagFamily[type] then
-            print(string.format("[%s] Unknown bag type %s (%s), please report this on the addon page.", addOnName, type, name))
+            ICT:print("Unknown bag type %s (%s), please report this on the addon page.", type, name)
             ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
         end
     end
@@ -484,7 +484,11 @@ function Player:getProfessionRank(id)
 end
 
 function Player:getName()
-    return ICT.db.options.verboseName and self.fullName or self.name
+    return ICT.db.options.frame.verboseName and self.fullName or self.name
+end
+
+function Player:getFullName()
+    return self.fullName
 end
 
 function Player:getNameWithIcon()
@@ -502,7 +506,7 @@ end
 
 function Player:isQuestVisible()
     return function(quest)
-        return quest.currency:isVisible() and (self:isQuestAvailable(quest) or ICT.db.options.allQuests)
+        return quest.currency:isVisible() and (self:isQuestAvailable(quest) or not ICT.db.options.quests.hideUnavailable)
     end
 end
 
@@ -534,8 +538,16 @@ function Player:isCurrentPlayer()
     return self.fullName == Player.GetCurrentPlayer()
 end
 
+function Player:isVisible()
+    return not self.isDisabled
+end
+
+function Player:setVisible(checked)
+    self.isDisabled = not checked
+end
+
 function Player:isEnabled()
-    return not self.isDisabled and self:isLevelVisible()
+    return self:isVisible() and self:isLevelVisible()
 end
 
 function Player:isLevelVisible()
