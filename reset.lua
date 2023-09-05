@@ -33,7 +33,7 @@ end
 
 function Reset:reset()
     local timestamp = GetServerTime()
-    if self:expires() < timestamp then
+    if self:expires() and self:expires() < timestamp then
         ICT:print("%s reset, updating info.", self:getName())
         for _, player in pairs(ICT.db.players) do
             self.func(player)

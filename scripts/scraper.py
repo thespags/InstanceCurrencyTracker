@@ -1,5 +1,24 @@
 import csv
 from collections import OrderedDict
+import requests
+from lxml import html
+import json
+
+url = "https://wago.tools/db2"
+response = requests.get(url)
+tree = html.fromstring(response.content)
+data = tree.xpath('//div[@id="app"]//@data-page')[0]
+json_object = json.loads(data)
+print(json_object["versions"])
+
+
+
+files = {"DungeonEncounter", "GroupFinderActivity",
+         "LFGDungeons", "MapDifficulty", "SpellItemEnchantment"}
+for file in files:
+    url = "https://wago.tools/db2/{0}/csv?build=3.4.3.51126".format(file)
+    response = requests.get(url)
+    open(file + ".csv", "wb").write(response.content)
 
 
 def get_key(header, value):
@@ -22,25 +41,36 @@ def key_string(v):
 # Some things we want sorted for readability, map keys, number lists.
 # Other things we don't want sorted like encounter order.
 ignored_zones = {631, 632, 658, 668, 724}
+ignored_sort = {"encounters"}
 
-def to_string(v, newline=True, sort=True):
+
+def to_string(v, level=0, ignore=False, sort=True):
     if type(v) is dict:
+        if len(v) == 0:
+            return "{}"
+        newline = level == 0 or level == 1
+        indent = "\n" + "    " * (level + 1) if newline else " "
         keys = list(v.keys())
         keys.sort()
         output = "{"
-        indent = "\n    " if newline else " "
         for key in keys:
-            comment = "--" if key in ignored_zones else ""
-            output += indent + "{2}{0} = {1},".format(
+            ignored = key in ignored_zones
+            sort = key not in ignored_sort
+            comment = "--" if ignore or ignored else ""
+            output += "{0}{1}{2} = {3},".format(
+                indent,
+                comment,
                 key_string(v=key),
-                to_string(v=v[key], newline=False, sort=sort),
-                comment
+                to_string(v=v[key], level=level+1, ignore=ignored, sort=sort),
             )
-        output += "\n}" if newline else " }"
+        comment = "--" if ignore else ""
+        output += "\n" + "    " * level + comment + "}" if newline else " }"
         return output
     elif type(v) is set:
         return to_string(list(v), sort=sort)
     elif type(v) is list:
+        if len(v) == 0:
+            return "{}"
         if sort:
             v.sort()
         return "{ " + ", ".join(map(lambda x: to_string(x, sort=sort), v)) + " }"
@@ -52,151 +82,160 @@ def to_string(v, newline=True, sort=True):
         return str(v)
 
 
-enchantments = {}
-with open("SpellItemEnchantment.csv") as file:
-    csvreader = csv.reader(file)
-    header = next(csvreader)
+def read_spell_item_enchantment():
+    with open("SpellItemEnchantment.csv") as file:
+        csvreader = csv.reader(file)
+        header = next(csvreader)
 
-    for row in csvreader:
-        enchantments[int(row[0])] = row[1]
+        for row in csvreader:
+            enchantments[int(row[0])] = row[1]
 
-encounters = {}
-with open("DungeonEncounter.csv") as file:
-    nameToDifficulty = {}
-    csvreader = csv.reader(file)
-    header = next(csvreader)
-    idIndex = get_key(header, "MapID")
-    difficultyIndex = get_key(header, "DifficultyID")
-    orderIndex = get_key(header, "OrderIndex")
-    nameIndex = get_key(header, "Name_lang")
-    flagsIndex = get_key(header, "Flags")
 
-    for row in csvreader:
-        # Ignore Violet Hold bosses as they are random for the first 2 encounters.
-        # Flags is probably a bit vector and this may be different in later expansions.
-        flags = int(row[flagsIndex])
-        if flags == 20:
-            continue
+def read_dungeons():
+    with open("LFGDungeons.csv") as file:
+        csvreader = csv.reader(file)
+        header = next(csvreader)
+        id_index = get_key(header, "MapID")
+        difficulty_id_index = get_key(header, "DifficultyID")
+        expansion_index = get_key(header, "ExpansionLevel")
+        # name_index = get_key(header, "Name_lang")
 
-        key = int(row[idIndex])
-        if key not in encounters:
-            encounters[key] = {"names": OrderedDict()}
-        order = int(row[orderIndex])
-        name = row[nameIndex]
-        encounters[key]["names"][order] = name
-        difficulty = int(row[difficultyIndex])
-        nameToDifficulty[name] = difficulty
+        for row in csvreader:
+            difficulty = int(row[difficulty_id_index])
+            # skip open world (0) and vanilla dungeons (1) which have no lockout
+            if difficulty == 0:
+                continue
+            key = int(row[id_index])
+            if key not in infos:
+                infos[key] = {"sizes": set(), "resets": {}, "encounters": OrderedDict(), "activities": {}}
+            infos[key]["expansion"] = int(row[expansion_index])
+        infos[249]["legacy"] = {"expansion": 0, "size": 40}
 
+
+def read_dungeon_encounter(file_name, ids=None):
+    with open(file_name) as file:
+        csvreader = csv.reader(file)
+        header = next(csvreader)
+        id_index = get_key(header, "MapID")
+        difficulty_index = get_key(header, "DifficultyID")
+        order_index = get_key(header, "OrderIndex")
+        name_index = get_key(header, "Name_lang")
+        flags_index = get_key(header, "Flags")
+
+        for row in csvreader:
+            # Ignore Violet Hold bosses as they are random for the first 2 encounters.
+            # Flags is probably a bit vector and this may be different in later expansions.
+            flags = int(row[flags_index])
+            if flags == 20:
+                continue
+
+            key = int(row[id_index])
+            if key not in infos or (ids is not None and key not in ids):
+                continue
+            order = int(row[order_index])
+            name = row[name_index]
+            infos[key]["encounters"][order] = name
+            difficulty = int(row[difficulty_index])
+            if key not in name_to_difficulty:
+                name_to_difficulty[key] = {}
+            name_to_difficulty[key][name] = difficulty
+
+
+def sort_encounters():
     # sort by order index
-    for k, v in encounters.items():
-        sortedV = []
-        for _, encounter in sorted(v["names"].items()):
-            sortedV.append(encounter)
-        encounters[k]["names"] = sortedV
-        index = len(sortedV)
+    for k, v in infos.items():
+        sorted_v = []
+        for _, encounter in sorted(v["encounters"].items()):
+            sorted_v.append(encounter)
+        infos[k]["encounters"] = sorted_v
+        index = len(sorted_v)
         difficulty = 2
         while difficulty == 2:
             index -= 1
-            difficulty = nameToDifficulty[sortedV[index]]
-        encounters[k]["lastBossIndex"] = index + 1
+            difficulty = name_to_difficulty[k][sorted_v[index]]
+        infos[k]["lastBossIndex"] = index + 1
 
-difficulties = {}
-with open("Difficulty.csv") as file:
-    csvreader = csv.reader(file)
-    header = next(csvreader)
-    idIndex = get_key(header, "ID")
-    maxPlayersIndex = get_key(header, "MaxPlayers")
 
-    for row in csvreader:
-        difficulties[int(row[idIndex])] = int(row[maxPlayersIndex])
+def read_map_difficulty():
+    reset_intervals = {1: 1, 2: 7, 3: 3, 4: 5}
+    with open("MapDifficulty.csv") as file:
+        csvreader = csv.reader(file)
+        header = next(csvreader)
+        id_index = get_key(header, "MapID")
+        reset_index = get_key(header, "ResetInterval")
+        max_players_index = get_key(header, "MaxPlayers")
 
-resetIntervals = {1: 1, 2: 7, 3: 3, 4: 5}
-resets = {}
-with open("MapDifficulty.csv") as file:
-    csvreader = csv.reader(file)
-    header = next(csvreader)
-    idIndex = get_key(header, "MapID")
-    resetIndex = get_key(header, "ResetInterval")
-    maxPlayersIndex = get_key(header, "MaxPlayers")
+        for row in csvreader:
+            reset = int(row[reset_index])
+            # skip instances with no lockout
+            if reset == 0:
+                continue
+            key = int(row[id_index])
+            if key not in infos:
+                print("Missing Id: " + to_string(key))
+                continue
+            max_players = int(row[max_players_index])
+            infos[key]["resets"][max_players] = reset_intervals[reset]
+            infos[key]["sizes"].add(max_players)
 
-    for row in csvreader:
-        reset = int(row[resetIndex])
-        # skip instances with no lockout
-        if reset == 0:
-            continue
-        id = int(row[idIndex])
-        if id not in resets:
-            resets[id] = {}
-        maxPlayers = int(row[maxPlayersIndex])
-        resets[id][maxPlayers] = resetIntervals[reset]
 
-activityIdLookups = {
-    0: {5: [285], 20: [290], 40: [290]},
-    1: {5: [286], 10: [291], 25: [291]},
-    2: {5: [287, 289, 311, 312, 314], 10: [292], 25: [293]},
-}
+def read_group_finder_activity():
+    # activity_id_lookups = {
+    #     0: {5: [285], 20: [290], 40: [290]},
+    #     1: {5: [286], 10: [291], 25: [291]},
+    #     2: {5: [287, 289, 311, 312, 314], 10: [292], 25: [293]},
+    # }
+    ignore_lfg_category = {116, 118, 120}
+    ignore_names = {"Trial of the Grand Crusader"}
+    with open("GroupFinderActivity.csv") as file:
+        csvreader = csv.reader(file)
+        header = next(csvreader)
+        id_index = get_key(header, "MapID")
+        value_index = get_key(header, "ID")
+        name_index = get_key(header, "FullName_lang")
+        # difficulty_index = get_key(header, "Field_3_4_0_43659_004")
+        category_index = get_key(header, "GroupFinderCategoryID")
+        max_players_index = get_key(header, "MaxPlayers")
 
-ignore_lfg_category = {116, 118, 120}
-ignore_names = {"Trial of the Grand Crusader"}
-activities = {}
-with open("GroupFinderActivity.csv") as file:
-    csvreader = csv.reader(file)
-    header = next(csvreader)
-    idIndex = get_key(header, "MapID")
-    valueIndex = get_key(header, "ID")
-    nameIndex = get_key(header, "FullName_lang")
-    difficultyIndex = get_key(header, "Field_3_4_0_43659_004")
-    categoryIndex = get_key(header, "GroupFinderCategoryID")
+        for row in csvreader:
+            category = int(row[category_index])
+            name = row[name_index]
+            # Ignore outdoor zones, pvp, and customer
+            if category in ignore_lfg_category or name in ignore_names:
+                continue
+            key = int(row[id_index])
+            if key not in infos:
+                print("Missing Id: " + to_string(key))
+                continue
+            # difficulty = int(row[difficulty_index])
+            max_players = int(row[max_players_index])
+            activities = infos[key]["activities"]
+            if max_players not in activities:
+                activities[max_players] = []
+            activities[max_players].append(int(row[value_index]))
 
-    for row in csvreader:
-        category = int(row[categoryIndex])
-        name = row[nameIndex]
-        # Ignore outdoor zones, pvp, and customer
-        if category in ignore_lfg_category or name in ignore_names:
-            continue
-        id = int(row[idIndex])
-        if id not in activities:
-            activities[id] = {}
-        difficulty = int(row[difficultyIndex])
-        activities[id][difficulty] = int(row[valueIndex])
 
-expansions = {}
-with open("LFGDungeons.csv") as file:
-    csvreader = csv.reader(file)
-    header = next(csvreader)
-    idIndex = get_key(header, "MapID")
-    difficultyIdIndex = get_key(header, "DifficultyID")
-    expansionIndex = get_key(header, "ExpansionLevel")
-    nameIndex = get_key(header, "Name_lang")
-
-    for row in csvreader:
-        difficulty = int(row[difficultyIdIndex])
-        # skip open world (0) and vanilla dungeons (1) which have no lockout
-        if difficulty == 0 or difficulty == 1:
-            continue
-        id = int(row[idIndex])
-        if id not in expansions:
-            expansions[id] = {}
-        expansions[id]["expansion"] = int(row[expansionIndex])
-        expansions[id]["id"] = id
-        size = difficulties[difficulty]
-        prev = expansions[id].get("size", size)
-        expansions[id]["size"] = min(prev, size)
-    expansions[249]["legacy"] = 0
-    expansions[249]["legacySize"] = 40
+name_to_difficulty = {}
+infos = {}
+read_dungeons()
+read_dungeon_encounter("DungeonEncounter-1.14.csv", ids={34, 289})
+read_dungeon_encounter("DungeonEncounter.csv")
+sort_encounters()
+read_map_difficulty()
+read_group_finder_activity()
 
 f = open("instances.lua", "w")
-f.write("Instances.Encounters = " + to_string(encounters, sort=False))
-f.write("\n\n-- Size here is the smallest for the specific raid, we use this for sorting.")
-f.write("\nInstances.Expansions = " + to_string(expansions))
-f.write("\n\n-- Corresponds to the number of days on the lockout for the size.")
-f.write("\nInstances.Resets = " + to_string(resets))
-f.write("\n\n-- How to find the activity id for a specific zone, size and difficulty.")
-f.write("\nInstances.ActivityIdLookups = " + to_string(activityIdLookups))
-f.write("\n\n-- The id for LFG selection.")
-f.write("\nInstances.Activities = " + to_string(activities))
+f.write("infos = " + to_string(infos))
+f.write("""
+
+for k, v in pairs(infos) do
+    infos[k] = Instances:new(v)
+    v.id = k
+end""")
 f.close()
 
+enchantments = {}
+read_spell_item_enchantment()
 f = open("items.lua", "w")
 f.write("ICT.Enchants = " + to_string(enchantments))
 f.close()

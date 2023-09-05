@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local LibInstances = LibStub("LibInstances")
 local LCInspector = LibStub("LibClassicInspector")
 ICT.Player = {}
 local Player = ICT.Player
@@ -86,8 +87,8 @@ end
 function Player:createInstances()
     self.instances = self.instances or {}
 
-    for id, sizes in pairs(Instances.Resets) do
-        for size, _  in pairs(sizes) do
+    for id, info in pairs(LibInstances:GetInfos()) do
+        for _, size in pairs(info:getSizes()) do
             local key = Instances:key(id, size)
             self.instances[key] = Instances:new(self.instances[key], id, size)
         end

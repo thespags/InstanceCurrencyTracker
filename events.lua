@@ -62,15 +62,14 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "Blizzard_LookingForGroupUI" then
         ICT.db = getOrCreateDb()
+        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.3") then
+            ICT:print("Old version detected, reseting options to default...")
+            ICT.Options:setDefaultOptions(true)
+        end
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
-            ICT:print("Incompatible old version detected, wiping players. Please relog into each character, sorry.")
+            ICT:print("Old version detected, wiping players. Please relog into each character, sorry.")
             ICT:WipeAllPlayers()
         end
-        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.2") then
-            ICT.Options:setDefaultOptions(true)
-            ICT:print("Old version detected, reseting options to default...")
-        end
-
         ICT.db.version = version
 
         initMinimap()
