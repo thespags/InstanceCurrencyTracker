@@ -12,7 +12,6 @@ json_object = json.loads(data)
 print(json_object["versions"])
 
 
-
 files = {"DungeonEncounter", "GroupFinderActivity",
          "LFGDungeons", "MapDifficulty", "SpellItemEnchantment"}
 for file in files:

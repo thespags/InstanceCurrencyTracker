@@ -342,9 +342,7 @@ function Instances.infos()
     infos = {}
     for _, instance in pairs(LibInstances:GetInfos()) do
         local size = instance:getSizes()[1]
-        print("Hello" .. tostring(size))
         if size then
-            print(size)
             local info = Instances:new({}, instance.id, size)
             -- Drop size from name.
             info.name = GetRealZoneText(instance.id)
