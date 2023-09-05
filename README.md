@@ -11,6 +11,15 @@ The addon uses IDs so should work in any language however labels are not localiz
 
 Feel free to comment for additional features or suggestions.
 
+## Queuing
+For the current player, you can queue to a single instance or all unlocked instances by the icon for the instance type.
+You can dequeue by clicking the instance again or the icon which will dequeue all instances. 
+
+By default, the difficulty is set to the highest (as of phase 3 that's Titan Runed Beta). However you can select which difficulty under the options
+tab. If multiple difficulties are selected, you will be queued to all types for that instance. Currently, difficulty is _not_ per character but account wide.
+
+Note: Blizzard does not let you queue across instance types. i.e. You cannot queue to dungeons and raids.
+
 ## Viewing Frame
 By default the addon window is anchored to the Looking For Group Frame (`i` by default).  
 This can be disabled in the options menu, and replaced with a minimap icon.  
@@ -61,6 +70,8 @@ _Show the one day, three day, five day, or weekly reset timers._
 _Note: three and five require you to complete a raid with those lockout as there's no API to access the data._  
 + Instances  
 _Select the instances you wish to view, defaults to all WOTLK instances._
++ Difficulty  
+_The difficulty when queuing, normal, heroic, heroic+, heroic++, etc._
 + All Quests  
 _Shows all quests including those you have not met the prerequisite for._
 + Currency  
