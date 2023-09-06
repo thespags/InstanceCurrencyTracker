@@ -272,7 +272,7 @@ local function printCharacterInfo(player, x, offset)
         offset = Cells:get(x, offset):printOptionalValue(options.player.showXP, "XP", string.format("%s/%s (%.0f%%)", currentXP, maxXP, xpPercentage))
         local restedPercentage = player:getRestedXP()
         local bubbles = restedPercentage * 20
-        offset = Cells:get(x, offset):printOptionalValue(options.player.showRestedXP, "Rested XP", string.format("%s bubbles (%.0f%%)", bubbles, restedPercentage * 100))
+        offset = Cells:get(x, offset):printOptionalValue(options.player.showRestedXP, "Rested XP", string.format("%.1f bubbles (%.0f%%)", bubbles, restedPercentage * 100))
         local resting = player.resting and "Resting" or "Not Resting"
         offset = Cells:get(x, offset):printOptionalValue(options.player.showRestedState, "Resting State", resting)
     end
