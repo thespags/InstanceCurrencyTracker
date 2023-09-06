@@ -255,7 +255,7 @@ function Options:CreateOptionDropdown()
                 multiPlayerView.tooltipText = "Displays all selected characters in the frame or a single character selected with the drop down list."
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
-                    self:FlipOptionsMenu()
+                    Options:FlipOptionsMenu()
                     ICT:PrintPlayers()
                 end
                 DDM:UIDropDownMenu_AddButton(multiPlayerView)
@@ -341,7 +341,7 @@ function Options:PrintMessage(text)
     end
 end
 
-function Options:SetPlayerDropdown(player)
+function Options:SetPlayerDropDown(player)
     DDM:UIDropDownMenu_SetText(ICT.frame.playerDropdown, player:getName())
 end
 
@@ -371,5 +371,5 @@ function Options:CreatePlayerDropdown()
             end
         end
     )
-    self:FlipOptionsMenu()
+    Options:FlipOptionsMenu()
 end
