@@ -57,6 +57,11 @@ function ICT:spairs(t, comparator, filter)
     end
 end
 
+-- Natural sorted pairs iterator.
+function ICT:nspairs(t, filter)
+    return self:spairs(t, function(a, b) return a < b end, filter)
+end
+
 -- Sorted pairs iterator determined by mapping the values.
 function ICT:spairsByValue(t, comparator, filter)
     return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
