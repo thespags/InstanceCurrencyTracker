@@ -101,9 +101,9 @@ local function calculatePadding()
     paddings.bags = options.player.showBags
         and ICT:max(db.players, function(player) return ICT:sum(player.bagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0
-    paddings.bankBags = options.player.showBags and options.player.showBankBags
+    paddings.bags = paddings.bags + (options.player.showBags and options.player.showBankBags
         and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
-        or 0
+        or 0)
     paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
     paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), Cooldowns.isVisible) end, Player.isEnabled)
     paddings.specs = TT_GS and 6 or 2
@@ -288,17 +288,15 @@ local function printCharacterInfo(player, x, offset)
 
         if not ICT.db.options.collapsible["Bags"] then
             padding = getPadding(offset, paddings.bags)
-            for k, bag in ICT:nspairsByValue(bags, function(v) return v.total > 0 end) do
+            for k, bag in ICT:nspairs(bags, function(k) return bags[k].total > 0 end) do
                 cell = Cells:get(x, offset)
                 offset = cell:printValue(string.format("|T%s:12|t%s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                 tooltip:attach(cell)
             end
-            offset = UI:hideRows(x, offset, padding)
 
             local bankBags = player.bankBagsTotal or {}
-            padding = getPadding(offset, paddings.bankBags)
             if options.player.showBankBags and ICT:sum(bankBags, function(v) return v.total end) > 0 then
-                for k, bag in ICT:nspairsByValue(bankBags, function(v) return v.total > 0 end) do
+                for k, bag in ICT:nspairs(bankBags, function(k) return bags[k].total > 0 end) do
                     cell = Cells:get(x, offset)
                     offset = cell:printValue(string.format("|T%s:12|t[Bank] %s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                     tooltip:attach(cell)
