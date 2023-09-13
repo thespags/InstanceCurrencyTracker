@@ -6,6 +6,7 @@
 ## SavedVariables: InstanceCurrencyDB
 ## X-Curse-Project-ID: 892801
 ## X-Wago-ID: aNevrM62
+## X-WoWI-ID: 26629
 
 Libs\LibStub\LibStub.lua
 Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml

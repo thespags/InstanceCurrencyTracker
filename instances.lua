@@ -96,7 +96,6 @@ function Instances:enqueue(queuedIds, includeLocked, shouldMessage)
             local f = (remove or ignore) and tDeleteItem or table.insert
             -- Don't initiate a search if we weren't already searching. This seems to work but sometimes doesn't and I'm not sure why yet.
             if ICT.searching then
-                print("searching")
                 LFGBrowseActivityDropDown_ValueSetSelected(LFGBrowseFrame.ActivityDropDown, activityId, not (remove or ignore));
             end
             f(queuedIds, activityId)
