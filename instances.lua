@@ -59,7 +59,7 @@ end
 
 function Instances:activityId(difficulty)
     -- Use the provided difficulty or default to the highest. 
-    difficulty = difficulty or self:isDungeon() and #ICT.DifficultyInfo or #ICT.RaidDifficulty
+    difficulty = self:isDungeon() and (difficulty or #ICT.DifficultyInfo) or #ICT.RaidDifficulty
     -- Finds the type of activity, beta rune or raid 10 id, for an instance.
     return self.info:getActivityId(self.size, difficulty)
 end
@@ -75,7 +75,7 @@ function Instances:difficulties()
     return self:isDungeon() and ICT.DifficultyInfo or ICT.RaidDifficulty
 end
 
-function Instances:enqueue(queuedIds, shouldMessage)
+function Instances:enqueue(queuedIds, includeLocked, shouldMessage)
     local queueCategory = queuedIds[1] and C_LFGList.GetActivityInfoTable(queuedIds[1]).categoryID
     local instanceCategory = C_LFGList.GetActivityInfoTable(self:activityId()).categoryID
 
@@ -84,21 +84,28 @@ function Instances:enqueue(queuedIds, shouldMessage)
         return
     end
 
+    if not includeLocked and self.locked then
+        return
+    end
+
     for _, difficulty in pairs(self:difficulties()) do
         local activityId = self:activityId(difficulty.id)
-        local remove = tContains(queuedIds, activityId)
-        local ignore = not difficulty:isVisible()
-        local f = (remove or ignore) and tDeleteItem or table.insert
-        -- Don't initiate a search if we weren't already searching. This seems to work but sometimes doesn't and I'm not sure why yet.
-        if ICT.searching then
-            LFGBrowseActivityDropDown_ValueSetSelected(LFGBrowseFrame.ActivityDropDown, activityId, not (remove or ignore));
-        end
-        f(queuedIds, activityId)
-        -- Response back to the user to see what was queued/dequeued.
-        if shouldMessage and not ignore then
-            local message = remove and "Dequeuing %s" or "Enqueuing %s"
-            local name = self:getName() .. (self:isDungeon() and ", " .. difficulty:getName() or "")
-            ICT:oprint(message, "lfg", name)
+        if activityId then
+            local remove = tContains(queuedIds, activityId)
+            local ignore = not difficulty:isVisible()
+            local f = (remove or ignore) and tDeleteItem or table.insert
+            -- Don't initiate a search if we weren't already searching. This seems to work but sometimes doesn't and I'm not sure why yet.
+            if ICT.searching then
+                print("searching")
+                LFGBrowseActivityDropDown_ValueSetSelected(LFGBrowseFrame.ActivityDropDown, activityId, not (remove or ignore));
+            end
+            f(queuedIds, activityId)
+            -- Response back to the user to see what was queued/dequeued.
+            if shouldMessage and not ignore then
+                local message = remove and "Dequeuing %s" or "Enqueuing %s"
+                local name = self:getName() .. (self:isDungeon() and ", " .. difficulty:getName() or "")
+                ICT:oprint(message, "lfg", name)
+            end
         end
     end
 end

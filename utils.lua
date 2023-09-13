@@ -263,6 +263,17 @@ function ICT:GetTime64()
     return self:ConvertFrom32bitNegative(GetTime())
 end
 
+function ICT:GetTimeLeft(start, duration)
+    local now = ICT:GetTime64()
+    local serverNow = GetServerTime()
+    -- since start is relative to computer uptime it can be a negative if the cooldown started before you restarted your pc.
+    start = ICT:ConvertFrom32bitNegative(start)
+    if start > now then -- start negative 32b overflow while now is still negative (over 24d 20h 31m PC uptime)
+        start = start - 0x100000000 / 1e3 -- adjust relative to negative now
+    end
+    return start - now + serverNow + duration
+end
+
 function ICT:DisplayTime(time)
     if not time then
         return ""

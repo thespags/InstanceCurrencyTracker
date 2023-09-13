@@ -3,7 +3,6 @@ local addOnName, ICT = ...
 local DDM = LibStub("LibUIDropDownMenu-4.0")
 ICT.Options = {}
 local Options = ICT.Options
-local Cooldowns = ICT.Cooldowns
 local Instances = ICT.Instances
 local Player = ICT.Player
 
@@ -73,15 +72,15 @@ function Options:setDefaultOptions(override)
     if not options.displayInstances or override then
         options.displayInstances = { [0] = {}, [1] = {}, [2] = {}, }
         for _, v in pairs(Instances.infos()) do
-            options.displayInstances[v.expansion][v.id] = v.expansion == ICT.WOTLK
+            options.displayInstances[v.expansion][v.id] = v:fromExpansion(ICT.WOTLK)
         end
     end
 
     -- Set all WOTLK cooldowns on by default
     if not options.displayCooldowns or override then
         options.displayCooldowns = {}
-        for k, v in pairs(Cooldowns.spells) do
-            options.displayCooldowns[k] = v.expansion == ICT.WOTLK
+        for k, v in pairs(ICT.Cooldowns) do
+            options.displayCooldowns[k] = v:fromExpansion(ICT.WOTLK)
         end
     end
 
@@ -268,7 +267,7 @@ function Options:CreateOptionDropdown()
                 addObjectsOption("Difficulty", ICT.DifficultyInfo, level)
                 addMenuOption("Quests", ICT.db.options.quests, level)
                 addObjectsOption("Currency", ICT.Currencies, level)
-                addObjectsOption("Cooldowns", Cooldowns.spells, level)
+                addObjectsOption("Cooldowns", ICT.Cooldowns, level)
                 DDM:UIDropDownMenu_AddSeparator()
                 addMenuOption("      Frame", ICT.db.options.frame, level)
             elseif level == 2 then
@@ -293,7 +292,7 @@ function Options:CreateOptionDropdown()
                         addObjectOption(v, level)
                     end
                 elseif menuList == "Cooldowns" then
-                    addExpansionOptions(Cooldowns.spells, menuList, level)
+                    addExpansionOptions(ICT.Cooldowns, menuList, level)
                 elseif menuList == "      Frame" then
                     addOptions(frameOptions, "frame", level)
                 elseif menuList == "Character Info" then
@@ -319,7 +318,7 @@ function Options:CreateOptionDropdown()
                 elseif subList == "Cooldowns" then
                     -- Now create a level for all the cooldowns of that expansion.
                     local lastSkill
-                    for _, v in ICT:nspairsByValue(Cooldowns.spells, ICT:fWith(Cooldowns.fromExpansion, expansion)) do
+                    for _, v in ICT:nspairsByValue(ICT.Cooldowns, ICT:fWith(ICT.Cooldown.fromExpansion, expansion)) do
                         if lastSkill and lastSkill ~= v.skillId then
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end

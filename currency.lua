@@ -102,6 +102,14 @@ function Currency:setVisible(v)
     ICT.db.options.currency[self.id] = v
 end
 
+function Currency:__eq(other)
+    return self.order == other.order
+end
+
+function Currency:__lt(other)
+    return self.order < other.order
+end
+
 ICT.Triumph = Currency:new(301)
 ICT.SiderealEssence = Currency:new(2589)
 ICT.ChampionsSeal = Currency:new(241)
@@ -130,12 +138,4 @@ ICT.Currencies = {
 
 for k, v in ipairs(ICT.Currencies) do
     v.order = k
-end
-
-function Currency:__eq(other)
-    return self.order == other.order
-end
-
-function Currency:__lt(other)
-    return self.order < other.order
 end

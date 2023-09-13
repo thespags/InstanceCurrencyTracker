@@ -447,9 +447,23 @@ function Player:updateResting()
     self.restedXP = GetXPExhaustion();
 end
 
+function Player:recreateCooldowns()
+    -- Ensure cooldowns have any new functions and values.
+    for id, info in pairs(self.cooldowns or {}) do
+        -- Accidentally had useless cooldowns in which aren't in the map so remove them.
+        local new = ICT.Cooldowns[id]
+        if new then
+            self.cooldowns[id] = ICT.Cooldown:new(new)
+            self.cooldowns[id].expires = info.expires
+        else
+            self.cooldowns[id] = nil
+        end
+    end
+end
+
 function Player:updateCooldowns()
     self.cooldowns = self.cooldowns or {}
-    ICT.Cooldowns:update(self)
+    ICT.Cooldown:update(self)
 end
 
 function Player:getInstance(id, maxPlayers)

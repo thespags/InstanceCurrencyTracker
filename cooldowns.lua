@@ -1,265 +1,172 @@
 local addOnName, ICT = ...
 
-local Cooldowns = {
-    spells = {
-        -- Start Vanilla
-        -- Iron -> Gold
-        [11479] = { expansion = 0, transmute = true, icon = 133217, skillId = 171, },
-        -- Mithril -> Truesilver
-        [11480] = { expansion = 0, transmute = true, icon = 133222, skillId = 171, },
-        -- Arcanite (no cooldown in WOTLK)
-        [17187] = { expansion = 0, transmute = true, icon = 134459, skillId = 171, },
-        -- Earth -> Water
-        [17561] = { expansion = 0, transmute = true, icon = 136007, skillId = 171, },
-        -- Water -> Air
-        [17562] = { expansion = 0, transmute = true, icon = 136022, skillId = 171, },
-        -- Air -> Fire
-        [17559] = { expansion = 0, transmute = true, icon = 135830, skillId = 171, },
-        -- Fire -> Earth
-        [17560] = { expansion = 0, transmute = true, icon = 136102, skillId = 171, },
-        -- Undeath -> Water
-        [17563] = { expansion = 0, transmute = true, icon = 136007, skillId = 171, },
-        -- Water -> Undeath
-        [17564] = { expansion = 0, transmute = true, icon = 136195, skillId = 171, },
-        -- Life -> Earth
-        [17565] = { expansion = 0, transmute = true, icon = 136102, skillId = 171, },
-        -- Earth -> Life
-        [17566] = { expansion = 0, transmute = true, icon = 136006, skillId = 171, },
-        -- Elemental Fire
-        [25146] = { expansion = 0, transmute = true, icon = 135805, skillId = 171, },
-        -- Salt Shaker (no cooldown in WOTLK)
-        [19566] = { expansion = 0, icon = 132836, skillId = 165, },
-        -- Mooncloth
-        [18560] = { expansion = 0, icon = 132895, skillId = 197, },
-        -- End Vanilla/Start TBC
-        -- Earthstorm Diamond
-        [32765] = { expansion = 1, transmute = true, icon = 134097, skillId = 171, },
-        -- Skyfire Diamond
-        [32766] = { expansion = 1, transmute = true, icon = 134098, skillId = 171, },
-        -- Primal Might
-        [29688] = { expansion = 1, transmute = true, icon = 136050, skillId = 171, },
-        -- Primal Earth -> Water
-        [28567] = { expansion = 1, transmute = true, icon = 132852, skillId = 171, },
-        -- Primal Water -> Air
-        [28569] = { expansion = 1, transmute = true, icon = 132845, skillId = 171, },
-        -- Primal Air -> Fire
-        [28566] = { expansion = 1, transmute = true, icon = 132847, skillId = 171, },
-        -- Primal Fire -> Earth
-        [28568] = { expansion = 1, transmute = true, icon = 132846, skillId = 171, },
-        -- Primal Shadow -> Water
-        [28580] = { expansion = 1, transmute = true, icon = 132852, skillId = 171, },
-        -- Primal Water -> Shadow
-        [28581] = { expansion = 1, transmute = true, icon = 132851, skillId = 171, },
-        -- Primal Life -> Earth
-        [28584] = { expansion = 1, transmute = true, icon = 132846, skillId = 171, },
-        -- Primal Earth -> Life
-        [28585] = { expansion = 1, transmute = true, icon = 132848, skillId = 171, },
-        -- Primal Mana -> Fire
-        [28582] = { expansion = 1, transmute = true, icon = 132847, skillId = 171, },
-        -- Primal Fire -> Mana
-        [28583] = { expansion = 1, transmute = true, icon = 132849, skillId = 171, },
-        -- Spellcloth
-        [31373] = { expansion = 1, icon = 132910, skillId = 197, },
-        -- Shadowcloth
-        [36686] = { expansion = 1, icon = 132887, skillId = 197, },
-        -- Primial Moonthcloth
-        [26751] = { expansion = 1, icon = 132897, skillId = 197, },
-        -- Void Sphere
-        [28028] = { expansion = 1, icon = 132886, skillId = 333, },
-        -- Brilliant Glass
-        [47280] = { expansion = 1, icon = 134096, skillId = 755, },
-        -- End TBC/Start WOTLK
-        -- Titanium
-        [60350] = { expansion = 2, transmute = true, icon = 237045, skillId = 171, },
-        -- Earhtsiege Diamond
-        [57427] = { expansion = 2, transmute = true, icon = 237243, skillId = 171, },
-        -- Skyflare Diamond
-        [57425] = { expansion = 2, transmute = true, icon = 237235, skillId = 171, },
-        -- Ametrine
-        [66658] = { expansion = 2, transmute = true, icon = 237221, skillId = 171, },
-        -- Cardinal Ruby
-        [66659] = { expansion = 2, transmute = true, icon = 237220, skillId = 171, },
-        -- King's Amber
-        [66660] = { expansion = 2, transmute = true, icon = 237224, skillId = 171, },
-        -- Dreadstone
-        [66662] = { expansion = 2, transmute = true, icon = 237219, skillId = 171, },
-        -- Majestic Zircon
-        [66663] = { expansion = 2, transmute = true, icon = 237223, skillId = 171, },
-        -- Eye of Zul
-        [66664] = { expansion = 2, transmute = true, icon = 237222, skillId = 171, },
-        -- Eternal Air -> Earth
-        [53777] = { expansion = 2, transmute = true, icon = 237008, skillId = 171, },
-        -- Eternal Earth -> Air
-        [53781] = { expansion = 2, transmute = true, icon = 237007, skillId = 171, },
-        -- Eternal Air -> Water
-        [53776] = { expansion = 2, transmute = true, icon = 237012, skillId = 171, },
-        -- Eternal Water -> Air
-        [53783] = { expansion = 2, transmute = true, icon = 237007, skillId = 171, },
-        -- Eternal Shadow -> Earth
-        [53779] = { expansion = 2, transmute = true, icon = 237008, skillId = 171, },
-        -- Eternal Earth -> Shadow
-        [53782] = { expansion = 2, transmute = true, icon = 237011, skillId = 171, },
-        -- Eternal Life -> Fire
-        [53773] = { expansion = 2, transmute = true, icon = 237009, skillId = 171, },
-        -- Eternal Fire -> Life
-        [53775] = { expansion = 2, transmute = true, icon = 237010, skillId = 171, },
-        -- Eternal Fire -> Water
-        [53774] = { expansion = 2, transmute = true, icon = 237012, skillId = 171, },
-        -- Eternal Water -> Fire
-        [53784] = { expansion = 2, transmute = true, icon = 237009, skillId = 171, },
-        -- Eternal Life -> Shadow
-        [53771] = { expansion = 2, transmute = true, icon = 237011, skillId = 171, },
-        -- Eternal Shadow -> Life
-        [53780] = { expansion = 2, transmute = true, icon = 237010, skillId = 171, },
-        -- Moonshroud
-        [56001] = { expansion = 2, icon = 237025, skillId = 197, },
-        -- Ebonweave
-        [56002] = { expansion = 2, icon = 237022, skillId = 197, },
-        -- Spellweave
-        [56003] = { expansion = 2, icon = 237026, skillId = 197, },
-        -- Glacial Bag
-        [56005] = { expansion = 2, icon = 133666, skillId = 197, },
-        -- Northrend Alchemy Research
-        [60893] = { expansion = 2, icon = 136240, skillId = 171, },
-        -- Minor Inscription Research
-        [61288] = { expansion = 2, icon = 237171, skillId = 773, },
-        -- Major Inscription Research
-        [61177] = { expansion = 2, icon = 237171, skillId = 773, },
-        -- Icy Prism
-        [62242] = { expansion = 2, icon = 134095, skillId = 755, },
-        -- Smelt Titanstell
-        [55208] = { expansion = 2, icon = 237046, skillId = 186, },
-        -- End WOTLK
-   },
-    items = {
-        -- Start Vanilla
-        -- End Vanilla/Start WOTLK
-        -- Mysterious Egg
-        [39878] = { expansion = 2, duration = 590400 },
-        -- End WOTLK
-   }
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes")
+
+local spells = {
+    -- Start Vanilla
+    11479, -- Iron -> Gold
+    11480, -- Mithril -> Truesilver
+    17187, -- Arcanite (no cooldown in WOTLK)
+    17561, -- Earth -> Water
+    17562, -- Water -> Air
+    17559, -- Air -> Fire
+    17560, -- Fire -> Earth
+    17563, -- Undeath -> Water
+    17564, -- Water -> Undeath
+    17565, -- Life -> Earth
+    17566, -- Earth -> Life
+    25146, -- Elemental Fire
+    18560, -- Mooncloth
+    -- End Vanilla/Start TBC
+    32765, -- Earthstorm Diamond
+    32766, -- Skyfire Diamond
+    29688, -- Primal Might
+    28567, -- Primal Earth -> Water
+    28569, -- Primal Water -> Air
+    28566, -- Primal Air -> Fire
+    28568, -- Primal Fire -> Earth
+    28580, -- Primal Shadow -> Water
+    28581, -- Primal Water -> Shadow
+    28584, -- Primal Life -> Earth
+    28585, -- Primal Earth -> Life
+    28582, -- Primal Mana -> Fire
+    28583, -- Primal Fire -> Mana
+    31373, -- Spellcloth
+    36686, -- Shadowcloth
+    26751, -- Primial Moonthcloth
+    28028, -- Void Sphere
+    47280, -- Brilliant Glass
+    -- End TBC/Start WOTLK
+    60350, -- Titanium
+    57427, -- Earhtsiege Diamond
+    57425, -- Skyflare Diamond
+    66658, -- Ametrine
+    66659, -- Cardinal Ruby
+    66660, -- King's Amber
+    66662, -- Dreadstone
+    66663, -- Majestic Zircon
+    66664, -- Eye of Zul
+    53777, -- Eternal Air -> Earth
+    53781, -- Eternal Earth -> Air
+    53776, -- Eternal Air -> Water
+    53783, -- Eternal Water -> Air
+    53779, -- Eternal Shadow -> Earth
+    53782, -- Eternal Earth -> Shadow
+    53773, -- Eternal Life -> Fire
+    53775, -- Eternal Fire -> Life
+    53774, -- Eternal Fire -> Water
+    53784, -- Eternal Water -> Fire
+    53771, -- Eternal Life -> Shadow
+    53780, -- Eternal Shadow -> Life
+    56001, -- Moonshroud
+    56002, -- Ebonweave
+    56003, -- Spellweave
+    56005,  -- Glacial Bag
+    60893, -- Northrend Alchemy Research
+    61288, -- Minor Inscription Research
+    61177, -- Major Inscription Research
+    62242, -- Icy Prism
+    55208, -- Smelt Titansteel
+    -- End WOTLK
 }
-ICT.Cooldowns = Cooldowns
+local items = {
+    -- Start Vanilla
+    -- [19567] = { duration = 259200 }, -- Salt Shaker (no cooldown in WOTLK)
+    -- End Vanilla/Start WOTLK
+    -- [49040] = {}, -- Jeeves
+    [39878] = { skillId = 0, expansion = 2 }, -- Mysterious Egg
+    -- [40768] = {}, -- MollE
+    -- [48933] = {}, -- Wormhole
+    -- [43499] = { skillId = 0, expansion = 2 }, -- Iron Boot Flask
+    -- End WOTLK
+}
+local Cooldown = {}
+ICT.Cooldown = Cooldown
+ICT.Cooldowns = {}
 
--- Adds all the functions to the player.
-function Cooldowns:new(spell)
-    setmetatable(spell, self)
-    self.__index = self
-    return spell
-end
-
--- Note: The spell's icon doesn't match the icon of the item created.
--- We could use LibRecipes but that library is not complete,
--- so instead we hand code all icons.
-for k, v in pairs(Cooldowns.spells) do
-    v.id = k
-
-    local name = GetSpellInfo(k)
-    v.spellName = name
-    -- Remove transmute prefix.
-    if name:find(":") then
-        name = string.match(name, ".*: (.*)")
-    end
-    v.name = name
-
-    -- Converts ms to seconds
-    v.duration = GetSpellBaseCooldown(k) / 1000
-    if v.duration <= 0 then
-        Cooldowns.spells[k] = nil
-    end
-    Cooldowns.spells[k] = Cooldowns:new(v)
-    -- print(string.format("|T%s:14|t %s = %s", v.icon, v.name, v.duration))
-end
-
-for k, v in pairs(Cooldowns.items) do
-    v.icon = select(5, GetItemInfoInstant(k))
-    -- print(string.format("|T%s:14|t egg = %s", v.icon, v.duration))
-end
-
-function Cooldowns:GetTimeLeft(start, duration)
-    local now = ICT:GetTime64()
-    local serverNow = GetServerTime()
-    -- since start is relative to computer uptime it can be a negative if the cooldown started before you restarted your pc.
-    start = ICT:ConvertFrom32bitNegative(start)
-    if start > now then -- start negative 32b overflow while now is still negative (over 24d 20h 31m PC uptime)
-        start = start - 0x100000000 / 1e3 -- adjust relative to negative now
-    end
-    return start - now + serverNow + duration
-end
-
-function Cooldowns:update(player)
-    for spellId, info in pairs(Cooldowns.spells) do
-        -- local spellData = player.cooldowns[spellId] or {}
-        local spellKnown = IsPlayerSpell(spellId)
-
-        if spellKnown then
-            local start, duration = GetSpellCooldown(spellId)
-            if not start then
-                return
+function Cooldown:update(player)
+    for id, info in pairs(ICT.Cooldowns) do
+        if info.spellName then
+            local spellKnown = IsPlayerSpell(id)
+            if spellKnown then
+                local start, duration = GetSpellCooldown(id)
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(info)
+                -- Check duration to filter out spell lock, wands and other CD triggers
+                player.expires = start ~= 0 and duration == info.duration and ICT:GetTimeLeft(start, duration) or 0
+            else
+                -- Handles case if spell was known and no longer is.
+                player.cooldowns[id] = nil
             end
-            -- Check duration to filter out spell lock, wands and other CD triggers
-            -- Is this needed?
-            if start ~= 0 and duration ~= info.duration then
-                return
-            end
-            player.cooldowns[spellId] = Cooldowns:new(info)
-            player.cooldowns[spellId].expires = self:GetTimeLeft(start, duration)
         else
-            -- Handles case if spell was known and no longer is.
-            player.cooldowns[spellId] = nil
-        end
-    end
-end
-
--- Ensures cooldowns have new functions.
-function Cooldowns:recreate(player)
-    for spellId, info in pairs(player.cooldowns or {}) do
-        player.cooldowns[spellId] = Cooldowns:new(info)
-    end
-end
-
-function Cooldowns:cast(player)
-    for _, p in pairs(player.professions) do
-        if p.spellId ~= nil then
-            CastSpellByID(p.spellId)
-            for i = 1, GetNumTradeSkills() do
-                if GetTradeSkillInfo(i) == self.spellName then
-                    DoTradeSkill(i)
-                    CloseTradeSkill()
-                    return
-                end
+            if GetItemCount(id, true) > 0 and C_PlayerInfo.CanUseItem(id) then
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(info)
+                local start, duration = C_Container.GetItemCooldown(id)
+                player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:GetTimeLeft(start, duration) or 0
+            else
+                -- Handles case item is gone. Doesn't handle not being able to use item.
+                player.cooldowns[id] = nil
             end
         end
-        CloseTradeSkill()
     end
-    print(string.format("[%s] No skill found: %s", addOnName, self.spellName))
 end
 
-function Cooldowns:fromExpansion(expansion)
+function Cooldown:new(info)
+    local t = CopyTable(info)
+    setmetatable(t, self)
+    self.__index = self
+    return t
+end
+
+function Cooldown:fromExpansion(expansion)
     return self.expansion == expansion
 end
 
-function Cooldowns:getName()
+function Cooldown:getName()
     return self.name
 end
 
-function Cooldowns:getNameWithIcon()
+function Cooldown:cast(player)
+    if self.spellName then
+        for _, p in pairs(player.professions) do
+            if p.spellId ~= nil then
+                CastSpellByID(p.spellId)
+                for i = 1, GetNumTradeSkills() do
+                    if GetTradeSkillInfo(i) == self.spellName then
+                        DoTradeSkill(i)
+                        CloseTradeSkill()
+                        return
+                    end
+                end
+            end
+            CloseTradeSkill()
+        end
+        print(string.format("[%s] No skill found: %s", addOnName, self.spellName))
+    else
+        if GetItemCount(self.id) > 0 then
+            UseItemByName(self.itemName)
+        else
+            print(string.format("[%s] No item found in inventory: %s", addOnName, self.itemName))
+        end
+    end
+end
+
+function Cooldown:getNameWithIcon()
     return string.format("|T%s:14|t%s", self.icon, self.name)
 end
 
-function Cooldowns:isVisible()
+function Cooldown:isVisible()
     return ICT.db.options.displayCooldowns[self.id]
 end
 
-function Cooldowns:setVisible(v)
+function Cooldown:setVisible(v)
     ICT.db.options.displayCooldowns[self.id] = v
 end
 
-function Cooldowns:__eq(other)
+function Cooldown:__eq(other)
     return self.name == other.name
 end
 
-function Cooldowns:__lt(other)
+function Cooldown:__lt(other)
     if self.skillId == other.skillId then
         if self.expansion == other.expansion then
             return self.name < other.name
@@ -267,4 +174,59 @@ function Cooldowns:__lt(other)
         return self.expansion > other.expansion
     end
     return self.skillId < other.skillId
+end
+
+for _, id in pairs(spells) do
+    local v = {}
+    v.id = id
+
+    local category, expansion, _, _, itemId = LibTradeSkillRecipes:GetInfoBySpellId(id)
+    v.skillId = category
+    v.expansion = expansion
+    local name, _, icon = GetSpellInfo(id)
+    v.icon = itemId and select(5, GetItemInfoInstant(itemId)) or icon
+    v.spellName = name
+    -- Remove transmute prefix.
+    if name:find("Transmute:") then
+        name = string.match(name, "Transmute: (.*)")
+        v.transmute = true
+    end
+    v.name = name
+
+    -- Converts ms to seconds
+    v.duration = GetSpellBaseCooldown(id) / 1000
+    if v.duration > 0 then
+        ICT.Cooldowns[id] = Cooldown:new(v)
+        -- print(string.format("|T%s:14|t %s = %s", v.icon, v.spellName, v.duration))
+    else
+        -- print("skipping ".. v.spellName)
+    end
+end
+
+for id, v in pairs(items) do
+    v.id = id
+
+    v.icon = select(5, GetItemInfoInstant(id))
+    local category, expansion, _, _, _, _ = LibTradeSkillRecipes:GetInfoByItemId(id)
+    v.skillId = v.skillId or category
+    if not v.skillId then
+        print("Missing skillId: " .. id)
+    end
+    v.expansion = v.expansion or expansion
+    if not v.expansion then
+        print("Missing expansion: " .. id)
+    end
+    -- Default values until loaded.
+    v.name = id
+    v.icon = "134400"
+    local item = Item:CreateFromItemID(id)
+    item:ContinueOnItemLoad(function()
+        v.name = item:GetItemName()
+        v.itemName = v.name
+        if v.name:find("Wormhole Generator:") then
+            v.name = string.match(v.name, "Wormhole Generator: (.*)")
+        end
+        v.icon = item:GetItemIcon()
+    end)
+    ICT.Cooldowns[id] = Cooldown:new(v)
 end

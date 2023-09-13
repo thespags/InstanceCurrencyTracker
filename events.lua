@@ -78,7 +78,7 @@ local function initEvent(self, event, eventAddOn)
             ICT.db.players[k] = Player:new(player)
             -- Player may have already been created but we added new instances or new functions.
             player:createInstances()
-            ICT.Cooldowns:recreate(player)
+            player:recreateCooldowns()
         end
         -- Check if we need to delay this part.
         ICT.CreateCurrentPlayer()
@@ -96,8 +96,8 @@ initFrame:SetScript("OnEvent", initEvent)
 
 local updateFrame = CreateFrame("Frame")
 -- After the instance info is updated then trigger updates to our representation.
--- This fires every time we load LFG so it seems unnecessary.
--- updateFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
+-- This forces encounters to be updated, there seems to be some delay after encounter_end...
+updateFrame:RegisterEvent("UPDATE_INSTANCE_INFO")
 -- After an enounter update information for the instance.
 updateFrame:RegisterEvent("ENCOUNTER_END")
 -- After currency changes we need to update the wallet.
@@ -216,6 +216,7 @@ local function messageResults(player, instance)
         player:update()
         ICT:UpdateDisplay()
         for currency, _ in ICT:spairs(instance:currencies()) do
+
             -- Onyxia 40 is reused and has 0 emblems so skip currency.
             local max = instance:maxCurrency(currency)
             if currency:isVisible() and max ~= 0 then
