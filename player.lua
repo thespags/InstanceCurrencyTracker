@@ -450,7 +450,7 @@ end
 function Player:recreateCooldowns()
     -- Ensure cooldowns have any new functions and values.
     for id, info in pairs(self.cooldowns or {}) do
-        -- Accidentally had useless cooldowns in which aren't in the map so remove them.
+        -- Accidentally had useless cooldowns in which aren't in the table so remove them.
         local new = ICT.Cooldowns[id]
         if new then
             self.cooldowns[id] = ICT.Cooldown:new(new)

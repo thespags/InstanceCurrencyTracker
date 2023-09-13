@@ -92,7 +92,7 @@ function Cooldown:update(player)
                 local start, duration = GetSpellCooldown(id)
                 player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(info)
                 -- Check duration to filter out spell lock, wands and other CD triggers
-                player.expires = start ~= 0 and duration == info.duration and ICT:GetTimeLeft(start, duration) or 0
+                player.cooldowns[id].expires = start ~= 0 and duration == info.duration and ICT:GetTimeLeft(start, duration) or 0
             else
                 -- Handles case if spell was known and no longer is.
                 player.cooldowns[id] = nil
