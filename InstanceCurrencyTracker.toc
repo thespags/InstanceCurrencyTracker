@@ -15,6 +15,7 @@ Libs\LibUIDropDownMenu\LibUIDropDownMenu.lua
 Libs\LibDetours-1.0\LibDetours-1.0.lua
 Libs\LibClassicInspector\LibClassicInspector.lua
 Libs\LibInstances\LibInstances.lua
+Libs\LibTradeSkillRecipes\lib-wotlk.xml
 semver.lua
 utils.lua
 colors.lua

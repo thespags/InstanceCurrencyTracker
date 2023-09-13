@@ -1,7 +1,7 @@
 local addOnName, ICT = ...
 
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes")
 local Instances = ICT.Instances
-local Cooldowns = ICT.Cooldowns
 local Colors = ICT.Colors
 local Player = ICT.Player
 local Reset = ICT.Reset
@@ -96,7 +96,7 @@ local function calculatePadding()
     paddings.info = ICT:sumNonNil(options.player.showLevel, options.player.showGuild, options.player.showGuildRank, options.player.showMoney, options.player.showDurability)
     -- If there is a viewable player under 80 then pad for XP info.
     paddings.rested = ICT:containsAnyValue(db.players, function(player) return player.level < ICT.MaxLevel and player:isEnabled() end)
-        and ICT:sumNonNil(options.player.showXP, options.player.showRestedXP, options.player.showRestState)
+        and ICT:sumNonNil(options.player.showXP, options.player.showRestedXP, options.player.showRestedState)
         or 0
     paddings.bags = options.player.showBags
         and ICT:max(db.players, function(player) return ICT:sum(player.bagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
@@ -105,7 +105,7 @@ local function calculatePadding()
         and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0)
     paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
-    paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), Cooldowns.isVisible) end, Player.isEnabled)
+    paddings.cooldowns = ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
     paddings.specs = TT_GS and 6 or 2
     paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
@@ -214,7 +214,7 @@ local function specTooltip(player, spec)
     tooltip.shouldPrintTitle = true
     for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
         tooltip:printTitle("Enchants")
-        local enchant = item.enchantId and ICT.Enchants[item.enchantId] or "Missing"
+        local enchant = item.enchantId and LibTradeSkillRecipes:GetEffect(item.enchantId) or "Missing"
         tooltip:printValue(_G[item.invType], enchant)
     end
 
@@ -355,11 +355,11 @@ local function printCharacterInfo(player, x, offset)
 
         if not ICT.db.options.collapsible["Cooldowns"] then
             padding = getPadding(offset, paddings.cooldowns)
-            for _, v in ICT:nspairsByValue(player.cooldowns or {}, Cooldowns.isVisible) do
+            for _, v in ICT:nspairsByValue(player.cooldowns or {}, ICT.Cooldown.isVisible) do
                 cell = Cells:get(x, offset)
                 local name = v:getNameWithIcon()
                 offset = cell:printTicker(name, v.expires, v.duration)
-                if player:isCurrentPlayer() then
+                if player:isCurrentPlayer() and v.spellName then
                     cell:clickable(function() v:cast(player) end)
                 end
             end
@@ -428,7 +428,7 @@ local function enqueueAll(title, subTitle, instances)
         if info == nil then
             local queuedIds = {}
             for _, instance in pairs(instances) do
-                instance:enqueue(queuedIds, false)
+                instance:enqueue(queuedIds, false, false)
             end
             C_LFGList.CreateListing(queuedIds)
             ICT:oprint("Enqueued all non lock %s %s.", "lfg", ICT.Expansions[title], subTitle)
@@ -443,7 +443,7 @@ local function enqueue(instance)
     return function()
         local info = C_LFGList.GetActiveEntryInfo()
         local queuedIds = info and info.activityIDs or {}
-        instance:enqueue(queuedIds, true)
+        instance:enqueue(queuedIds, true, true)
 
         if #queuedIds == 0 then
             ICT:oprint("No more instances queued, delisting.", "lfg")
