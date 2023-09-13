@@ -431,7 +431,11 @@ local function enqueueAll(title, subTitle, instances)
                 instance:enqueue(queuedIds, false, false)
             end
             C_LFGList.CreateListing(queuedIds)
-            ICT:oprint("Enqueued all non lock %s %s.", "lfg", ICT.Expansions[title], subTitle)
+            if #queuedIds > 41 then
+                ICT:print("Enqueued too many instances: ", #queuedIds)
+            else
+                ICT:oprint("Enqueued all non lock %s %s.", "lfg", ICT.Expansions[title], subTitle)
+            end
         else
             C_LFGList.RemoveListing()
             ICT:oprint("Listing removed.", "lfg")
@@ -450,6 +454,9 @@ local function enqueue(instance)
             C_LFGList.RemoveListing()
             ICT:PrintPlayers()
             return
+        end
+        if #queuedIds > 41 then
+            ICT:print("Enqueued too many instances: ", #queuedIds)
         end
         local f = queuedIds == {} and C_LFGList.RemoveListing or info == nil and C_LFGList.CreateListing or C_LFGList.UpdateListing
         f(queuedIds)

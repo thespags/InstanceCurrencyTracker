@@ -9,6 +9,3 @@ externals:
     Libs/LibTradeSkillRecipes: https://github.com/thespags/LibTradeSkillRecipes/
     # Libs/LibDetours: https://github.com/anzz1/TacoTip/tree/master/Libs/LibDetours-1.0
     # Libs/LibClassicInspector: https://github.com/anzz1/TacoTip/tree/master/Libs/LibClassicInspector
-
-ignore:
-  - scripts

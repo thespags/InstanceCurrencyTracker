@@ -54,7 +54,8 @@ end
 
 -- This doesn't make sense for zones with subzones (like Scarlet Monastery and Dire Maul)
 function Instances:getActivityId(size, difficulty)
-    local activityId = (self.activities[size] or {})[difficulty]
+    local activities = (self.activities[size] or {})
+    local activityId = activities[math.min(difficulty, #activities)]
     assert(activityId, string.format("Unknown activity for id/size/difficulty: %s/%s/%s", self.id, size, difficulty))
     return activityId
 end

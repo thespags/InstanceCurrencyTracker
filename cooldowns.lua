@@ -140,12 +140,12 @@ function Cooldown:cast(player)
             end
             CloseTradeSkill()
         end
-        print(string.format("[%s] No skill found: %s", addOnName, self.spellName))
+        ICT:print("No skill found: %s", self.spellName)
     else
         if GetItemCount(self.id) > 0 then
             UseItemByName(self.itemName)
         else
-            print(string.format("[%s] No item found in inventory: %s", addOnName, self.itemName))
+            ICT:print("No item found in inventory: %s", self.itemName)
         end
     end
 end
@@ -210,11 +210,11 @@ for id, v in pairs(items) do
     local category, expansion, _, _, _, _ = LibTradeSkillRecipes:GetInfoByItemId(id)
     v.skillId = v.skillId or category
     if not v.skillId then
-        print("Missing skillId: " .. id)
+        ICT:print("Missing skillId: " .. id)
     end
     v.expansion = v.expansion or expansion
     if not v.expansion then
-        print("Missing expansion: " .. id)
+        ICT:print("Missing expansion: " .. id)
     end
     -- Default values until loaded.
     v.name = id
