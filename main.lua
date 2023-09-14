@@ -342,7 +342,7 @@ local function printCharacterInfo(player, x, offset)
                 cell = Cells:get(x, offset)
                 offset = cell:printValue(nameWithIcon, string.format("%s/%s", v.rank, v.max))
                 if v.spellId and player:isCurrentPlayer() then
-                    cell:clickable(function() CastSpellByID(v.spellId) end)
+                    cell:attachClick(function() CastSpellByID(v.spellId) end)
                 end
             end
             offset = UI:hideRows(x, offset, padding)
@@ -358,9 +358,14 @@ local function printCharacterInfo(player, x, offset)
             for _, v in ICT:nspairsByValue(player.cooldowns or {}, ICT.Cooldown.isVisible) do
                 cell = Cells:get(x, offset)
                 local name = v:getNameWithIcon()
-                offset = cell:printTicker(name, v.expires, v.duration)
-                if player:isCurrentPlayer() and v.spellName then
-                    cell:clickable(function() v:cast(player) end)
+                local key = player.fullName .. name
+                offset = cell:printTicker(name, key, v.expires, v.duration)
+                if player:isCurrentPlayer() then
+                    if v.spellName then
+                        cell:attachClick(function() v:cast(player) end)
+                    elseif v.itemName then
+                        cell:attachSecureClick(v.itemName)
+                    end
                 end
             end
             offset = UI:hideRows(x, offset, padding)
@@ -486,7 +491,7 @@ local function printInstances(player, title, subTitle, size, instances, x, offse
                 offset = cell:printLine(instance:getName(), color)
                 instanceTooltip(player, instance):attach(cell)
                 if player:isCurrentPlayer() then
-                    cell:clickable(enqueue(instance))
+                    cell:attachClick(enqueue(instance))
                 end
             end
         end
@@ -679,7 +684,8 @@ local function printResetTimers(x, offset)
     local tooltip = timerSectionTooltip()
     if count > 0 then
         if ICT.db.options.multiPlayerView then
-            local start = 32 + -60 * count / 2
+            -- local start = 32 + -60 * count / 2
+            local start = 28 + -55 * count / 2
             local frame = nil
             for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
                 start, frame = UI:printMultiViewResetTicker(start, v:getName(), v:expires(), v:duration())
@@ -692,7 +698,7 @@ local function printResetTimers(x, offset)
 
             if not ICT.db.options.collapsible["Reset"] then
                 for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
-                    offset = Cells:get(x, offset):printTicker(v:getName(), v:expires(), v:duration())
+                    offset = Cells:get(x, offset):printTicker(v:getName(), v:getName(), v:expires(), v:duration())
                 end
             end
             offset = Cells:get(x, offset):hide()

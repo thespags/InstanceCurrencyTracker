@@ -73,10 +73,10 @@ local items = {
     -- Start Vanilla
     -- [19567] = { duration = 259200 }, -- Salt Shaker (no cooldown in WOTLK)
     -- End Vanilla/Start WOTLK
-    -- [49040] = {}, -- Jeeves
+    [40768] = {}, -- MollE
+    [48933] = {}, -- Wormhole
+    [49040] = {}, -- Jeeves
     [39878] = { skillId = 0, expansion = 2 }, -- Mysterious Egg
-    -- [40768] = {}, -- MollE
-    -- [48933] = {}, -- Wormhole
     -- [43499] = { skillId = 0, expansion = 2 }, -- Iron Boot Flask
     -- End WOTLK
 }
