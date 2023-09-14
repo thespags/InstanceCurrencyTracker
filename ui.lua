@@ -13,13 +13,16 @@ ICT.lockedColor = "FFFF00FF"
 ICT.lockedColor = "FF800080"
 ICT.queuedLockedColor = "FFFFC0FF"
 ICT.unavailableColor = red
+-- local font = "Fonts\\FRIZQT__.TTF"
+local font = "Fonts\\ARIALN.ttf"
+
 
 local UI = {
     -- Individual cell size for each position in the frame.
     cellWidth = 200,
     cellHeight = 10,
     -- Default frame size.
-    defaultWidth = 240,
+    defaultWidth = 260,
     defaultHeight = 600,
     -- Default frame location.
     defaultX = 400,
@@ -77,7 +80,7 @@ function Tooltips:create(name)
         self.frame:Hide()
         self.frame.textField = self.frame:CreateFontString()
         self.frame.textField:SetPoint("CENTER")
-        self.frame.textField:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        self.frame.textField:SetFont(font, 10)
         self.frame.textField:SetJustifyH("LEFT")
     end
     self.frame.textField:SetText(self.text)
@@ -137,20 +140,25 @@ function Cells:get(x, y)
         cell.left = cell.frame:CreateFontString()
         cell.left:SetPoint("LEFT")
         cell.left:SetJustifyH("LEFT")
-        cell.left:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        cell.left:SetFont(font, 10)
 
         cell.right = cell.frame:CreateFontString()
-        cell.right:SetPoint("RIGHT")
+        cell.right:SetPoint("RIGHT", 4, 0)
         cell.right:SetJustifyH("RIGHT")
-        cell.right:SetFont("Fonts\\FRIZQT__.TTF", 10)
+        cell.right:SetFont(font, 10)
+
+        cell.frame:HookScript("OnClick", function() if cell.clickable then cell.hookOnClick() end end)
+        cell.frame:RegisterForClicks("AnyUp")
     end
     -- Remove any cell action so we can reuse the cell.
     for _, button in pairs(cell.buttons) do
         button:Hide()
     end
+    cell.clickable = false
     cell.frame:SetScript("OnEnter", nil)
     cell.frame:SetScript("OnLeave", nil)
-    cell.frame:SetScript("OnClick", nil)
+    cell.frame:SetAttribute("type", nil)
+    cell.frame:SetAttribute("item", nil)
     return cell
 end
 
@@ -173,7 +181,7 @@ local function countdown(expires, duration, startColor, endColor)
     return "N/A"
 end
 
-function Cells:printTicker(title, expires, duration, colorOverride)
+function Cells:printTicker(title, key, expires, duration, colorOverride)
     local indent = Cells.indent
     local update = function()
         local time, color = countdown(expires, duration, red, green)
@@ -181,7 +189,7 @@ function Cells:printTicker(title, expires, duration, colorOverride)
         self:printValue(title, time, nil, colorOverride or color)
         Cells.indent = ""
     end
-    UI.tickers[title] = { ticker = C_Timer.NewTicker(1, update) }
+    UI.tickers[key] = { ticker = C_Timer.NewTicker(1, update) }
     local time, color = countdown(expires, duration, red, green)
     return self:printValue(title, time, nil, colorOverride or color)
 end
@@ -208,10 +216,9 @@ function Cells:printValue(leftText, rightText, leftColor, rightColor)
     return self.y + 1
 end
 
-function Cells:clickable(f)
+function Cells:attachClickHover()
     local indent = Cells.indent
     local leftColor = self.leftColor
-    self.frame:SetScript("OnClick", f)
     self.frame:HookScript("OnEnter", function()
         Cells.indent = indent
         self.hover = true
@@ -224,6 +231,18 @@ function Cells:clickable(f)
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         Cells.indent = ""
     end)
+end
+
+function Cells:attachSecureClick(itemName)
+    self.frame:SetAttribute("type", "item")
+    self.frame:SetAttribute("item", itemName)
+    self:attachClickHover()
+end
+
+function Cells:attachClick(f)
+    self.clickable = true
+    self.hookOnClick = f
+    self:attachClickHover()
 end
 
 function Cells:printOptionalValue(option, leftText, rightText, leftColor, rightColor)
@@ -240,7 +259,7 @@ end
 function Cells:printSectionTitle(title, key)
     local sectionTitle = getSectionTitle(title, key)
     self:printLine(sectionTitle, ICT.sectionColor)
-    self:clickable(
+    self:attachClick(
         function()
             key = key or title
             ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
@@ -357,7 +376,7 @@ function UI:resetFrameButton()
     button:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetScript("OnClick", function()
-        self:drawFrame(self.defaultX, self.defaultY, self.cellWidth * self.displayX + 40, math.max(self.defaultHeight, self.cellHeight * self.displayY))
+        self:drawFrame(self.defaultX, self.defaultY, self.cellWidth * self.displayX + 60, math.max(self.defaultHeight, self.cellHeight * self.displayY))
     end)
     Tooltips:new("Reset size and position"):create("ICTResetFrameTooltip"):attachFrame(button)
 end
@@ -383,7 +402,7 @@ function UI:printMultiViewResetTicker(x, title, expires, duration)
         frame:SetSize(UI.cellWidth, UI.cellHeight)
         local textField = frame:CreateFontString()
         textField:SetPoint("CENTER")
-        textField:SetFont("Fonts\\FRIZQT__.TTF", 8)
+        textField:SetFont(font, 10)
         textField:SetJustifyH("LEFT")
         frame.textField = textField
     end
@@ -396,7 +415,7 @@ function UI:printMultiViewResetTicker(x, title, expires, duration)
     self.tickers[title] = { ticker = C_Timer.NewTicker(1, update), frame = frame }
     local time, _ = countdown(expires, duration)
     frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time))
-    return x + 60, frame
+    return x + 55, frame
 end
 
 local function createDialogWindow(name, titleText, bodyText, buttonText)

@@ -186,6 +186,7 @@ local cooldownFrame = CreateFrame("Frame")
 -- Trade skill update doesn't seem sufficient to determine an item was made (i.e. start a cooldown)
 cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
 cooldownFrame:RegisterEvent("CHAT_MSG_TRADESKILLS")
+cooldownFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
 cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
 
 -- We can't update the color of instances until we know we've been queued or dequeued.
