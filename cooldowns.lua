@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes")
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 
 local spells = {
     -- Start Vanilla
@@ -85,21 +85,21 @@ ICT.Cooldown = Cooldown
 ICT.Cooldowns = {}
 
 function Cooldown:update(player)
-    for id, info in pairs(ICT.Cooldowns) do
-        if info.spellName then
+    for id, v in pairs(ICT.Cooldowns) do
+        if v:getSpell() then
             local spellKnown = IsPlayerSpell(id)
             if spellKnown then
                 local start, duration = GetSpellCooldown(id)
-                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(info)
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
                 -- Check duration to filter out spell lock, wands and other CD triggers
-                player.cooldowns[id].expires = start ~= 0 and duration == info.duration and ICT:GetTimeLeft(start, duration) or 0
+                player.cooldowns[id].expires = start ~= 0 and duration == v.info.duration and ICT:GetTimeLeft(start, duration) or 0
             else
                 -- Handles case if spell was known and no longer is.
                 player.cooldowns[id] = nil
             end
-        else
+        elseif v:getItem() then
             if GetItemCount(id, true) > 0 and C_PlayerInfo.CanUseItem(id) then
-                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(info)
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
                 local start, duration = C_Container.GetItemCooldown(id)
                 player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:GetTimeLeft(start, duration) or 0
             else
@@ -111,27 +111,27 @@ function Cooldown:update(player)
 end
 
 function Cooldown:new(info)
-    local t = CopyTable(info)
+    local t = { ["info"] = info }
     setmetatable(t, self)
     self.__index = self
     return t
 end
 
 function Cooldown:fromExpansion(expansion)
-    return self.expansion == expansion
+    return self.info.expansion == expansion
 end
 
 function Cooldown:getName()
-    return self.name
+    return self.info.name
 end
 
 function Cooldown:cast(player)
-    if self.spellName then
+    if self:getSpell() then
         for _, p in pairs(player.professions) do
             if p.spellId ~= nil then
                 CastSpellByID(p.spellId)
                 for i = 1, GetNumTradeSkills() do
-                    if GetTradeSkillInfo(i) == self.spellName then
+                    if GetTradeSkillInfo(i) == self:getSpell() then
                         DoTradeSkill(i)
                         CloseTradeSkill()
                         return
@@ -140,51 +140,57 @@ function Cooldown:cast(player)
             end
             CloseTradeSkill()
         end
-        ICT:print("No skill found: %s", self.spellName)
-    else
-        if GetItemCount(self.id) > 0 then
-            UseItemByName(self.itemName)
-        else
-            ICT:print("No item found in inventory: %s", self.itemName)
-        end
+        ICT:print("No skill found: %s", self:getSpell())
     end
+end
+
+function Cooldown:getSkillId()
+    return self.info.skillId
+end
+
+function Cooldown:getSpell()
+    return self.info.spellName
+end
+
+function Cooldown:getItem()
+    return self.info.itemName
 end
 
 function Cooldown:getNameWithIcon()
-    return string.format("|T%s:14|t%s", self.icon, self.name)
+    return string.format("|T%s:14|t%s", self.info.icon, self.info.name)
 end
 
 function Cooldown:isVisible()
-    return ICT.db.options.displayCooldowns[self.id]
+    return ICT.db.options.displayCooldowns[self.info.id]
 end
 
 function Cooldown:setVisible(v)
-    ICT.db.options.displayCooldowns[self.id] = v
+    ICT.db.options.displayCooldowns[self.info.id] = v
 end
 
 function Cooldown:__eq(other)
-    return self.name == other.name
+    return self.info.name == other.info.name
 end
 
 function Cooldown:__lt(other)
-    if self.skillId == other.skillId then
-        if self.expansion == other.expansion then
-            return self.name < other.name
+    if self.info.skillId == other.info.skillId then
+        if self.info.expansion == other.info.expansion then
+            return self.info.name < other.info.name
         end
-        return self.expansion > other.expansion
+        return self.info.expansion > other.info.expansion
     end
-    return self.skillId < other.skillId
+    return self.info.skillId < other.info.skillId
 end
 
 for _, id in pairs(spells) do
     local v = {}
     v.id = id
 
-    local category, expansion, _, _, itemId = LibTradeSkillRecipes:GetInfoBySpellId(id)
-    v.skillId = category
-    v.expansion = expansion
+    local info = LibTradeSkillRecipes:GetInfoBySpellId(id)
+    v.skillId = info.categoryId
+    v.expansion = info.expansionId
     local name, _, icon = GetSpellInfo(id)
-    v.icon = itemId and select(5, GetItemInfoInstant(itemId)) or icon
+    v.icon = info.itemId and select(5, GetItemInfoInstant(info.itemId)) or icon
     v.spellName = name
     -- Remove transmute prefix.
     if name:find("Transmute:") then
@@ -207,12 +213,12 @@ for id, v in pairs(items) do
     v.id = id
 
     v.icon = select(5, GetItemInfoInstant(id))
-    local category, expansion, _, _, _, _ = LibTradeSkillRecipes:GetInfoByItemId(id)
-    v.skillId = v.skillId or category
+    local info = LibTradeSkillRecipes:GetInfoByItemId(id)[1]
+    v.skillId = v.skillId or info.categoryId
     if not v.skillId then
         ICT:print("Missing skillId: " .. id)
     end
-    v.expansion = v.expansion or expansion
+    v.expansion = v.expansion or info.expansionId
     if not v.expansion then
         ICT:print("Missing expansion: " .. id)
     end
@@ -227,6 +233,7 @@ for id, v in pairs(items) do
             v.name = string.match(v.name, "Wormhole Generator: (.*)")
         end
         v.icon = item:GetItemIcon()
+        ICT:UpdateDisplay()
     end)
     ICT.Cooldowns[id] = Cooldown:new(v)
 end

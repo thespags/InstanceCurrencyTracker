@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes")
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Instances = ICT.Instances
 local Colors = ICT.Colors
 local Player = ICT.Player
@@ -361,10 +361,10 @@ local function printCharacterInfo(player, x, offset)
                 local key = player.fullName .. name
                 offset = cell:printTicker(name, key, v.expires, v.duration)
                 if player:isCurrentPlayer() then
-                    if v.spellName then
+                    if v:getSpell() then
                         cell:attachClick(function() v:cast(player) end)
-                    elseif v.itemName then
-                        cell:attachSecureClick(v.itemName)
+                    elseif v:getItem() then
+                        cell:attachSecureClick(v:getItem())
                     end
                 end
             end
