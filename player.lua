@@ -453,7 +453,7 @@ function Player:recreateCooldowns()
         -- Accidentally had useless cooldowns in which aren't in the table so remove them.
         local new = ICT.Cooldowns[id]
         if new then
-            self.cooldowns[id] = ICT.Cooldown:new(new)
+            self.cooldowns[id] = ICT.Cooldown:new(new.info)
             self.cooldowns[id].expires = info.expires
         else
             self.cooldowns[id] = nil

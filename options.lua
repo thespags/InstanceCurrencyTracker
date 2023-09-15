@@ -319,10 +319,10 @@ function Options:CreateOptionDropdown()
                     -- Now create a level for all the cooldowns of that expansion.
                     local lastSkill
                     for _, v in ICT:nspairsByValue(ICT.Cooldowns, ICT:fWith(ICT.Cooldown.fromExpansion, expansion)) do
-                        if lastSkill and lastSkill ~= v.skillId then
+                        if lastSkill and lastSkill ~= v:getSkillId() then
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end
-                        lastSkill = v.skillId
+                        lastSkill = v:getSkillId()
                         addObjectOption(v, level)
                     end
                 end
