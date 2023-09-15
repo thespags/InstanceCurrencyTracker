@@ -213,12 +213,12 @@ for id, v in pairs(items) do
     v.id = id
 
     v.icon = select(5, GetItemInfoInstant(id))
-    local info = LibTradeSkillRecipes:GetInfoByItemId(id)[1]
-    v.skillId = v.skillId or info.categoryId
+    local info = LibTradeSkillRecipes:GetInfoByItemId(id)
+    v.skillId = v.skillId or info[1].categoryId
     if not v.skillId then
         ICT:print("Missing skillId: " .. id)
     end
-    v.expansion = v.expansion or info.expansionId
+    v.expansion = v.expansion or info[1].expansionId
     if not v.expansion then
         ICT:print("Missing expansion: " .. id)
     end
