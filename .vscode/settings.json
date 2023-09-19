@@ -92,6 +92,12 @@
         "C_LFGList",
         "tContains",
         "tDeleteItem",
-        "GetAddOnMetadata"
+        "GetAddOnMetadata",
+        "LFGBrowseActivityDropDown_ValueSetSelected",
+        "LFGBrowseFrame",
+        "UnitIsGroupLeader",
+        "C_PlayerInfo",
+        "GetItemCount",
+        "Item"
     ]
 }

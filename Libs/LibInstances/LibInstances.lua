@@ -56,7 +56,6 @@ end
 function Instances:getActivityId(size, difficulty)
     local activities = (self.activities[size] or {})
     local activityId = activities[math.min(difficulty, #activities)]
-    assert(activityId, string.format("Unknown activity for id/size/difficulty: %s/%s/%s", self.id, size, difficulty))
     return activityId
 end
 
