@@ -1,7 +1,21 @@
 local addOn, ICT = ...
 
 local Colors = {}
+Colors.green = "FF00FF00"
+Colors.red = "FFFF0000"
 ICT.Colors = Colors
+
+function Colors:getQuestColor(player, quest)
+    return (not player:isQuestAvailable(quest) and ICT.unavailableColor) or (player:isQuestCompleted(quest) and ICT.lockedColor or ICT.availableColor)
+end
+
+function Colors:getSelectedColor(selected)
+    return selected and ICT.lockedColor or ICT.availableColor
+end
+
+function Colors:getSelectedQueueColor(selected)
+    return selected and ICT.queuedLockedColor or ICT.queuedAvailableColor
+end
 
 function Colors:hex2rgbInteger(hex)
     return tonumber("0x" .. hex:sub(3,4)), tonumber("0x" .. hex:sub(5,6)), tonumber("0x" .. hex:sub(7,8))

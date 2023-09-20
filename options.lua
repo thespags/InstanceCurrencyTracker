@@ -1,35 +1,43 @@
 local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 ICT.Options = {}
+local UI = ICT.UI
 local Options = ICT.Options
 local Instances = ICT.Instances
 local Player = ICT.Player
 
 local playerOptions = {
-    { name = "Show Level", key = "showLevel", },
-    { name = "Show Guild", key = "showGuild", },
-    { name = "Show Guild Rank", key = "showGuildRank", },
-    { name = "Show Gold", key = "showMoney", },
-    { name = "Show Durability", key = "showDurability", },
-    { name = "Show XP", key = "showXP", },
-    { name = "Show Rested XP", key = "showRestedXP", },
-    { name = "Show Resting State", key = "showRestedState", },
-    { name = "Show Bags", key = "showBags", },
-    { name = "Show Bank Bags", key = "showBankBags", },
-    { name = "Show Specs", key = "showSpecs", },
-    { name = "Show Gear Scores", key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
-    { name = "Show Professions", key = "showProfessions", },
+    { name = L["Show Level"], key = "showLevel", },
+    { name = L["Show Guild"], key = "showGuild", },
+    { name = L["Show Guild Rank"], key = "showGuildRank", },
+    { name = L["Show Gold"], key = "showMoney", },
+    { name = L["Show Durability"], key = "showDurability", },
+    { name = L["Show XP"], key = "showXP", },
+    { name = L["Show Rested XP"], key = "showRestedXP", },
+    { name = L["Show Resting State"], key = "showRestedState", },
+    { name = L["Show Bags"], key = "showBags", },
+    { name = L["Show Bank Bags"], key = "showBankBags", },
+    { name = L["Show Specs"], key = "showSpecs", },
+    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
+    { name = L["Show Professions"], key = "showProfessions", },
+    { name = L["Show Cooldowns"], key = "showCooldowns", },
+}
+
+local gearOptions = {
+    { name = L["Show Specs"], key = "showSpecs", },
+    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
 }
 
 local messageOptions = {
-    { name = "Send Group Messages", key = "group", tooltip = "Messages your party or raid on leaving an instance with the collected currency. Otherwise prints to your chat window only.", },
-    { name = "Send LFG Messages", key = "lfg", tooltip = "Prints messages when enqueuing or dequeuing LFG window when clicking ICT buttons.", },
+    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"] },
+    { name = L["Send LFG Messages"], key = "lfg", tooltip = L["SendLFGMessagesTooltip"] },
 }
 
 local questOptions = {
-    { name = "Hide Unavailable Quests", key = "hideUnavailable"},
-    { name = "Show Quests", key = "show", },
+    { name = L["Hide Unavailable Quests"], key = "hideUnavailable"},
+    { name = L["Show Quests"], key = "show", },
 }
 
 function Options.minimap()
@@ -38,13 +46,13 @@ function Options.minimap()
 end
 
 local frameOptions = {
-    { name = "Anchor to LFG", key = "anchorLFG", tooltip = "Brings up the frame when viewing the LFG frame otherwise detaches from the frame.", },
-    { name = "Show Minimap Icon", key = "showMinimapIcon", func = Options.minimap },
-    { name = "Order Lock Last", key = "orderLockLast", defaultFalse = true, "Orders locked instances and completed quests after available instances and quests.", },
-    { name = "Verbose Currency", key = "verboseCurrency", defaultFalse = true, tooltip = "Multiline currency view or a single line currency view.", },
-    { name = "Verbose Currency Tooltip", key = "verboseCurrencyTooltip", tooltip = "Shows instances and quests currency available and total currency for the hovered over currency.", },
-    { name = "Show Realm Name", key = "verboseName", defaultFalse = true, toolti = "Shows [{realm name}] {player name} versus {player name}.", },
-    { name = "Show Level Slider", key = "showLevelSlider", tooltip = "Displays the slider bar to control minimum character level." },
+    { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
+    { name = L["Show Minimap Icon"], key = "showMinimapIcon", func = Options.minimap },
+    { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, tooltip = L["OrderLockLastTooltip"], },
+    { name = L["Verbose Currency"], key = "verboseCurrency", defaultFalse = true, tooltip = L["VerboseCurrencyTooltip"], },
+    { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
+    { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
+    { name = L["Show Level Slider"], key = "showLevelSlider", tooltip = L["ShowLevelSliderTooltip"], },
 }
 
 function Options:setDefaultOptions(override)
@@ -98,9 +106,14 @@ function Options:setDefaultOptions(override)
         end
     end
     setDefaults(playerOptions, "player")
+    setDefaults(gearOptions, "gear")
     setDefaults(messageOptions, "messages")
     setDefaults(frameOptions, "frame")
     setDefaults(questOptions, "quests")
+    -- Added new player value, set to on.
+    if ICT.db.options.player.showCooldowns == nil then
+        ICT.db.options.player.showCooldowns = true
+    end
 end
 
 function Options:FlipMinimapIcon()
@@ -142,7 +155,7 @@ local function addObjectOption(o, level)
     info.value = o.getFullName and o:getFullName() or o:getName()
     info.func = function(self)
         o:setVisible(not o:isVisible())
-        ICT:PrintPlayers()
+        UI:PrintPlayers()
     end
     DDM:UIDropDownMenu_AddButton(info, level)
 end
@@ -163,7 +176,7 @@ local function addExpansionOptions(objects, menuList, level)
             for _, o in ICT:fpairsByValue(objects, function(v) return v:fromExpansion(expansion) end ) do
                 o:setVisible(not wasChecked)
             end
-            ICT:PrintPlayers()
+            UI:PrintPlayers()
         end
         DDM:UIDropDownMenu_AddButton(info, level)
     end
@@ -182,7 +195,7 @@ local function addObjectsOption(name, objects, level, filter)
         for _, o in ICT:fpairsByValue(objects, filter) do
             o:setVisible(not wasChecked)
         end
-        ICT:PrintPlayers()
+        UI:PrintPlayers()
     end
     DDM:UIDropDownMenu_AddButton(info, level)
 end
@@ -197,7 +210,7 @@ local function addMenuOption(name, options, level, tooltip)
         for k, _ in pairs(options) do
             options[k] = not wasChecked
         end
-        ICT:PrintPlayers()
+        UI:PrintPlayers()
     end
     if tooltip then
         info.tooltipTitle = info.text
@@ -216,7 +229,7 @@ local function addOptions(options, group, level)
             if v.func then
                 v.func()
             end
-            ICT:PrintPlayers()
+            UI:PrintPlayers()
         end
         if v.tooltip then
             info.tooltipTitle = v.name
@@ -255,49 +268,52 @@ function Options:CreateOptionDropdown()
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
                     Options:FlipOptionsMenu()
-                    ICT:PrintPlayers()
+                    UI:PrintPlayers()
                 end
                 DDM:UIDropDownMenu_AddButton(multiPlayerView)
 
-                addMenuOption("Messages", ICT.db.options.messages, level)
-                addMenuOption("Character Info", ICT.db.options.player, level, "Enables and disables information about a character to appear.")
-                addObjectsOption("Characters", ICT.db.players, level, Player.isLevelVisible)
-                addObjectsOption("Reset Timers", ICT.ResetInfo, level)
-                addObjectsOption("Instances", Instances.infos(), level)
-                addObjectsOption("Difficulty", ICT.DifficultyInfo, level)
-                addMenuOption("Quests", ICT.db.options.quests, level)
-                addObjectsOption("Currency", ICT.Currencies, level)
-                addObjectsOption("Cooldowns", ICT.Cooldowns, level)
+                addMenuOption(L["Messages"], ICT.db.options.messages, level)
+                addMenuOption(L["Character Info"], ICT.db.options.player, level, "Enables and disables information about a character to appear.")
+                addMenuOption(L["Gear Info"], ICT.db.options.gear, level, "Enables and disables information for the gear tab.")
+                addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
+                addObjectsOption(L["Reset Timers"], ICT.ResetInfo, level)
+                addObjectsOption(L["Instances"], Instances.infos(), level)
+                addObjectsOption(L["Difficulty"], ICT.DifficultyInfo, level)
+                addMenuOption(L["Quests"], ICT.db.options.quests, level)
+                addObjectsOption(L["Currency"], ICT.Currencies, level)
+                addObjectsOption(L["Cooldowns"], ICT.Cooldowns, level)
                 DDM:UIDropDownMenu_AddSeparator()
-                addMenuOption("      Frame", ICT.db.options.frame, level)
+                addMenuOption("      " .. L["Frame"], ICT.db.options.frame, level)
             elseif level == 2 then
-                if menuList == "Characters" then
+                if menuList == L["Characters"] then
                     for _, player in ICT:nspairsByValue(ICT.db.players, Player.isLevelVisible) do
                         addObjectOption(player, level)
                     end
-                elseif menuList == "Reset Timers" then
+                elseif menuList == L["Reset Timers"] then
                     for _, v in ICT:spairs(ICT.ResetInfo) do
                         addObjectOption(v, level)
                     end
-                elseif menuList == "Instances" then
+                elseif menuList == L["Instances"] then
                     addExpansionOptions(Instances.infos(), menuList, level)
-                elseif menuList == "Difficulty" then
+                elseif menuList == L["Difficulty"] then
                     for _, v in ipairs(ICT.DifficultyInfo) do
                         addObjectOption(v, level)
                     end
-                elseif menuList == "Quests" then
+                elseif menuList == L["Quests"] then
                     addOptions(questOptions, "quests", level)
-                elseif menuList == "Currency" then
+                elseif menuList == L["Currency"] then
                     for _, v in ipairs(ICT.Currencies) do
                         addObjectOption(v, level)
                     end
-                elseif menuList == "Cooldowns" then
+                elseif menuList == L["Cooldowns"] then
                     addExpansionOptions(ICT.Cooldowns, menuList, level)
-                elseif menuList == "      Frame" then
+                elseif menuList == "      " .. L["Frame"] then
                     addOptions(frameOptions, "frame", level)
-                elseif menuList == "Character Info" then
+                elseif menuList == L["Character Info"] then
                     addOptions(playerOptions, "player", level)
-                elseif menuList == "Messages" then
+                elseif menuList == L["Gear Info"] then
+                    addOptions(gearOptions, "gear", level)
+                elseif menuList == L["Messages"] then
                     addOptions(messageOptions, "messages", level)
                 end
             elseif level == 3 then
@@ -334,6 +350,7 @@ end
 function Options:PrintMessage(text)
     if IsInGroup() and ICT.db.options.messages.group then
         local type = IsInRaid() and "RAID" or "PARTY"
+        print(text)
         SendChatMessage(text, type)
     else
         print(text)
@@ -364,7 +381,7 @@ function Options:CreatePlayerDropdown()
                 info.func = function(self)
                     ICT.selectedPlayer = self.value
                     DDM:UIDropDownMenu_SetText(playerDropdown, player:getName())
-                    ICT:PrintPlayers()
+                    UI:PrintPlayers()
                 end
                 DDM:UIDropDownMenu_AddButton(info)
             end

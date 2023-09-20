@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
 local LibInstances = LibStub("LibInstances")
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 ICT.Instances = {}
 local Instances = ICT.Instances
 
@@ -80,7 +81,7 @@ function Instances:enqueue(queuedIds, includeLocked, shouldMessage)
     local instanceCategory = C_LFGList.GetActivityInfoTable(self:activityId()).categoryID
 
     if queueCategory and queueCategory ~= instanceCategory then
-        ICT:oprint("Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together.", "lfg", self:getName())
+        ICT:oprint(L["Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together."], "lfg", self:getName())
         return
     end
 
@@ -101,7 +102,7 @@ function Instances:enqueue(queuedIds, includeLocked, shouldMessage)
             f(queuedIds, activityId)
             -- Response back to the user to see what was queued/dequeued.
             if shouldMessage and not ignore then
-                local message = remove and "Dequeuing %s" or "Enqueuing %s"
+                local message = remove and L["Dequeuing %s"] or L["Enqueuing %s"]
                 local name = self:getName() .. (self:isDungeon() and ", " .. difficulty:getName() or "")
                 ICT:oprint(message, "lfg", name)
             end

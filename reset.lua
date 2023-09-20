@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Reset = {}
 ICT.Reset = Reset
 
@@ -34,7 +35,7 @@ end
 function Reset:reset()
     local timestamp = GetServerTime()
     if self:expires() and self:expires() < timestamp then
-        ICT:print("%s reset, updating info.", self:getName())
+        ICT:print(L["%s reset, updating info."], self:getName())
         for _, player in pairs(ICT.db.players) do
             self.func(player)
         end
