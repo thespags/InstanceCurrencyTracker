@@ -110,8 +110,8 @@ end
 function ICT:getEnchant(effectId, slot)
     if x[effectId] then
         return x[effectId][slot]
-    else
-        print(effectId .. " missing")
+    elseif effectId then
+        ICT:print("EffectId missing: %s", effectId)
     end
 end
 
