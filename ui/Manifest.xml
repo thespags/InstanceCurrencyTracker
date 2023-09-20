@@ -1,0 +1,9 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="colors.lua"/>
+  <Script file="ui.lua"/>
+  <Script file="cells.lua"/>
+  <Script file="tooltips.lua"/>
+  <Script file="common.lua"/>
+  <Script file="main-tab.lua"/>
+  <Script file="gear-tab.lua"/>
+</Ui>

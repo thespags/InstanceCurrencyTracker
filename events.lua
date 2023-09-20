@@ -2,10 +2,12 @@ local addOnName, ICT = ...
 
 ICT.LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Player = ICT.Player
 local Options = ICT.Options
 local version = GetAddOnMetadata("InstanceCurrencyTracker", "Version")
 local maxPlayers, instanceId
+local UI = ICT.UI
 
 local function getOrCreateDb()
     local db = InstanceCurrencyDB or {}
@@ -21,7 +23,7 @@ end
 local function flipFrame()
     if not ICT.frame:IsVisible() then
         -- Force display update if it's enabled.
-        ICT:PrintPlayers()
+        UI:PrintPlayers()
         ICT.frame:Show()
     else
         ICT.frame:Hide()
@@ -33,7 +35,7 @@ function ICT.UpdateDisplay()
     player.time = GetServerTime();
     -- Defer updating the display if it's not currently viewed.
     if ICT.frame and ICT.frame:IsVisible() then
-        ICT:PrintPlayers()
+        UI:PrintPlayers()
     else
         ICT.dprint("not updating frame")
     end
@@ -67,7 +69,7 @@ local function initEvent(self, event, eventAddOn)
             ICT.Options:setDefaultOptions(true)
         end
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
-            ICT:print("Old version detected, wiping players. Please relog into each character, sorry.")
+            ICT:print("Old version detected, wiping players. Please relog into each character.")
             ICT:WipeAllPlayers()
         end
         ICT.db.version = version
@@ -84,9 +86,10 @@ local function initEvent(self, event, eventAddOn)
         ICT.CreateCurrentPlayer()
         ICT.init = true
         ICT.GetPlayer():onLoad()
-        ICT:CreateFrame()
-        ICT:print("Initialized %s...", version)
-        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then ICT:PrintPlayers() ICT.frame:Show() end end)
+        ICT.UI:CreateFrame()
+        ICT.selectedPlayer = Player.GetCurrentPlayer()
+        ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
+        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
         LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)
     end
 end
@@ -267,7 +270,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             elseif command == "player" then
                 ICT.WipePlayer(rest)
             else
-                ICT:print("Invalid command")
+                ICT:print(L["Invalid command"])
             end
         end
         -- Refresh frame
@@ -280,9 +283,9 @@ end
 function ICT.WipePlayer(playerName)
     if ICT.db.players[playerName] then
         ICT.db.players[playerName] = nil
-        ICT:print("Wiped player: %s", playerName)
+        ICT:print(L["Wiped character: %s"], playerName)
     else
-        ICT:print("Unknown player: %s", playerName)
+        ICT:print(L["Unknown character: %s"], playerName)
     end
     ICT.CreateCurrentPlayer()
 end
@@ -293,13 +296,13 @@ function ICT.WipeRealm(realmName)
         count = count + 1
         ICT.db.players[name] = nil
     end
-    ICT:print("Wiped %s players on realm: %s", count, realmName)
+    ICT:print(L["Wiped %s characters on realm: %s"], count, realmName)
     ICT.CreateCurrentPlayer()
 end
 
 function ICT.WipeAllPlayers()
     local count = ICT:sum(ICT.db.players, ICT:ReturnX(1))
     ICT.db.players = {}
-    ICT:print("Wiped %s players", count)
+    ICT:print(L["Wiped %s characters"], count)
     ICT.CreateCurrentPlayer()
 end

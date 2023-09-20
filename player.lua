@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local LibInstances = LibStub("LibInstances")
 local LCInspector = LibStub("LibClassicInspector")
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 ICT.Player = {}
 local Player = ICT.Player
 local Instances = ICT.Instances
@@ -14,7 +15,7 @@ function ICT.CreateCurrentPlayer()
     if ICT.db.players[fullName] then
         return
     end
-    ICT:print("Creating player: %s", fullName)
+    ICT:print(L["Creating player: %s"], fullName)
     local player = Player:new()
     player.fullName = fullName
     player.name = UnitName("Player")
@@ -372,7 +373,7 @@ local function addBags(index, bags, bagsTotal)
 
         -- Handle cases if new bag types are added.
         if not ICT.BagFamily[type] then
-            ICT:print("Unknown bag type %s (%s), please report this on the addon page.", type, name)
+            ICT:print(L["Unknown bag type %s (%s), please report this on the addon page."], type, name)
             ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
         end
     end

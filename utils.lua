@@ -110,12 +110,16 @@ function ICT:sum(t, op, f)
     return total
 end
 
-function ICT:sumNonNil(...)
+function ICT:sumNonNilTable(t)
     local count = 0
-    for _, v in pairs({...}) do
+    for _, v in pairs(t) do
         count = count + (v and 1 or 0)
     end
     return count
+end
+
+function ICT:sumNonNil(...)
+    return self:sumNonNilTable({...})
 end
 
 function ICT:max(t, op, f)
@@ -235,9 +239,8 @@ end
 ---@param text string
 ---@param ... string
 function ICT:print(text, ...)
-    local color = "FF40FF60"
     text = string.format(text, ...)
-    print(string.format("|c%s[ICT] %s|r", color, text))
+    print(string.format("|c%s[ICT] %s|r", ICT.textColor, text))
 end
 
 --- Prints the string if the option is set to print.

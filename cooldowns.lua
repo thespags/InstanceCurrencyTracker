@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 
 local spells = {
     -- Start Vanilla
@@ -140,7 +141,7 @@ function Cooldown:cast(player)
             end
             CloseTradeSkill()
         end
-        ICT:print("No skill found: %s", self:getSpell())
+        ICT:print(L["No skill found: %s"], self:getSpell())
     end
 end
 
@@ -216,11 +217,11 @@ for id, v in pairs(items) do
     local info = LibTradeSkillRecipes:GetInfoByItemId(id)
     v.skillId = v.skillId or info[1].categoryId
     if not v.skillId then
-        ICT:print("Missing skillId: " .. id)
+        ICT:print(L["Cooldown skillId: %s"], id)
     end
     v.expansion = v.expansion or info[1].expansionId
     if not v.expansion then
-        ICT:print("Missing expansion: " .. id)
+        ICT:print(L["Cooldown missing expansion: %s"], id)
     end
     -- Default values until loaded.
     v.name = id
@@ -233,7 +234,10 @@ for id, v in pairs(items) do
             v.name = string.match(v.name, "Wormhole Generator: (.*)")
         end
         v.icon = item:GetItemIcon()
-        ICT:UpdateDisplay()
+        -- Make sure function is loaded.
+        if ICT.UpdateDisplay then
+            ICT:UpdateDisplay()
+        end
     end)
     ICT.Cooldowns[id] = Cooldown:new(v)
 end
