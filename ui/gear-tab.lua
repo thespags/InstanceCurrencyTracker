@@ -27,9 +27,10 @@ end
 
 function GearTab:printGlyph(spec, type, typeName, x, offset)
     for index, glyph in ICT:fpairsByValue(spec.glyphs or {}, function(v) return v.type == type and v.enabled end) do
-        local name = glyph.spellId and string.format("%s|T%s:14|t", select(1, GetSpellLink(glyph.spellId)), glyph.icon) or L["Missing"]
+        local name = select(1, GetSpellLink(glyph.spellId)) or GetSpellInfo(glyph.spellId)
+        local nameWithIcon = glyph.spellId and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
         local cell = self.cells:get(x, offset)
-        offset = cell:printValue(typeName .. " " .. index, name)
+        offset = cell:printValue(typeName .. " " .. index, nameWithIcon)
         cell:attachHyperLink()
     end
     return offset
