@@ -185,10 +185,16 @@ function UI:openDeleteFrame(player)
 end
 
 local options = createDialogWindow("ICTResetOptionsDialog", "Confirm Reset Options", "Set all options to their default value?", "Confirm")
+local resetOptions = true
 function UI:openResetOptionsFrame()
     return function()
+        resetOptions = not resetOptions
+        if resetOptions then
+            options:Hide()
+            return
+        end
         options:Show()
-        options.button:SetScript("OnClick", function ()
+        options.button:SetScript("OnClick", function()
             ICT.Options:setDefaultOptions(true)
             options:Hide()
         end)
@@ -349,7 +355,9 @@ function UI:CreatePlayerSlider()
         local value = frame:GetText();
         value = tonumber(value);
         if value then
+            value = math.max(math.min(ICT.MaxLevel, value), 1)
             ICT.db.options.minimumLevel = value
+            levelSlider:SetValue(value)
             levelSlider.editBox:SetText(value)
             frame:ClearFocus()
         else
