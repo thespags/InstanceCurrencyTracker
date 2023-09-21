@@ -227,7 +227,8 @@ local function messageResults(player, instance)
                 local available = instance:availableCurrency(currency)
                 local collected = max - available
                 local total = player:totalCurrency(currency)
-                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, currency:getNameWithIcon(), collected, max, total)
+                -- I don't know or I can't put an icon into chat.
+                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, currency:getName(), collected, max, total)
                 Options:PrintMessage(text)
             end
         end
@@ -248,6 +249,8 @@ end
 local broadcastFrame = CreateFrame("Frame")
 broadcastFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 broadcastFrame:SetScript("OnEvent", broadcastEvent)
+-- On reload set the instance.
+C_Timer.After(0.5, broadcastEvent)
 
 SLASH_InstanceCurrencyTracker1 = "/ict";
 SlashCmdList.InstanceCurrencyTracker = function(msg)

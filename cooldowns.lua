@@ -193,9 +193,11 @@ for _, id in pairs(spells) do
     local name, _, icon = GetSpellInfo(id)
     v.icon = info.itemId and select(5, GetItemInfoInstant(info.itemId)) or icon
     v.spellName = name
-    -- Remove transmute prefix.
-    if name:find("Transmute:") then
-        name = string.match(name, "Transmute: (.*)")
+    -- Remove transmute prefix, trying to ignore languages by just using :, 
+    -- in the future we may have non transmutes with :.
+    local i = name:find(":")
+    if i then
+        name = string.sub(name, i + 2)
         v.transmute = true
     end
     v.name = name
@@ -230,8 +232,9 @@ for id, v in pairs(items) do
     item:ContinueOnItemLoad(function()
         v.name = item:GetItemName()
         v.itemName = v.name
-        if v.name:find("Wormhole Generator:") then
-            v.name = string.match(v.name, "Wormhole Generator: (.*)")
+        local i = v.name:find(":")
+        if i then
+            v.name = string.sub(v.name, i + 2)
         end
         v.icon = item:GetItemIcon()
         -- Make sure function is loaded.
