@@ -22,15 +22,19 @@ local factionQuestName = function(hordeName, allianceName)
 end
 
 local level80 = function(player)
-    return player.level == 80
+    return player:isLevel(80)
 end
 
 local isJewelCrafter = function(player)
-    return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:getProfessionRank(51311) >= 375
+    return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:isJewelCrafter(375)
 end
 
-local isCook = function(player)
-    return player.level >= 65 and player:getProfessionRank(51296) >= 350
+local hasCooking = function(player)
+    return player:isLevel(65) and player:hasCooking(350)
+end
+
+local hasFishing = function(player)
+    return player:isLevel(70) and player:hasFishing()
 end
 
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
@@ -78,7 +82,13 @@ ICT.QuestInfo = {
         -- Mustard Dogs drops 2, but that requires the ability to detect the active daily.
         amount = 1,
         currency = ICT.Epicurean,
-        prereq = isCook,
+        prereq = hasCooking,
+    },
+    ["Fishing Daily"] = {
+        name = ICT:ReturnX("Fishing Daily"),
+        ids = { 13830, 13832, 13833, 13834, 13836 },
+        amount = 0,
+        prereq = hasFishing,
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     ["Threat From Above"] = {
@@ -166,6 +176,14 @@ function Quests:isDailyCompleted()
     return false
 end
 
+function Quests:isVisible()
+    return self.currency and self.currency:isVisible() or ICT.db.options.quests[self.key]
+end
+
+function Quests:getCurrencyName()
+    return self.currency and self.currency:getNameWithIconTooltip() or "No Currency"
+end
+
 -- This would be nicer if it wasn't player dependent.
 -- In general, I believe quests are the same name across factions but may have different quest givers.
 -- However, I don't always have a common name for "some group of quests".
@@ -182,8 +200,10 @@ function ICT.QuestSort(player)
         end
         if a.currency == b.currency then
             return a.name(player) < b.name(player)
-        else
+        elseif a.currency and b.currency then
             return a.currency < b.currency
+        else
+            return a.currency ~= nil
         end
     end
 end

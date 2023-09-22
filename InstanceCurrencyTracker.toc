@@ -8,20 +8,10 @@
 ## X-Wago-ID: aNevrM62
 ## X-WoWI-ID: 26629
 
-embeds.xml
-Libs\LibStub\LibStub.lua
-Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
-Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
-Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
-Libs\LibUIDropDownMenu\LibUIDropDownMenu.lua
-Libs\LibDetours-1.0\LibDetours-1.0.lua
-Libs\LibClassicInspector\LibClassicInspector.lua
-Libs\LibInstances\LibInstances.lua
-Libs\LibTradeSkillRecipes\lib-wotlk.xml
+Manifest.xml
 Locale\Locales.xml
 semver.lua
 utils.lua
-colors.lua
 currency.lua
 instances.lua
 quests.lua

@@ -38,6 +38,7 @@ local messageOptions = {
 local questOptions = {
     { name = L["Hide Unavailable Quests"], key = "hideUnavailable"},
     { name = L["Show Quests"], key = "show", },
+    { name = L["Show Fishing Daily"], key = "Fishing Daily", }
 }
 
 function Options.minimap()
@@ -243,12 +244,12 @@ end
 function Options:CreateOptionDropdown()
     local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", ICT.frame)
     ICT.frame.options = dropdown
-    dropdown:SetPoint("TOP", ICT.frame, "BOTTOM", 0, 2)
+    dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT", 0, 2)
     dropdown:SetAlpha(1)
     dropdown:SetIgnoreParentAlpha(true)
 
     -- Width set to slightly smaller than parent frame.
-    DDM:UIDropDownMenu_SetWidth(dropdown, 160)
+    DDM:UIDropDownMenu_SetWidth(dropdown, 80)
     DDM:UIDropDownMenu_SetText(dropdown, "Options")
     local options = ICT.db.options
     self:setDefaultOptions()
@@ -350,7 +351,6 @@ end
 function Options:PrintMessage(text)
     if IsInGroup() and ICT.db.options.messages.group then
         local type = IsInRaid() and "RAID" or "PARTY"
-        print(text)
         SendChatMessage(text, type)
     else
         print(text)

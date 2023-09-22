@@ -522,7 +522,7 @@ end
 
 local function questTooltip(name, quest)
     local tooltip = Tooltips:new(name)
-    tooltip:printValue(quest.currency:getNameWithIconTooltip(), quest.amount)
+    tooltip:printValue(quest:getCurrencyName(), quest.amount or "")
 
     for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
         if player:isQuestVisible(quest) then
