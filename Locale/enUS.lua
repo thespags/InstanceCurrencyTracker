@@ -4,6 +4,26 @@ L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Curren
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
 
+------ Professions
+L["alchemy"] = "Alchemy"
+L["archaeology"] = "Archaeology"
+L["blacksmithing"] = "Blacksmithing"
+L["cooking"] = "Cooking"
+L["enchanting"] = "Enchanting"
+L["engineering"] = "Engineering"
+L["firstAid"] = "First Aid"
+L["fishing"] = "Fishing"
+L["herbalism"] = "Herbalism"
+L["herbalismskills"] = "Herbalism Skills"
+L["inscription"] = "Inscription"
+L["jewelcrafting"] = "Jewelcrafting"
+L["leatherworking"] = "Leatherworking"
+L["mining"] = "Mining"
+L["miningskills"] = "Mining Skills"
+L["skinning"] = "Skinning"
+L["skinningskills"] = "Skinning Skills"
+L["tailoring"] = "Tailoring"
+
 -- Sections
 L["Info"] = "Info"
 L["Bags"] = "Bags"
@@ -36,6 +56,10 @@ L["Free / Total"] = "Free / Total"
 L["Personal Bags"] = "Personal Bags"
 L["Bank Bags"] = "Bank Bags"
 L["BagTooltipNote"] = "Note: Bank bags require opening and closing the bank for each character."
+L["General"] = "General"
+L["Arrows"] = "Arrows"
+L["Bullets"] = "Bullets"
+L["Soul Shards"] = "Soul Shards"
 
 -- Gear Info
 L["Talents"] = "Talents"

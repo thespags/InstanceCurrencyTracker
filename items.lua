@@ -1,5 +1,6 @@
 local addOn, ICT = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Player = ICT.Player
 
 -- TODO check if this is available in wow db?
@@ -58,27 +59,27 @@ ICT.ItemTypeToSlot = {
 -- Values align with 2^(n - 1), except for the 0 case.
 ICT.BagFamily = {
     -- Generic
-    [0] = { icon = "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack", name = "General" },
+    [0] = { icon = "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack", name = L["General"] },
     -- Arrows
-    [1] = { icon = 41165, name = "Arrows" },
+    [1] = { icon = 41165, name = L["Arrows"] },
     -- Bullets
-    [2] = { icon = 249175, name = "Bullets" },
+    [2] = { icon = 249175, name = L["Bullets"] },
     -- Soul Shards
-    [4] = { icon = 134075, name = "Soul Shards" },
+    [4] = { icon = 134075, name = L["Soul Shards"] },
     -- Leathworking 
-    [8] = { icon = 133611, name = select(1, GetSpellInfo(51302))},
+    [8] = { icon = 133611, name = L["leatherworking"] },
     -- Inscription 
-    [16] = { icon = 237171, name = select(1, GetSpellInfo(45357))},
+    [16] = { icon = 237171, name = L["inscription"] },
     -- Herbalism
-    [32] = { icon = 136246, name = select(1, GetSpellInfo(265820))},
+    [32] = { icon = 136246, name = L["herbalism"] },
     -- Enchanting 
-    [64] = { icon = 136244, name = select(1, GetSpellInfo(51313))},
+    [64] = { icon = 136244, name = L["enchanting"] },
     -- Engineering
-    [128] = { icon = 136243, name = select(1, GetSpellInfo(51306))},
+    [128] = { icon = 136243, name = L["engineering"] },
     -- Jewelcrafting
-    [512] = { icon = 134071, name = select(1, GetSpellInfo(51311))},
+    [512] = { icon = 134071, name = L["jewelcrafting"] },
     -- Mining
-    [1024] = { icon = 136248, name = select(1, GetSpellInfo(50310))},
+    [1024] = { icon = 136248, name = L["mining"] },
 }
 
 function ICT:addGems(k, item, missingOnly)

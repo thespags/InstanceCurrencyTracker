@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local LCInspector = LibStub("LibClassicInspector")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
@@ -203,59 +204,42 @@ function Player:updateInstance()
     end
 end
 
-local remap = {
-    [50310] = 2656,
-    [29354] = 2656,
-    [10248] = 2656,
-    [3564] = 2656,
-    [2576] = 2656,
-    [2575] = 2656,
-}
--- All these are fishing
-local ignored = ICT:set(2383, 7731, 7732, 7620, 18248, 33095, 51294, 62734)
-local SECONDARY_SKILLS = string.gsub(SECONDARY_SKILLS, ":", "")
-local PROFICIENCIES = string.gsub(PROFICIENCIES, ":", "")
-function Player:updateSkills()
-    -- Skill list is always in same order, so we can get primary/secondary/weapon by checking the section headers.
-    local professionCount = 0
-    local isSecondary = false
-    local profession = false
-    -- Reset skills in case one was dropped.
-    self.professions = {}
+function Player:addSkill(index, isSecondary)
+    if index then
+        local name, icon, rank, max, _, offset, skillLine, _  = LibAddonCompat:GetProfessionInfo(index)
+        local spellId = offset and select(2, GetSpellBookItemInfo(offset + 1, "SPELL"))
+        local profession = {
+            name = name,
+            skillLine = skillLine,
+            icon = icon,
+            rank = rank,
+            max = max,
+            spellId = spellId,
+            isSecondary = isSecondary or false
+        }
+        tinsert(self.professions, profession)
+    end
+end
 
-    for i = 1, GetNumSkillLines() do
-        local name, isHeader, _, rank, _, _, max = GetSkillLineInfo(i)
-        -- Herbliasm doesn't have a spell so swap to 'Find Herb', note this isn't localized...
-        local nameOrId = name == "Herbalism" and 2383 or name
-        local _, _, icon, _, _, _, spellId = GetSpellInfo(nameOrId)
-        -- Ugly, but Swap (mining) or ignore (fishing),
-        spellId = remap[spellId] or not ignored[spellId] and spellId or nil
-        -- Note we aren't using anything besides professions, in the future we may want to display other attributes.
-        if isHeader and name == TRADE_SKILLS then
-            isSecondary = false
-            profession = true
-        elseif isHeader and name == SECONDARY_SKILLS then
-            isSecondary = true
-            profession = true
-        elseif isHeader and string.find(name, COMBAT_RATING_NAME1) then
-            profession = false
-        elseif isHeader and string.find(name, PROFICIENCIES) then
-            profession = false
-        elseif isHeader and name == LANGUAGES_LABEL then
-            profession = false
-        end
-        if not isHeader and profession and icon then
-            professionCount = professionCount + 1;
-            self.professions[professionCount] = {
-                name = name,
-                icon = icon,
-                rank = rank,
-                max = max,
-                spellId = spellId,
-                isSecondary = isSecondary
-            }
+function Player:getProfessionRank(skillLine)
+    for _, v in pairs(self.professions or {}) do
+        if v.skillLine == skillLine then
+            return v.rank
         end
     end
+    return 0
+end
+
+function Player:updateSkills()
+    -- Reset skills in case one was dropped.
+    self.professions = {}
+    local first, second, _, fishing, cooking, firstAid = LibAddonCompat:GetProfessions()
+    print(LibAddonCompat:GetProfessions())
+    self:addSkill(first)
+    self:addSkill(second)
+    self:addSkill(cooking, true)
+    self:addSkill(firstAid, true)
+    self:addSkill(fishing, true)
 end
 
 function Player:getSpec(id)
@@ -489,16 +473,6 @@ function Player:getRestedXP()
 	return percent
 end
 
-function Player:getProfessionRank(id)
-    local icon = select(3, GetSpellInfo(id))
-    for _, v in pairs(self.professions or {}) do
-        if v.icon == icon then
-            return v.rank
-        end
-    end
-    return 0
-end
-
 function Player:getName()
     return ICT.db.options.frame.verboseName and self.fullName or self.name
 end
@@ -522,7 +496,7 @@ end
 
 function Player:isQuestVisible()
     return function(quest)
-        return quest.currency:isVisible() and (self:isQuestAvailable(quest) or not ICT.db.options.quests.hideUnavailable)
+        return quest:isVisible() and (self:isQuestAvailable(quest) or not ICT.db.options.quests.hideUnavailable)
     end
 end
 
@@ -534,20 +508,36 @@ function Player:isQuestCompleted(quest)
     return self.quests.completed[quest.key]
 end
 
+function Player:hasCooking(level)
+    return self:getProfessionRank(185) >= (level or 1)
+end
+
+function Player:hasFishing(level)
+    return self:getProfessionRank(356) >= (level or 1)
+end
+
 function Player:isEngineer(level)
-    return self:getProfessionRank(51306) >= (level or 1)
+    return self:getProfessionRank(202) >= (level or 1)
 end
 
 function Player:isEnchanter(level)
-    return self:getProfessionRank(51313) >= (level or 1)
+    return self:getProfessionRank(333) >= (level or 1)
 end
 
 function Player:isBlacksmith(level)
-    return self:getProfessionRank(51300) >= (level or 1)
+    return self:getProfessionRank(164) >= (level or 1)
+end
+
+function Player:isJewelCrafter(level)
+    return self:getProfessionRank(755) >= (level or 1)
+end
+
+function Player:isLevel(level)
+    return self.level >= level
 end
 
 function Player:isMaxLevel()
-    return self.level == ICT.MaxLevel
+    return self:isLevel(ICT.MaxLevel)
 end
 
 function Player:isCurrentPlayer()
@@ -567,7 +557,7 @@ function Player:isEnabled()
 end
 
 function Player:isLevelVisible()
-    return self.level >= (ICT.db.options.minimumLevel or ICT.MaxLevel)
+    return self:isLevel(ICT.db.options.minimumLevel or ICT.MaxLevel)
 end
 
 function Player:__eq(other)

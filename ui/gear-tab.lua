@@ -14,10 +14,12 @@ function GearTab:calculatePadding()
     local db = ICT.db
     self.paddings.items = ICT:max(db.players, function(player) return ICT:size(player:getSpec().items or {}) end, Player.isEnabled)
     self.paddings.glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
+    self.paddings.enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     for i=1,2 do
         self.paddings[i] = {}
         self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player.specs[i].items or {}) end, Player.isEnabled)
         self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
+        self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     end
 end
 
@@ -90,6 +92,7 @@ function GearTab:printSpec(player, x, offset, spec)
     cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Enchants"])
     if cell:isSectionExpanded(L["Enchants"]) then
+        local padding = self:getPadding(offset, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
             local enchant = ICT:getEnchant(item.enchantId, slot)
@@ -98,6 +101,7 @@ function GearTab:printSpec(player, x, offset, spec)
             offset = cell:printValue(_G[item.invType], enchant)
             cell:attachHyperLink()
         end
+        offset = self.cells:hideRows(x, offset, padding)
     end
     offset = self.cells:get(x, offset):hide()
     self.cells.indent = ""

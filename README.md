@@ -53,6 +53,7 @@ Otherwise `/ict` will bring up the window.
     + Quest rewards
     + Quest completed per character
     + Prerequisites met per character
+    + Quests are viewed by currency unless no currency associated.
 
 ## Options
 + Show Realm Name  
@@ -64,16 +65,23 @@ _Enables messaging to your group collected currency, otherwise prints to your ch
 + Characters  
 _Enable/Disable the characters to appear in the dropdown list and multi player view._
 + Character Info  
-_Enable/Disable line information about the character to appear under their name._
+_Enable/Disable line information about the character to appear under their name._  
++ Gear Info
+_Enable/Disable information for the gear tab._  
 + Reset Timers  
 _Show the one day, three day, five day, or weekly reset timers._  
 _Note: three and five require you to complete a raid with those lockout as there's no API to access the data._  
 + Instances  
-_Select the instances you wish to view, defaults to all WOTLK instances._
+_Select the instances you wish to view, defaults to all WOTLK instances._  
 + Difficulty  
-_The difficulty when queuing, normal, heroic, heroic+, heroic++, etc._
-+ All Quests  
-_Shows all quests including those you have not met the prerequisite for._
+_The difficulty when queuing, normal, heroic, heroic+, heroic++, etc._  
++ Quests 
+    + Hide unavailable Quests
+    _Do not show quests that a character has not met the prequisite._  
+    + Show Quests
+    _Shows the quest section._  
+    + Show Fishing Daily  
+    _Shows the fishing daily quest, otherwise quests are controlled by currency._  
 + Currency  
 _Select the currency you wish to view defaults to all currencies._
 + Cooldowns  
