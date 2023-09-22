@@ -234,7 +234,6 @@ function Player:updateSkills()
     -- Reset skills in case one was dropped.
     self.professions = {}
     local first, second, _, fishing, cooking, firstAid = LibAddonCompat:GetProfessions()
-    print(LibAddonCompat:GetProfessions())
     self:addSkill(first)
     self:addSkill(second)
     self:addSkill(cooking, true)
