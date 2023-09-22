@@ -1,12 +1,13 @@
 package-as: InstanceCurrencyTracker
 
 externals:
-    Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
-    Libs/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1
-    Libs/LibUIDropDownMenu: https://repos.wowace.com/wow/libuidropdownmenu/trunk/LibUIDropDownMenu
     Libs/AceLocale-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceLocale-3.0
-    Libs/LibDBIcon-1.0: https://repos.curseforge.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+    Libs/LibAddonCompat-1.0: https://github.com/Eliote/LibAddonCompat-1.0
     Libs/CallbackHandler-1.0: svn://svn.wowace.com/wow/callbackhandler/mainline/trunk/CallbackHandler-1.0
+    Libs/LibDataBroker-1.1: https://github.com/tekkub/libdatabroker-1-1
+    Libs/LibDBIcon-1.0: https://repos.curseforge.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0
+    Libs/LibUIDropDownMenu: https://repos.wowace.com/wow/libuidropdownmenu/trunk/LibUIDropDownMenu
+    Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
     Libs/LibTradeSkillRecipes: https://github.com/thespags/LibTradeSkillRecipes/
     # Libs/LibDetours: https://github.com/anzz1/TacoTip/tree/master/Libs/LibDetours-1.0
     # Libs/LibClassicInspector: https://github.com/anzz1/TacoTip/tree/master/Libs/LibClassicInspector
