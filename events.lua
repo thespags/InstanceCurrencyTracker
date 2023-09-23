@@ -147,8 +147,7 @@ glyphFrame:SetScript("OnEvent", ICT:throttleFunction("Glyph", 1, Player.updateGl
 local gearFrame = CreateFrame("Frame")
 gearFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 gearFrame:RegisterEvent("SOCKET_INFO_SUCCESS")
--- If something gets enchanted, although this is very potentially noisy as you can't filter it based on a specific skill.
-gearFrame:RegisterEvent("TRADE_SKILL_UPDATE")
+gearFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 gearFrame:SetScript("OnEvent", ICT:throttleFunction("Gear", 3, Player.updateGear, ICT.UpdateDisplay))
 
 local bagFrame = CreateFrame("Frame")
@@ -186,9 +185,6 @@ durabilityFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", 0, Player.updateDurability, ICT.UpdateDisplay))
 
 local cooldownFrame = CreateFrame("Frame")
--- Trade skill update doesn't seem sufficient to determine an item was made (i.e. start a cooldown)
-cooldownFrame:RegisterEvent("TRADE_SKILL_UPDATE")
-cooldownFrame:RegisterEvent("CHAT_MSG_TRADESKILLS")
 cooldownFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
 cooldownFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, Player.updateCooldowns, ICT.UpdateDisplay))
 

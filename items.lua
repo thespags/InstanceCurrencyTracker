@@ -104,16 +104,12 @@ local x = {}
 local function addEnchant(spellId, effectId, slots)
     for _, slot in pairs(slots) do
         x[effectId] = x[effectId] or {}
-        x[effectId][slot] = spellId
+        x[effectId][slot] = ICT:getSpellLink(spellId) or L["Missing"]
     end
 end
 
 function ICT:getEnchant(effectId, slot)
-    if x[effectId] then
-        return x[effectId][slot]
-    elseif effectId then
-        ICT:print("EffectId missing: %s", effectId)
-    end
+    return x[effectId] and x[effectId][slot]
 end
 
 addEnchant(2832, 16, {5,7,8,10,20})

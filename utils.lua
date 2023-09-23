@@ -37,6 +37,19 @@ function ICT:tradeLinkSplit(link)
     return ICT:linkSplit(link, "trade")
 end
 
+function ICT:getSpellLink(spellId)
+    -- Remap glyph of vampiric blood because Blizard has the worng one.
+    if spellId == 58676 then
+        spellId = 58726
+    end
+    local link = select(1, GetSpellLink(spellId))
+    if not link then
+        local name = select(1, GetSpellInfo(spellId))
+        link = name and string.format("|c%s|Henchant:%s|h[%s]|h|r", "FF71d5FF", spellId, name)
+    end
+    return link
+end
+
 -- Sorted pairs iterator determined by the table key.
 function ICT:spairs(t, comparator, filter)
     local keys = {}

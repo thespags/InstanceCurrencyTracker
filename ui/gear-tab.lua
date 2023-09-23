@@ -20,6 +20,7 @@ function GearTab:calculatePadding()
         self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player.specs[i].items or {}) end, Player.isEnabled)
         self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
         self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
+
     end
 end
 
@@ -29,8 +30,8 @@ end
 
 function GearTab:printGlyph(spec, type, typeName, x, offset)
     for index, glyph in ICT:fpairsByValue(spec.glyphs or {}, function(v) return v.type == type and v.enabled end) do
-        local name = select(1, GetSpellLink(glyph.spellId)) or GetSpellInfo(glyph.spellId)
-        local nameWithIcon = glyph.spellId and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
+        local name = ICT:getSpellLink(glyph.spellId)
+        local nameWithIcon = name and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
         local cell = self.cells:get(x, offset)
         offset = cell:printValue(typeName .. " " .. index, nameWithIcon)
         cell:attachHyperLink()
@@ -95,8 +96,7 @@ function GearTab:printSpec(player, x, offset, spec)
         local padding = self:getPadding(offset, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
-            local enchant = ICT:getEnchant(item.enchantId, slot)
-            enchant = enchant and GetSpellLink(enchant) or L["Missing"]
+            local enchant = ICT:getEnchant(item.enchantId, slot) or L["Missing"]
             cell = self.cells:get(x, offset)
             offset = cell:printValue(_G[item.invType], enchant)
             cell:attachHyperLink()
@@ -110,14 +110,13 @@ end
 
 function GearTab:printPlayer(player, x)
     local offset = 1
+    offset = self.cells:get(x, offset):printPlayerTitle(player)
     if ICT.db.options.gear.showSpecs then
         for _, spec in pairs(player:getSpecs()) do
-            offset = self.cells:get(x, offset):printPlayerTitle(player)
             offset = self:printSpec(player, x, offset, spec)
         end
     else
         local spec = player:getSpec()
-        offset = self.cells:get(x, offset):printPlayerTitle(player)
         offset = self:printSpec(player, x, offset, spec)
     end
     return offset
