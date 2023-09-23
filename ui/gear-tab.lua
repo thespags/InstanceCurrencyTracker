@@ -20,7 +20,6 @@ function GearTab:calculatePadding()
         self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player.specs[i].items or {}) end, Player.isEnabled)
         self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
         self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
-
     end
 end
 

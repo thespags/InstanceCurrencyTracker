@@ -240,9 +240,9 @@ function MainTab:printCharacterInfo(player, x, offset)
             padding = self:getPadding(offset, "cooldowns")
             for _, v in ICT:nspairsByValue(player.cooldowns or {}, ICT.Cooldown.isVisible) do
                 cell = self.cells:get(x, offset)
-                local name = v:getNameWithIcon()
-                local key = player.fullName .. name
-                offset = cell:printTicker(name, key, v.expires, v.duration)
+                local key = player.fullName .. v:getName()
+                offset = cell:printTicker(v:getNameWithIcon(), key, v.expires, v.duration)
+                cell:attachHyperLink()
                 if player:isCurrentPlayer() then
                     if v:getSpell() then
                         cell:attachClick(function() v:cast(player) end)
@@ -597,7 +597,6 @@ function MainTab:printPlayer(player, x)
     offset = self:printAllInstances(player, x, offset)
     offset = self:printQuests(player, x, offset)
     offset = self:printCurrency(player, x, offset)
-    -- self.cells:hideRows(x, offset, self.frame.displayY or 0)
     return offset
 end
 

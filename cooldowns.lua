@@ -158,7 +158,7 @@ function Cooldown:getItem()
 end
 
 function Cooldown:getNameWithIcon()
-    return string.format("|T%s:14|t%s", self.info.icon, self.info.name)
+    return string.format("|T%s:14|t%s", self.info.icon, self.info.link)
 end
 
 function Cooldown:isVisible()
@@ -201,6 +201,7 @@ for _, id in pairs(spells) do
         v.transmute = true
     end
     v.name = name
+    v.link = GetSpellLink(id)
 
     -- Converts ms to seconds
     v.duration = GetSpellBaseCooldown(id) / 1000
@@ -215,11 +216,10 @@ end
 for id, v in pairs(items) do
     v.id = id
 
-    v.icon = select(5, GetItemInfoInstant(id))
     local info = LibTradeSkillRecipes:GetInfoByItemId(id)
     v.skillId = v.skillId or info[1].categoryId
     if not v.skillId then
-        ICT:print(L["Cooldown skillId: %s"], id)
+        ICT:print(L["Cooldown missing skillId: %s"], id)
     end
     v.expansion = v.expansion or info[1].expansionId
     if not v.expansion then
@@ -228,6 +228,7 @@ for id, v in pairs(items) do
     -- Default values until loaded.
     v.name = id
     v.icon = "134400"
+    v.link = id
     local item = Item:CreateFromItemID(id)
     item:ContinueOnItemLoad(function()
         v.name = item:GetItemName()
@@ -237,6 +238,7 @@ for id, v in pairs(items) do
             v.name = string.sub(v.name, i + 2)
         end
         v.icon = item:GetItemIcon()
+        v.link = item:GetItemLink()
         -- Make sure function is loaded.
         if ICT.UpdateDisplay then
             ICT:UpdateDisplay()
