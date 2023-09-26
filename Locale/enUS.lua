@@ -89,12 +89,19 @@ L["Completed"] = "Completed"
 L["Missing Prerequesite"] = "Missing Prerequesite"
 
 -- Options
+L["Multi Character View"] = "Multi Character View"
+L["Multi Character View Tootip"] = "Displays all selected characters in the frame or a single character selected with the drop down list."
 L["Messages"] = "Messages"
 L["Character Info"] = "Character Info"
+L["Character Info Toolip"] = "Enables and disables information about a character to appear."
+L["Gear Info"] = "Gear Info"
+L["Gear Info Toolip"] = "Enables and disables information for the gear tab."
+L["Professions Toolip"] = "Enables and disables information for the professions tab."
 L["Characters"] = "Characters"
 L["Reset Timers"] = "Reset Timers"
 L["Instances"] = "Instances"
 L["Difficulty"] = "Difficulty"
+L["Pets"] = "Pets"
 L["Frame"] = "Frame"
 
 -- Player Options

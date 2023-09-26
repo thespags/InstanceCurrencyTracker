@@ -73,6 +73,7 @@ function Player:onLoad()
     self:updateXP()
     self:updateResting()
     self:updateCooldowns()
+    self:updatePets()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -286,6 +287,28 @@ function Player:updateTalents()
     end
     self:updateGear()
     self:updateGlyphs()
+end
+
+function Player:updatePets()
+    self.pets = self.pets or {}
+    if HasPetUI() then
+        -- Pets can have duplicate names so use GUID.
+        local _, talentIcon, pointsSpent, fileName = GetTalentTabInfo(1, false, true, 1)
+        local icon, name, level, type, talent = GetStablePetInfo(0)
+        local pet = { player = self, icon = icon, name = name, level = level, type = type, talent = talent, specs = {} }
+        self.pets[name] = ICT.Pet:new(pet)
+        local activeSpec = self:getSpec()
+        activeSpec.pets = activeSpec.pets or {}
+        activeSpec.pets[name] = { talentIcon = talentIcon, pointsSpent = pointsSpent, fileName = fileName }
+    end
+    for key, pet in pairs(self.pets) do
+        pet.player = self
+        self.pets[key] = ICT.Pet:new(pet)
+    end
+end
+
+function Player:getPets()
+    return self.pets or {}
 end
 
 function Player:updateGlyphs()
@@ -580,11 +603,11 @@ function Player:isLevelVisible()
 end
 
 function Player:__eq(other)
-    return self:getName() == other:getName()
+    return self.fullName == other.fullName
 end
 
 function Player:__lt(other)
-    return self:getName() < other:getName()
+    return self.fullName < other.fullName
 end
 
 function Player:__tostring()

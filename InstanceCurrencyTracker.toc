@@ -15,6 +15,7 @@ utils.lua
 currency.lua
 instances.lua
 quests.lua
+pets.lua
 player.lua
 reset.lua
 cooldowns.lua

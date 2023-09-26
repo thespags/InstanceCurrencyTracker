@@ -54,7 +54,7 @@ function MainTab:goldTooltip(player)
     for _, player in ICT:nspairsByValue(ICT.db.players, function(p) return player.realm == p.realm end) do
         tooltip:printValue(player:getName(), GetCoinTextureString(player.money or 0), player:getClassColor())
     end
-    return tooltip:create("ICTGoldTip" .. player.fullName)
+    return tooltip:create("ICTGoldTip" .. player:getFullName())
 end
 
 function MainTab:bagTooltip(player)
@@ -78,7 +78,7 @@ function MainTab:bagTooltip(player)
 
         tooltip:printPlain("\n" .. L["BagTooltipNote"])
     end
-    return tooltip:create("ICTBagTooltip" .. player.fullName)
+    return tooltip:create("ICTBagTooltip" .. player:getFullName())
 end
 
 function MainTab:specTooltip(player, spec)
@@ -119,7 +119,7 @@ function MainTab:specTooltip(player, spec)
     tooltip:printPlain("\nNote: Socket icons will appear if you are missing ")
     :printPlain("an item that can have an extra slot, such as your belt.")
     :printPlain("\nAlso, enchants aren't localized.")
-    return tooltip:create("ICTSpec" .. spec.id .. player.fullName)
+    return tooltip:create("ICTSpec" .. spec.id .. player:getFullName())
 end
 
 function MainTab:printCharacterInfo(player, x, offset)
@@ -242,7 +242,7 @@ function MainTab:printCharacterInfo(player, x, offset)
             padding = self:getPadding(offset, "cooldowns")
             for _, v in ICT:nspairsByValue(player.cooldowns or {}, ICT.Cooldown.isVisible) do
                 cell = self.cells:get(x, offset)
-                local key = player.fullName .. v:getName()
+                local key = player:getFullName() .. v:getName()
                 offset = cell:printTicker(v:getNameWithIcon(), key, v.expires, v.duration)
                 if player:isCurrentPlayer() then
                     if v:getSpell() then
@@ -293,7 +293,7 @@ local function instanceTooltip(player, instance)
         end
     end
     -- This player is the original player which owns the cell.
-    return tooltip:create("ICTInstanceTooltip" .. instance.id .. instance.size .. player.fullName)
+    return tooltip:create("ICTInstanceTooltip" .. instance.id .. instance.size .. player:getFullName())
 end
 
 local function instanceSectionTooltip()
@@ -471,7 +471,7 @@ local function currencyTooltip(selectedPlayer, currency)
         printInstancesForCurrency(tooltip, L["Raids"], selectedPlayer:getRaids(), currency)
         printQuestsForCurrency(tooltip, selectedPlayer, currency)
     end
-    return tooltip:create("ICTCurrencyTooltip" .. selectedPlayer.fullName .. currency.id)
+    return tooltip:create("ICTCurrencyTooltip" .. selectedPlayer:getFullName() .. currency.id)
 end
 
 -- Prints currency with multi line information.

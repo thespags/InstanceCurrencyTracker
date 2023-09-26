@@ -12,14 +12,24 @@ ICT.GearTab = GearTab
 
 function GearTab:calculatePadding()
     local db = ICT.db
+    self.paddings.pets = ICT:max(
+        db.players,
+        function(player) return ICT:sum(player:getPets(), function(v) return 
+        v:isVisible() and player:getSpec().pets[v:getName()] and 1 or 0 end) end, Player.isEnabled
+    )
     self.paddings.items = ICT:max(db.players, function(player) return ICT:size(player:getSpec().items or {}) end, Player.isEnabled)
     self.paddings.glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
     self.paddings.enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     for i=1,2 do
         self.paddings[i] = {}
-        self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player.specs[i].items or {}) end, Player.isEnabled)
-        self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
-        self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player.specs[i].items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
+        self.paddings[i].pets = ICT:max(
+            db.players,
+            function(player) return ICT:sum(player:getPets(), function(v) return 
+            v:isVisible() and player:getSpec(i).pets[v:getName()] and 1 or 0 end) end, Player.isEnabled
+        )
+        self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player:getSpec(i).items or {}) end, Player.isEnabled)
+        self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
+        self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     end
 end
 
@@ -60,23 +70,34 @@ function GearTab:printSpec(player, x, offset, spec)
     end
 
     self.cells.indent = "  "
-    tooltip = UI:specsSectionTooltip()
+
+    local tooltip = UI:specsSectionTooltip()
     cell = self.cells:get(x, offset)
     offset = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3))
     tooltip:attach(cell)
     offset = UI:printGearScore(self, spec, tooltip, x, offset)
-    offset = self.cells:get(x, offset):hide()
 
+    local padding = self:getPadding(offset, "pets", spec.id)
+    for _, pet in ICT:nspairsByValue(player:getPets(), ICT.Pet.isVisible) do
+        if spec.pets and spec.pets[pet.name] then
+            local specPet = spec.pets[pet.name]
+            cell = self.cells:get(x, offset)
+            offset = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
+        end
+    end
     if not spec.items then
         offset = self.cells:get(x, offset):printLine(L["ActivateSpecLoad"], ICT.textColor)
         return self.cells:get(x, offset):hide()
     end
+
+    offset = self.cells:hideRows(x, offset, padding)
+    offset = self.cells:get(x, offset):hide()
     cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Items"])
     tooltip:attach(cell)
 
     if cell:isSectionExpanded(L["Items"]) then
-        local padding = self:getPadding(offset, "items", spec.id)
+        padding = self:getPadding(offset, "items", spec.id)
         for k, item in pairs(spec.items or {}) do
             local text = ICT:addGems(k, item, true)
             cell = self.cells:get(x, offset)

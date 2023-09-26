@@ -131,6 +131,16 @@ talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
 talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 talentFrame:SetScript("OnEvent", ICT:throttleFunction("Talent", 3, Player.updateTalents, ICT.UpdateDisplay))
 
+local petFrame = CreateFrame("Frame")
+-- Bunch of different things to try to get a pet loaded.
+petFrame:RegisterEvent("UNIT_PET")
+petFrame:RegisterEvent("UNIT_PET_TRAINING_POINTS")
+petFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+petFrame:RegisterEvent("PET_TALENT_UPDATE")
+petFrame:RegisterEvent("PET_BAR_UPDATE")
+petFrame:RegisterEvent("LOCALPLAYER_PET_RENAMED")
+petFrame:SetScript("OnEvent", ICT:throttleFunction("Talent", 3, Player.updatePets, ICT.UpdateDisplay))
+
 local glyphFrame = CreateFrame("Frame")
 glyphFrame:RegisterEvent("ACTIVATE_GLYPH")
 glyphFrame:SetScript("OnEvent", ICT:throttleFunction("Glyph", 1, Player.updateGlyphs, ICT.UpdateDisplay))

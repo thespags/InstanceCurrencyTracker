@@ -111,6 +111,13 @@ function Options:setDefaultOptions(override)
         options.reset = { [1] = true, [3] = false, [5] = false, [7] = true}
     end
 
+    if not ICT.db.options.pets or override then
+        ICT.db.options.pets = {}
+    end
+    for fullName, _ in pairs(ICT.db.players) do
+        ICT.db.options.pets[fullName] = ICT.db.options.pets[fullName] or {}
+    end
+
     local function setDefaults(t, key)
         if not options[key] or override then
             options[key] = {}
@@ -162,6 +169,52 @@ local function createInfo(text)
     -- otherwise on the first click the menu gets confused...
     info.keepShownOnClick = true
     return info
+end
+
+local function isVisible(v) return v:isVisible() end
+
+local function addAllPlayerOptions(name, func, level)
+    local check = function()
+        local wasChecked = true
+        for _, player in ICT:nspairsByValue(ICT.db.players, Player.isVisible) do
+            wasChecked = wasChecked and ICT:containsAllValues(func(player), isVisible)
+        end
+        return wasChecked
+    end
+    local info = createInfo(name)
+    info.checked = check()
+    info.menuList = info.text
+    info.hasArrow = true
+    info.func = function(self)
+        local wasChecked = check()
+        for _, player in ICT:nspairsByValue(ICT.db.players, Player.isVisible) do
+            for _, pet in pairs(player:getPets()) do
+                pet:setVisible(not wasChecked)
+            end
+        end
+        UI:PrintPlayers()
+    end
+    DDM:UIDropDownMenu_AddButton(info, level)
+end
+
+local function addPlayerOptions(func, menuList, level)
+    for _, player in ICT:nspairsByValue(ICT.db.players, Player.isVisible) do
+        if ICT:size(func(player)) > 0 then
+            local info = createInfo(player:getName())
+            info.checked = ICT:containsAllValues(func(player), isVisible)
+            info.menuList = menuList .. ":" .. player:getFullName()
+            info.hasArrow = true
+
+            info.func = function(self)
+                local wasChecked = ICT:containsAllValues(func(player), isVisible)
+                for _, o in ICT:fpairsByValue(func(player), function(v) return v:fromPlayer(player) end ) do
+                    o:setVisible(not wasChecked)
+                end
+                UI:PrintPlayers()
+            end
+            DDM:UIDropDownMenu_AddButton(info, level)
+        end
+    end
 end
 
 local function addObjectOption(o, level)
@@ -275,11 +328,11 @@ function Options:CreateOptionDropdown()
             if (level or 1) == 1 then
 
                 -- Switches between a single character and multiple characters to view.
-                local multiPlayerView = createInfo("Multi Character View")
+                local multiPlayerView = createInfo(L["Multi Character View"])
                 multiPlayerView.checked = options.multiPlayerView
                 multiPlayerView.tooltipTitle = multiPlayerView.text
                 multiPlayerView.tooltipOnButton = true
-                multiPlayerView.tooltipText = "Displays all selected characters in the frame or a single character selected with the drop down list."
+                multiPlayerView.tooltipText = L["Multi Character View Tooltip"]
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
                     Options:FlipOptionsMenu()
@@ -288,9 +341,9 @@ function Options:CreateOptionDropdown()
                 DDM:UIDropDownMenu_AddButton(multiPlayerView)
 
                 addMenuOption(L["Messages"], ICT.db.options.messages, level)
-                addMenuOption(L["Character Info"], ICT.db.options.player, level, "Enables and disables information about a character to appear.")
-                addMenuOption(L["Gear Info"], ICT.db.options.gear, level, "Enables and disables information for the gear tab.")
-                addMenuOption(L["Professions"], ICT.db.options.professions, level, "Enables and disables information for the professions tab.")
+                addMenuOption(L["Character Info"], ICT.db.options.player, level, L["Character Info Toolip"])
+                addMenuOption(L["Gear Info"], ICT.db.options.gear, level, L["Gear Info Toolip"])
+                addMenuOption(L["Professions"], ICT.db.options.professions, level, L["Professions Toolip"])
                 addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
                 addObjectsOption(L["Reset Timers"], ICT.ResetInfo, level)
                 addObjectsOption(L["Instances"], Instances.infos(), level)
@@ -298,6 +351,8 @@ function Options:CreateOptionDropdown()
                 addMenuOption(L["Quests"], ICT.db.options.quests, level)
                 addObjectsOption(L["Currency"], ICT.Currencies, level)
                 addObjectsOption(L["Cooldowns"], ICT.Cooldowns, level)
+                addAllPlayerOptions(L["Pets"], Player.getPets, level)
+
                 DDM:UIDropDownMenu_AddSeparator()
                 addMenuOption("      " .. L["Frame"], ICT.db.options.frame, level)
             elseif level == 2 then
@@ -323,6 +378,8 @@ function Options:CreateOptionDropdown()
                     end
                 elseif menuList == L["Cooldowns"] then
                     addExpansionOptions(ICT.Cooldowns, menuList, level)
+                elseif menuList == L["Pets"] then
+                    addPlayerOptions(Player.getPets, menuList, level)
                 elseif menuList == "      " .. L["Frame"] then
                     addOptions(frameOptions, "frame", level)
                 elseif menuList == L["Character Info"] then
@@ -337,9 +394,9 @@ function Options:CreateOptionDropdown()
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
                 -- Now create a level for all the instances of that expansion.
-                local subList, expansion = menuList:match("([%w%s]+):([%w%s]+)")
-                expansion = tonumber(expansion)
-                if subList == "Instances" then
+                local subList, filter = menuList:match("([%w%s]+):([%[%]%w%s]+)")
+                if subList == L["Instances"] then
+                    local expansion = tonumber(filter)
                     local lastSize
                     for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, ICT:fWith(Instances.fromExpansion, expansion)) do
                         local size = v.legacy == expansion and v.legacySize or v.size
@@ -349,7 +406,8 @@ function Options:CreateOptionDropdown()
                         lastSize = size
                         addObjectOption(v, level)
                     end
-                elseif subList == "Cooldowns" then
+                elseif subList == L["Cooldowns"] then
+                    local expansion = tonumber(filter)
                     -- Now create a level for all the cooldowns of that expansion.
                     local lastSkill
                     for _, v in ICT:nspairsByValue(ICT.Cooldowns, ICT:fWith(ICT.Cooldown.fromExpansion, expansion)) do
@@ -357,6 +415,11 @@ function Options:CreateOptionDropdown()
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end
                         lastSkill = v:getSkillLine()
+                        addObjectOption(v, level)
+                    end
+                elseif subList == L["Pets"] then
+                    local fullName = filter
+                    for _, v in ICT:nspairsByValue(ICT.db.players[fullName]:getPets()) do
                         addObjectOption(v, level)
                     end
                 end
@@ -393,8 +456,8 @@ function Options:CreatePlayerDropdown()
             local info = DDM:UIDropDownMenu_CreateInfo()
             for _, player in ICT:nspairsByValue(ICT.db.players, Player.isPlayerEnabled) do
                 info.text = player:getNameWithIcon()
-                info.value = player.fullName
-                info.checked = ICT.selectedPlayer == player.fullName
+                info.value = player:getFullName()
+                info.checked = ICT.selectedPlayer == player:getFullName()
                 info.func = function(self)
                     ICT.selectedPlayer = self.value
                     DDM:UIDropDownMenu_SetText(playerDropdown, player:getName())
