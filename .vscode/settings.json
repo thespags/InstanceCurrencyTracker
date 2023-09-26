@@ -125,6 +125,13 @@
         "SetItemRef",
         "GameTooltip",
         "IsShiftKeyDown",
-        "GetTradeSkillRecipeLink"
+        "GetTradeSkillRecipeLink",
+        "CreateSimpleTextureMarkup",
+        "SetActiveTalentGroup",
+        "GetTalentTabInfo",
+        "GetStablePetInfo",
+        "HasPetUI",
+        "GetSpellBookItemInfo",
+        "ExpandTradeSkillSubClass"
     ]
 }
