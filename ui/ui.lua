@@ -63,8 +63,9 @@ function UI:CreateFrame()
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
 
-    self:addTab(frame, ICT.MainTab, "Main")
-    self:addTab(frame, ICT.GearTab, "Gear")
+    self:addTab(frame, ICT.MainTab, L["Main"])
+    self:addTab(frame, ICT.GearTab, L["Gear"])
+    self:addTab(frame, ICT.ProfessionsTab, L["Professions"])
     self:selectTab(frame.tabs[ICT.db.selectedTab or 1])()
 
     ICT.Options:CreatePlayerDropdown()

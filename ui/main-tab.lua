@@ -242,7 +242,6 @@ function MainTab:printCharacterInfo(player, x, offset)
                 cell = self.cells:get(x, offset)
                 local key = player.fullName .. v:getName()
                 offset = cell:printTicker(v:getNameWithIcon(), key, v.expires, v.duration)
-                cell:attachHyperLink()
                 if player:isCurrentPlayer() then
                     if v:getSpell() then
                         cell:attachClick(function() v:cast(player) end)

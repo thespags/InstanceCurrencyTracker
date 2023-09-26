@@ -120,20 +120,11 @@ local skillFrame = CreateFrame("Frame")
 skillFrame:RegisterEvent("CHAT_MSG_SKILL")
 -- Learning a new skill or raising a skill from Journeyman to Master. 
 skillFrame:RegisterEvent("SKILL_LINES_CHANGED")
-skillFrame:SetScript("OnEvent", ICT:throttleFunction("Skill", 3, Player.updateSkills, ICT.UpdateDisplay))
+skillFrame:SetScript("OnEvent", ICT:throttleFunction("Professions", 3, Player.updateProfessions, ICT.UpdateDisplay))
 
--- Links aren't shareable after the player logs out.
--- local skillShowFrame = CreateFrame("Frame")
--- skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
--- skillShowFrame:SetScript("OnEvent", function()
---     -- Remove color so we can color it.
---     local link = GetTradeSkillListLink()
---     local spellId = tonumber(ICT.tradeLinkSplit(link)[2]) or 0
---     local player = ICT.GetPlayer()
---     player.professionLinks = player.professionLinks or {}
---     player.professionLinks[spellId] = link
--- end
--- )
+local skillShowFrame = CreateFrame("Frame")
+skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
+skillShowFrame:SetScript("OnEvent", ICT:throttleFunction("Skills", 0.5, Player.updateSkills, ICT.UpdateDisplay))
 
 local talentFrame = CreateFrame("Frame")
 talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")

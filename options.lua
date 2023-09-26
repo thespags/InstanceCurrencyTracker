@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 ICT.Options = {}
 local UI = ICT.UI
 local Options = ICT.Options
@@ -29,6 +30,18 @@ local gearOptions = {
     { name = L["Show Specs"], key = "showSpecs", },
     { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
 }
+
+local professionOptions = {
+    { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true },
+}
+for i, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+    tinsert(professionOptions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK})
+end
+for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(), 
+    function(a, b) return a.isSecondary == b.isSecondary and L[a.name] < L[b.name] or b.isSecondary end,
+    function(v) return v.hasRecipes end) do
+    tinsert(professionOptions, { name = L[profession.name], key = "showProfession" .. i, defaultFalse = profession.isSecondary })
+end
 
 local messageOptions = {
     { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"] },
@@ -102,12 +115,13 @@ function Options:setDefaultOptions(override)
         if not options[key] or override then
             options[key] = {}
             for _, v in pairs(t) do
-                options[key][v.key] = v.defaultFalse == nil
+                options[key][v.key] = not v.defaultFalse
             end
         end
     end
     setDefaults(playerOptions, "player")
     setDefaults(gearOptions, "gear")
+    setDefaults(professionOptions, "professions")
     setDefaults(messageOptions, "messages")
     setDefaults(frameOptions, "frame")
     setDefaults(questOptions, "quests")
@@ -276,6 +290,7 @@ function Options:CreateOptionDropdown()
                 addMenuOption(L["Messages"], ICT.db.options.messages, level)
                 addMenuOption(L["Character Info"], ICT.db.options.player, level, "Enables and disables information about a character to appear.")
                 addMenuOption(L["Gear Info"], ICT.db.options.gear, level, "Enables and disables information for the gear tab.")
+                addMenuOption(L["Professions"], ICT.db.options.professions, level, "Enables and disables information for the professions tab.")
                 addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
                 addObjectsOption(L["Reset Timers"], ICT.ResetInfo, level)
                 addObjectsOption(L["Instances"], Instances.infos(), level)
@@ -314,6 +329,8 @@ function Options:CreateOptionDropdown()
                     addOptions(playerOptions, "player", level)
                 elseif menuList == L["Gear Info"] then
                     addOptions(gearOptions, "gear", level)
+                elseif menuList == L["Professions"] then
+                    addOptions(professionOptions, "professions", level)
                 elseif menuList == L["Messages"] then
                     addOptions(messageOptions, "messages", level)
                 end
@@ -336,10 +353,10 @@ function Options:CreateOptionDropdown()
                     -- Now create a level for all the cooldowns of that expansion.
                     local lastSkill
                     for _, v in ICT:nspairsByValue(ICT.Cooldowns, ICT:fWith(ICT.Cooldown.fromExpansion, expansion)) do
-                        if lastSkill and lastSkill ~= v:getSkillId() then
+                        if lastSkill and lastSkill ~= v:getSkillLine() then
                             DDM:UIDropDownMenu_AddSeparator(level)
                         end
-                        lastSkill = v:getSkillId()
+                        lastSkill = v:getSkillLine()
                         addObjectOption(v, level)
                     end
                 end

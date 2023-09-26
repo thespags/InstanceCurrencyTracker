@@ -1,12 +1,13 @@
 local addOnName, ICT = ...
 
-local LibAddonCompat = LibStub("LibAddonCompat-1.0")
-local LibInstances = LibStub("LibInstances")
-local LCInspector = LibStub("LibClassicInspector")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local LibAddonCompat = LibStub("LibAddonCompat-1.0")
+local LCInspector = LibStub("LibClassicInspector")
+local LibInstances = LibStub("LibInstances")
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local Instances = ICT.Instances
 ICT.Player = {}
 local Player = ICT.Player
-local Instances = ICT.Instances
 
 -- Adds "static" fields, 
 -- Note: we may wnat to move this information to "onLoad",
@@ -61,7 +62,7 @@ end
 
 -- Called when the addon is loaded to update any fields.
 function Player:onLoad()
-    self:updateSkills()
+    self:updateProfessions()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
     ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
@@ -204,7 +205,7 @@ function Player:updateInstance()
     end
 end
 
-function Player:addSkill(index, isSecondary)
+function Player:addProfession(index, isSecondary)
     if index then
         local name, icon, rank, max, _, offset, skillLine, _  = LibAddonCompat:GetProfessionInfo(index)
         local spellId = offset and select(2, GetSpellBookItemInfo(offset + 1, "SPELL"))
@@ -230,15 +231,33 @@ function Player:getProfessionRank(skillLine)
     return 0
 end
 
-function Player:updateSkills()
+function Player:updateProfessions()
     -- Reset skills in case one was dropped.
     self.professions = {}
     local first, second, _, fishing, cooking, firstAid = LibAddonCompat:GetProfessions()
-    self:addSkill(first)
-    self:addSkill(second)
-    self:addSkill(cooking, true)
-    self:addSkill(firstAid, true)
-    self:addSkill(fishing, true)
+    self:addProfession(first)
+    self:addProfession(second)
+    self:addProfession(cooking, true)
+    self:addProfession(firstAid, true)
+    self:addProfession(fishing, true)
+    self:updateSkills()
+end
+
+function Player:updateSkills()
+    self.skills = self.skills or {}
+    local numTradeskills = GetNumTradeSkills()
+    for i=1,numTradeskills do
+        local name, difficulty = GetTradeSkillInfo(i)
+        if name and difficulty ~= "header" then
+            local spellLink = GetTradeSkillRecipeLink(i)
+            local id = tonumber(ICT:enchantLinkSplit(spellLink)[1])
+            if id then
+                local categoryId = LibTradeSkillRecipes:GetInfoBySpellId(id).categoryId
+                self.skills[categoryId] = self.skills[categoryId] or {}
+                self.skills[categoryId][id] = { link = spellLink, difficulty = difficulty }
+            end
+        end
+    end
 end
 
 function Player:getSpec(id)
@@ -295,7 +314,7 @@ function Player:updateGear()
         if itemLink ~= nil then
             local item = {}
 
-            local details = ICT:itemLinkSplit(itemLink, ":")
+            local details = ICT:itemLinkSplit(itemLink)
             -- Use link instead of id so we don't have to worry about looking up an uncached value.
             item.link = itemLink
             -- Convert to number for our table lookup, Blizzard calls handle strings vs numbers.

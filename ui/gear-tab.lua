@@ -51,7 +51,7 @@ function GearTab:printSpec(player, x, offset, spec)
         return self.cells:get(x, offset):hide()
     end
     if not spec.items then
-        offset = self.cells:get(x, offset):printLine("Please activate the spec to load items.", ICT.textColor)
+        offset = self.cells:get(x, offset):printLine(L["ActivateSpec"], ICT.textColor)
         return self.cells:get(x, offset):hide()
     end
     self.cells.indent = "  "

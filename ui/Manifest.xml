@@ -6,4 +6,5 @@
   <Script file="common.lua"/>
   <Script file="main-tab.lua"/>
   <Script file="gear-tab.lua"/>
+  <Script file="professions-tab.lua"/>
 </Ui>

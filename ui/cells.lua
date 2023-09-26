@@ -55,6 +55,7 @@ function Cells:get(x, y)
     cell.frame:SetScript("OnLeave", nil)
     cell.frame:SetAttribute("type", nil)
     cell.frame:SetAttribute("item", nil)
+    cell.frame:GetNormalTexture()
     return cell
 end
 
@@ -114,26 +115,27 @@ function Cell:printValue(leftText, rightText, leftColor, rightColor)
     return self.y + 1
 end
 
-function Cell:printSimple(leftText, rightText)
-    self.left:SetText(leftText)
-    self.left:Show()
-    self.right:SetText(rightText)
-    self.right:Show()
-    return self.y + 1
-end
-
-function Cell:attachHyperLink()
+function Cell:attachHyperLink(f)
+    _ = f and self:attachClick(f)
     self.frame:SetHyperlinksEnabled(true)
     self.frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-        SetItemRef(link, text, button, self)
+        -- Blizzard will only hyperlink items in chat if the color is correct...
+        text = string.gsub(text, "|c%w+|", "|cffffd000|")
+        if button == "LeftButton" and not IsShiftKeyDown() then
+            _ = f and f()
+        else
+            SetItemRef(link, text, button, self)
+        end
     end)
     self.frame:SetScript("OnHyperlinkEnter", function(_, link)
         GameTooltip:SetOwner(self.frame, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(link)
         GameTooltip:Show()
+        _ = f and self.frame:SetNormalTexture("auctionhouse-nav-button-highlight")
     end)
     self.frame:SetScript("OnHyperlinkLeave", function()
         GameTooltip:Hide()
+        _ = f and self.frame:ClearNormalTexture()
     end)
 end
 
@@ -145,12 +147,14 @@ function Cell:attachClickHover()
         self.hover = true
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         self.parent.indent = ""
+        self.frame:SetNormalTexture("auctionhouse-nav-button-highlight")
     end)
     self.frame:HookScript("OnLeave", function()
         self.parent.indent = indent
         self.hover = false
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         self.parent.indent = ""
+        self.frame:ClearNormalTexture()
     end)
 end
 

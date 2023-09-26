@@ -67,19 +67,19 @@ ICT.BagFamily = {
     -- Soul Shards
     [4] = { icon = 134075, name = L["Soul Shards"] },
     -- Leathworking 
-    [8] = { icon = 133611, name = L["leatherworking"] },
+    [8] = { icon = 133611, name = L["Leatherworking"] },
     -- Inscription 
-    [16] = { icon = 237171, name = L["inscription"] },
+    [16] = { icon = 237171, name = L["Inscription"] },
     -- Herbalism
-    [32] = { icon = 136246, name = L["herbalism"] },
+    [32] = { icon = 136246, name = L["Herbalism"] },
     -- Enchanting 
-    [64] = { icon = 136244, name = L["enchanting"] },
+    [64] = { icon = 136244, name = L["Enchanting"] },
     -- Engineering
-    [128] = { icon = 136243, name = L["engineering"] },
+    [128] = { icon = 136243, name = L["Engineering"] },
     -- Jewelcrafting
-    [512] = { icon = 134071, name = L["jewelcrafting"] },
+    [512] = { icon = 134071, name = L["Jewelcrafting"] },
     -- Mining
-    [1024] = { icon = 136248, name = L["mining"] },
+    [1024] = { icon = 136248, name = L["Mining"] },
 }
 
 function ICT:addGems(k, item, missingOnly)

@@ -1,5 +1,6 @@
 local addOn, ICT = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 ICT.OneDay = 86400
 ICT.MaxLevel = 80
 ICT.ClassIcons = {
@@ -37,6 +38,15 @@ function ICT:tradeLinkSplit(link)
     return ICT:linkSplit(link, "trade")
 end
 
+function ICT:enchantLinkSplit(link)
+    return ICT:linkSplit(link, "enchant")
+end
+
+function ICT:getColoredSpellLink(spellId, color)
+    local name = select(1, GetSpellInfo(spellId))
+    return name and string.format("|c%s|Henchant:%s|h[%s]|h|r", color, spellId, name)
+end
+
 function ICT:getSpellLink(spellId)
     -- Remap glyph of vampiric blood because Blizard has the worng one.
     if spellId == 58676 then
@@ -48,6 +58,27 @@ function ICT:getSpellLink(spellId)
         link = name and string.format("|c%s|Henchant:%s|h[%s]|h|r", "FF71d5FF", spellId, name)
     end
     return link
+end
+
+function ICT:castTradeSkill(player, skillLine, expectedName)
+    for _, p in pairs(player.professions or {}) do
+        if p.skillLine == skillLine and p.spellId then
+            CastSpellByID(p.spellId)
+            for i = 1, GetNumTradeSkills() do
+                local name, difficulty = GetTradeSkillInfo(i)
+                if name == expectedName then
+                    DoTradeSkill(i)
+                    CloseTradeSkill()
+                    return
+                elseif difficulty == "header" then
+                    -- Forces expands so we can find all trades.
+                    ExpandTradeSkillSubClass(i)
+                end
+            end
+            CloseTradeSkill()
+        end
+    end
+    ICT:print(L["No skill found: %s"], expectedName)
 end
 
 -- Sorted pairs iterator determined by the table key.

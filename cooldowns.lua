@@ -77,8 +77,8 @@ local items = {
     [40768] = {}, -- MollE
     [48933] = {}, -- Wormhole
     [49040] = {}, -- Jeeves
-    [39878] = { skillId = 0, expansion = 2 }, -- Mysterious Egg
-    -- [43499] = { skillId = 0, expansion = 2 }, -- Iron Boot Flask
+    [39878] = { skillLine = 0, expansion = 2 }, -- Mysterious Egg
+    -- [43499] = { skillLine = 0, expansion = 2 }, -- Iron Boot Flask
     -- End WOTLK
 }
 local Cooldown = {}
@@ -128,25 +128,12 @@ end
 
 function Cooldown:cast(player)
     if self:getSpell() then
-        for _, p in pairs(player.professions) do
-            if p.spellId ~= nil then
-                CastSpellByID(p.spellId)
-                for i = 1, GetNumTradeSkills() do
-                    if GetTradeSkillInfo(i) == self:getSpell() then
-                        DoTradeSkill(i)
-                        CloseTradeSkill()
-                        return
-                    end
-                end
-            end
-            CloseTradeSkill()
-        end
-        ICT:print(L["No skill found: %s"], self:getSpell())
+        ICT:castTradeSkill(player, self:getSkillLine(), self:getSpell())
     end
 end
 
-function Cooldown:getSkillId()
-    return self.info.skillId
+function Cooldown:getSkillLine()
+    return self.info.skillLine
 end
 
 function Cooldown:getSpell()
@@ -158,7 +145,7 @@ function Cooldown:getItem()
 end
 
 function Cooldown:getNameWithIcon()
-    return string.format("|T%s:14|t%s", self.info.icon, self.info.link)
+    return string.format("|T%s:14|t%s", self.info.icon, self.info.name)
 end
 
 function Cooldown:isVisible()
@@ -174,13 +161,13 @@ function Cooldown:__eq(other)
 end
 
 function Cooldown:__lt(other)
-    if self.info.skillId == other.info.skillId then
+    if self.info.skillLine == other.info.skillLine then
         if self.info.expansion == other.info.expansion then
             return self.info.name < other.info.name
         end
         return self.info.expansion > other.info.expansion
     end
-    return self.info.skillId < other.info.skillId
+    return self.info.skillLine < other.info.skillLine
 end
 
 for _, id in pairs(spells) do
@@ -188,7 +175,7 @@ for _, id in pairs(spells) do
     v.id = id
 
     local info = LibTradeSkillRecipes:GetInfoBySpellId(id)
-    v.skillId = info.categoryId
+    v.skillLine = info.categoryId
     v.expansion = info.expansionId
     local name, _, icon = GetSpellInfo(id)
     v.icon = info.itemId and select(5, GetItemInfoInstant(info.itemId)) or icon
@@ -215,11 +202,10 @@ end
 
 for id, v in pairs(items) do
     v.id = id
-
     local info = LibTradeSkillRecipes:GetInfoByItemId(id)
-    v.skillId = v.skillId or info[1].categoryId
-    if not v.skillId then
-        ICT:print(L["Cooldown missing skillId: %s"], id)
+    v.skillLine = v.skillLine or info[1].categoryId
+    if not v.skillLine then
+        ICT:print(L["Cooldown missing skillLine: %s"], id)
     end
     v.expansion = v.expansion or info[1].expansionId
     if not v.expansion then

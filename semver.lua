@@ -88,6 +88,9 @@ local semver = {
   end
   
   local function parseVersion(str)
+    if str == "@project-version@" then
+      return 99999, 0, 0
+    end
     local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^v?(%d+)%.?(%d*)%.?(%d*)(.-)$")
     assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
     local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)

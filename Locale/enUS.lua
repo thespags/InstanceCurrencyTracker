@@ -4,25 +4,30 @@ L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Curren
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
 
------- Professions
-L["alchemy"] = "Alchemy"
-L["archaeology"] = "Archaeology"
-L["blacksmithing"] = "Blacksmithing"
-L["cooking"] = "Cooking"
-L["enchanting"] = "Enchanting"
-L["engineering"] = "Engineering"
-L["firstAid"] = "First Aid"
-L["fishing"] = "Fishing"
-L["herbalism"] = "Herbalism"
-L["herbalismskills"] = "Herbalism Skills"
-L["inscription"] = "Inscription"
-L["jewelcrafting"] = "Jewelcrafting"
-L["leatherworking"] = "Leatherworking"
-L["mining"] = "Mining"
-L["miningskills"] = "Mining Skills"
-L["skinning"] = "Skinning"
-L["skinningskills"] = "Skinning Skills"
-L["tailoring"] = "Tailoring"
+-- Tabs
+L["Main"] = "Main"
+L["Gear"] = "Gear"
+L["Professions"] = "Professions"
+
+-- Professions
+L["Alchemy"] = "Alchemy"
+L["Archaeology"] = "Archaeology"
+L["Blacksmithing"] = "Blacksmithing"
+L["Cooking"] = "Cooking"
+L["Enchanting"] = "Enchanting"
+L["Engineering"] = "Engineering"
+L["FirstAid"] = "First Aid"
+L["Fishing"] = "Fishing"
+L["Herbalism"] = "Herbalism"
+L["HerbalismSkills"] = "Herbalism Skills"
+L["Inscription"] = "Inscription"
+L["Jewelcrafting"] = "Jewelcrafting"
+L["Leatherworking"] = "Leatherworking"
+L["Mining"] = "Mining"
+L["MiningSkills"] = "Mining Skills"
+L["Skinning"] = "Skinning"
+L["SkinningSkills"] = "Skinning Skills"
+L["Tailoring"] = "Tailoring"
 
 -- Sections
 L["Info"] = "Info"
@@ -150,7 +155,10 @@ L["Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together."]
 L["Cannot queue, not currently the group leader."] = "Cannot queue, not currently the group leader."
 
 -- Gear Tab
+L["ActivateSpec"] = "Please activate the spec to load items."
 
+-- Professions Tab
+L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."
 
 -- Slash Commands
 L["Invalid command"] = "Invalid command"
