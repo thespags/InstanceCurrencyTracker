@@ -3,6 +3,15 @@ local addOn, ICT = ...
 local Colors = {}
 Colors.green = "FF00FF00"
 Colors.red = "FFFF0000"
+ICT.tooltipTitleColor = Colors.green
+ICT.availableColor = "FFFFFFFF"
+ICT.queuedAvailableColor = "FF90C0FF"
+ICT.sectionColor = "FFFFFF00"
+ICT.subtitleColor = "FFFFCC00"
+ICT.textColor = "FF9CD6DE"
+ICT.lockedColor = "FFFF00FF"
+ICT.queuedLockedColor = "FFFFC0FF"
+ICT.unavailableColor = Colors.red
 ICT.Colors = Colors
 
 function Colors:getQuestColor(player, quest)

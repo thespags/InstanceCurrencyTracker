@@ -280,6 +280,7 @@ function Player:updateTalents()
             spec.id = i
             local specialization = LCInspector:GetSpecialization(self.guid, i)
             spec.name = specialization and LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
+            spec.icon = specialization and select(2, GetTalentTabInfo(specialization, false, false, i))
             spec.tab1, spec.tab2, spec.tab3 = tab1, tab2, tab3
         end
     end

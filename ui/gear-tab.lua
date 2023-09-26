@@ -44,25 +44,33 @@ function GearTab:printSpec(player, x, offset, spec)
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
     local key = "Spec" .. (ICT.db.options.gear.showSpecs and spec.id or "")
-    local sectionName = spec.name or key
+    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
+    local sectionName = icon .. (spec.name or key)
     local cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(sectionName, key)
+    local isActive = spec.id == player.activeSpec
+    offset = cell:printSectionTitle(sectionName, key, isActive and ICT.lockedColor)
+
+    if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
+        local f = function() SetActiveTalentGroup(spec.id) end
+        local tooltip = ICT.Tooltips:new(L["Activate Spec"]):printPlain(L["Activate Spec Body"])
+        cell:attachButton("ICTSetSpec", tooltip, f):SetEnabled(not isActive)
+    end
     if not cell:isSectionExpanded(key) then
         return self.cells:get(x, offset):hide()
     end
-    if not spec.items then
-        offset = self.cells:get(x, offset):printLine(L["ActivateSpec"], ICT.textColor)
-        return self.cells:get(x, offset):hide()
-    end
+
     self.cells.indent = "  "
-    local tooltip = UI:specsSectionTooltip()
-    local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
+    tooltip = UI:specsSectionTooltip()
     cell = self.cells:get(x, offset)
-    offset = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+    offset = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3))
     tooltip:attach(cell)
     offset = UI:printGearScore(self, spec, tooltip, x, offset)
     offset = self.cells:get(x, offset):hide()
 
+    if not spec.items then
+        offset = self.cells:get(x, offset):printLine(L["ActivateSpecLoad"], ICT.textColor)
+        return self.cells:get(x, offset):hide()
+    end
     cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Items"])
     tooltip:attach(cell)

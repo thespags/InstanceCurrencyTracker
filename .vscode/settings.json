@@ -123,6 +123,8 @@
         "GameFontHighlightSmall",
         "GetSpellLink",
         "SetItemRef",
-        "GameTooltip"
+        "GameTooltip",
+        "IsShiftKeyDown",
+        "GetTradeSkillRecipeLink"
     ]
 }

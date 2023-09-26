@@ -201,7 +201,9 @@ function MainTab:printCharacterInfo(player, x, offset)
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
                     local tooltip = self:specTooltip(player, spec)
                     cell = self.cells:get(x, offset)
-                    offset = cell:printValue(spec.name or "", string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+                    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
+                    local name = icon .. (spec.name or "")
+                    offset = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
                     tooltip:attach(cell)
                     offset = UI:printGearScore(self, spec, tooltip, x, offset)
                 end
@@ -361,11 +363,9 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, off
     local canQueue = not IsInGroup() or UnitIsGroupLeader("player")
     local cantQueue = function() ICT:print(L["Cannot queue, not currently the group leader."]) end
     if player:isCurrentPlayer() then
-        if canQueue then
-            cell:enqueueAllButton(enqueueAll(title, subTitle, instances))
-        else
-            cell:enqueueAllButton(cantQueue)
-        end
+        local f = canQueue and enqueueAll(title, subTitle, instances) or cantQueue
+        local tooltip = ICT.Tooltips:new(L["Enqueue Instances"]):printPlain(L["Enqueue Instances Body"])
+        cell:attachButton("ICTEnqueueAll", tooltip, f)
     end
 
     -- If the section is collapsible then short circuit here.

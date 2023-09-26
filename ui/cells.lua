@@ -180,12 +180,16 @@ function Cell:isSectionExpanded(key)
 end
 
 -- Key if you want different titles across columns. Currently only for character names to share the same collapse.
-function Cell:printSectionTitle(title, key)
+function Cell:printSectionTitle(title, key, color)
+    return self:printSectionTitleValue(title, nil, key, color)
+end
+
+function Cell:printSectionTitleValue(title, value, key, color)
     key = self.parent.frame:GetName() .. (key or title)
     local expanded = ICT.db.options.collapsible[key]
     local icon = expanded and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"
     title = string.format("|T%s:12|t%s", icon, title)
-    self:printLine(title, ICT.sectionColor)
+    self:printValue(title, value, color or ICT.sectionColor)
     self:attachClick(
         function()
             ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
@@ -219,8 +223,8 @@ function Cell:deletePlayerButton(player)
     button:Show()
 end
 
-function Cell:enqueueAllButton(f)
-    local name = string.format("ICTEnqueueAll(%s, %s)", self.x, self.y)
+function Cell:attachButton(key, tooltip, f)
+    local name = string.format("%s(%s, %s)", key, self.x, self.y)
     local button = self.buttons[name]
     if not button then
         button = CreateFrame("Button", name, self.frame, "UIPanelButtonTemplate")
@@ -229,12 +233,9 @@ function Cell:enqueueAllButton(f)
         button:SetSize(12, 12)
         button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture(134396)
-        ICT.Tooltips:new("Enqueue Instances")
-        :printPlain("Enqueues all non locked instances for the given category.")
-        :printPlain("Dequeues if already queued.")
-        :create(name .. "Tooltip")
-        :attachFrame(button)
+        tooltip:create(name .. "Tooltip"):attachFrame(button)
     end
     button:SetScript("OnClick", f)
     button:Show()
+    return button
 end

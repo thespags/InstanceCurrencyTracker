@@ -77,7 +77,7 @@ function ProfessionsTab:printProfession(player, profession, x, offset)
     local skills = player.skills[skillLine]
     local cell = self.cells:get(x, offset)
     local sort = options.difficultySort and infoDifficultySort(player) or infoSort
-    offset = cell:printSectionTitle(profession.name)
+    offset = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
     if cell:isSectionExpanded(profession.name) then
         if skills and ICT:size(skills) > 0 then

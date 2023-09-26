@@ -2,15 +2,6 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
-ICT.tooltipTitleColor = Colors.green
-ICT.availableColor = "FFFFFFFF"
-ICT.queuedAvailableColor = "FF90C0FF"
-ICT.sectionColor = "FFFFFF00"
-ICT.subtitleColor = "FFFFCC00"
-ICT.textColor = "FF9CD6DE"
-ICT.lockedColor = "FFFF00FF"
-ICT.queuedLockedColor = "FFFFC0FF"
-ICT.unavailableColor = Colors.red
 
 local UI = {
     -- Individual cell size for each position in the frame.
@@ -66,7 +57,7 @@ function UI:CreateFrame()
     self:addTab(frame, ICT.MainTab, L["Main"])
     self:addTab(frame, ICT.GearTab, L["Gear"])
     self:addTab(frame, ICT.ProfessionsTab, L["Professions"])
-    self:selectTab(frame.tabs[ICT.db.selectedTab or 1])()
+    PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
 
     ICT.Options:CreatePlayerDropdown()
     ICT.Options:CreateOptionDropdown()
@@ -264,6 +255,7 @@ function UI:selectTab(tab)
             parent.tabs[i]:hide()
         end
         ICT.db.selectedTab = tab.button:GetID()
+        self:PrintPlayers()
         tab:show()
         if tab.OnSelect then
             tab.OnSelect(tab)
@@ -302,25 +294,31 @@ function UI:PrintPlayers()
     ICT.Options:FlipSlider()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do
-        local offset = 0
-        local x = 0
-        tab.cells:hide()
-        _ = tab.prePrint and tab:prePrint()
-        if ICT.db.options.multiPlayerView then
-            for _, player in ICT:nspairsByValue(ICT.db.players, ICT.Player.isEnabled) do
+        -- Only update the viewed Tab.
+        if ICT.db.selectedTab == tab.button:GetID() then
+            local offset = 0
+            local x = 0
+            tab.cells:hide()
+            _ = tab.prePrint and tab:prePrint()
+            if ICT.db.options.multiPlayerView then
+                for _, player in ICT:nspairsByValue(ICT.db.players, ICT.Player.isEnabled) do
+                    x = x + 1
+                    offset = math.max(tab:printPlayer(player, x), offset)
+                end
+            else
+                local player = self:getSelectedOrDefault()
                 x = x + 1
-                offset = math.max(tab:printPlayer(player, x), offset)
+                offset = tab:printPlayer(player, x)
+                ICT.Options:SetPlayerDropDown(player)
             end
-        else
-            local player = self:getSelectedOrDefault()
-            x = x + 1
-            offset = tab:printPlayer(player, x)
-            ICT.Options:SetPlayerDropDown(player)
+            _ = tab.postPrint and tab:postPrint()
+            self:updateFrameSizes(tab.frame, x, offset)
+            tab.X = x
+            tab.Y = offset
         end
-        _ = tab.postPrint and tab:postPrint()
-        self:updateFrameSizes(tab.frame, x, offset)
-        maxX = math.max(maxX, x)
-        maxY = math.max(maxY, offset)
+        -- Preserve width/height from other tabs.
+        maxX = math.max(maxX, tab.X or 0)
+        maxY = math.max(maxY, tab.Y or 0)
     end
     self.maxX = maxX
     self.maxY = maxY

@@ -153,9 +153,13 @@ L["Listing removed."] = "Listing removed."
 L["No more instances queued, delisting."] = "No more instances queued, delisting."
 L["Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together."] = "Ignoring %s, as Blizzard doesn't let you queue raids and dungeons together."
 L["Cannot queue, not currently the group leader."] = "Cannot queue, not currently the group leader."
+L["Enqueue Instances"] = "Enqueue Instances"
+L["Enqueue Instances Body"] = "Enqueues all non locked instances for the given category.\nDequeues if already queued."
 
 -- Gear Tab
-L["ActivateSpec"] = "Please activate the spec to load items."
+L["Activate Spec"] = "Activate Spec"
+L["Activate Spec Body"] = "Click to activate this spec."
+L["ActivateSpecLoad"] = "Please activate the spec to load items."
 
 -- Professions Tab
 L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."
