@@ -73,7 +73,6 @@ function Player:onLoad()
     self:updateXP()
     self:updateResting()
     self:updateCooldowns()
-    -- Ensure pet metatable is set.
     self:updatePets()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
@@ -290,6 +289,13 @@ function Player:updateTalents()
     self:updateGlyphs()
 end
 
+function Player:recreatePets()
+    for key, pet in pairs(self:getPets()) do
+        pet.player = self
+        self.pets[key] = ICT.Pet:new(pet)
+    end
+end
+
 function Player:updatePets()
     self.pets = self.pets or {}
     local hasUI, isHunterPet = HasPetUI();
@@ -302,10 +308,6 @@ function Player:updatePets()
         local activeSpec = self:getSpec()
         activeSpec.pets = activeSpec.pets or {}
         activeSpec.pets[name] = { talentIcon = talentIcon, pointsSpent = pointsSpent, fileName = fileName }
-    end
-    for key, pet in pairs(self.pets) do
-        pet.player = self
-        self.pets[key] = ICT.Pet:new(pet)
     end
 end
 

@@ -81,6 +81,7 @@ local function initEvent(self, event, eventAddOn)
             -- Player may have already been created but we added new instances or new functions.
             player:createInstances()
             player:recreateCooldowns()
+            player:recreatePets()
         end
         -- Check if we need to delay this part.
         ICT.CreateCurrentPlayer()
