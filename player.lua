@@ -73,6 +73,7 @@ function Player:onLoad()
     self:updateXP()
     self:updateResting()
     self:updateCooldowns()
+    -- Ensure pet metatable is set.
     self:updatePets()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
