@@ -32,10 +32,11 @@ local gearOptions = {
 }
 
 local professionOptions = {
-    { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true },
+    { name = L["Sort By Difficulty"], key = "sortByDifficulty", defaultFalse=true, },
+    { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true, },
 }
 for i, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
-    tinsert(professionOptions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK})
+    tinsert(professionOptions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK, })
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(), 
     function(a, b) return a.isSecondary == b.isSecondary and L[a.name] < L[b.name] or b.isSecondary end,
@@ -171,7 +172,7 @@ local function createInfo(text)
     return info
 end
 
-local function isVisible(v) return v:isVisible() end
+local function isVisible(v) return v.isVisible and v:isVisible() end
 
 local function addAllPlayerOptions(name, func, level)
     local check = function()
