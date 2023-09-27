@@ -197,7 +197,7 @@ function MainTab:printCharacterInfo(player, x, offset)
         if cell:isSectionExpanded("Specs") then
             padding = self:getPadding(offset, "specs")
             for _, spec in pairs(player:getSpecs()) do
-                if not(spec.tab1 == 0 and spec.tab2 == 0 and spec.tab3 == 0) then
+                if ICT:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
                     local tooltip = self:specTooltip(player, spec)
                     cell = self.cells:get(x, offset)

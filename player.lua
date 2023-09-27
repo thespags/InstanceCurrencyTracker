@@ -2,7 +2,6 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
-local LCInspector = LibStub("LibClassicInspector")
 local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Instances = ICT.Instances
@@ -273,20 +272,41 @@ function Player:getSpecs()
 end
 
 function Player:updateTalents()
-    self.activeSpec = LCInspector:GetActiveTalentGroup(self.guid)
+    -- GetActiveTalentGroup(false, false)
+    self.activeSpec = GetActiveTalentGroup()
     for i=1,2 do
-        local tab1, tab2, tab3 = LCInspector:GetTalentPoints(self.guid, i)
-        if tab1 ~= nil and tab2 ~= nil and tab3 ~= nil then
-            local spec = self:getSpec(i)
-            spec.id = i
-            local specialization = LCInspector:GetSpecialization(self.guid, i)
-            spec.name = specialization and LCInspector:GetSpecializationName(self.class, specialization, true) or ("Spec " .. i)
-            spec.icon = specialization and select(2, GetTalentTabInfo(specialization, false, false, i))
-            spec.tab1, spec.tab2, spec.tab3 = tab1, tab2, tab3
-        end
+        self:getTalent(self:getSpec(i), i)
     end
     self:updateGear()
     self:updateGlyphs()
+end
+
+function Player:getTalent(spec, group)
+    local max = 0
+    spec.id = group
+    local totalPoints = 0
+    for i = 1,GetNumTalentTabs() do
+        local name, icon, pointsSpent, _ = GetTalentTabInfo(i, false, false, group)
+        pointsSpent = pointsSpent or 0
+        spec["tab" .. i] = pointsSpent
+        totalPoints = totalPoints + pointsSpent
+        if pointsSpent > max then
+            spec.name = name
+            spec.icon = icon
+        end
+    end
+    spec.totalPoints = totalPoints
+    for i=1,2 do
+        spec.glyphs = {}
+        for j=1,6 do
+            -- This icon is transparent, we could load the item and not the spell,
+            -- it lacked it's own charm as all the glyphs for the same type and class are the same.
+            -- Requires using stpain's data dump.
+            -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
+            local enabled, type, spellId, icon = GetGlyphSocketInfo(j, i)
+            spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
+        end
+    end
 end
 
 function Player:recreatePets()
@@ -315,26 +335,10 @@ function Player:getPets()
     return self.pets or {}
 end
 
-function Player:updateGlyphs()
-    for i=1,2 do
-        local spec = self:getSpec(i)
-        spec.glyphs = {}
-        for j=1,6 do
-            -- This icon is transparent, we could load the item and not the spell,
-            -- it lacked it's own charm as all the glyphs for the same type and class are the same.
-            -- Requires using stpain's data dump.
-            -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
-            local enabled, type, spellId, icon = GetGlyphSocketInfo(j, i)
-            spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
-        end
-    end
-end
-
 function Player:updateGear()
-    local active = LCInspector:GetActiveTalentGroup(self.guid)
+    self.activeSpec = GetActiveTalentGroup()
     self.specs = self.specs or { {}, {} }
-    self.activeSpec = active
-    self.specs[active] = self.specs[active] or {}
+    self.specs[self.activeSpec] = self.specs[self.activeSpec] or {}
 
     local items = {}
     for i=1,19 do

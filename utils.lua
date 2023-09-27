@@ -60,6 +60,10 @@ function ICT:getSpellLink(spellId)
     return link
 end
 
+function ICT:isValidSpec(spec)
+    return not(spec.tab1 == 0 and spec.tab2 == 0 and spec.tab3 == 0)
+end
+
 function ICT:castTradeSkill(player, skillLine, expectedName)
     for _, p in pairs(player.professions or {}) do
         if p.skillLine == skillLine and p.spellId then

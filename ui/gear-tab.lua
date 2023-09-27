@@ -49,7 +49,7 @@ function GearTab:printGlyph(spec, type, typeName, x, offset)
 end
 
 function GearTab:printSpec(player, x, offset, spec)
-    if not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec then
+    if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec) or not ICT:isValidSpec(spec) then
         return offset
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
