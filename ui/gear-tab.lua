@@ -77,6 +77,7 @@ function GearTab:printSpec(player, x, offset, spec)
     tooltip:attach(cell)
     offset = UI:printGearScore(self, spec, tooltip, x, offset)
 
+    -- For hunters , how pets.
     local padding = self:getPadding(offset, "pets", spec.id)
     for _, pet in ICT:nspairsByValue(player:getPets(), ICT.Pet.isVisible) do
         if spec.pets and spec.pets[pet.name] then
@@ -85,6 +86,8 @@ function GearTab:printSpec(player, x, offset, spec)
             offset = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
         end
     end
+
+    -- Requires spec activation so short circuit.
     if not spec.items then
         offset = self.cells:get(x, offset):printLine(L["ActivateSpecLoad"], ICT.textColor)
         return self.cells:get(x, offset):hide()
@@ -92,9 +95,9 @@ function GearTab:printSpec(player, x, offset, spec)
 
     offset = self.cells:hideRows(x, offset, padding)
     offset = self.cells:get(x, offset):hide()
+
     cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Items"])
-    tooltip:attach(cell)
 
     if cell:isSectionExpanded(L["Items"]) then
         padding = self:getPadding(offset, "items", spec.id)
@@ -121,7 +124,7 @@ function GearTab:printSpec(player, x, offset, spec)
     cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Enchants"])
     if cell:isSectionExpanded(L["Enchants"]) then
-        local padding = self:getPadding(offset, "enchants", spec.id)
+        padding = self:getPadding(offset, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
             local enchant = ICT:getEnchant(item.enchantId, slot) or L["Missing"]

@@ -291,7 +291,8 @@ end
 
 function Player:updatePets()
     self.pets = self.pets or {}
-    if HasPetUI() then
+    local hasUI, isHunterPet = HasPetUI();
+    if hasUI and isHunterPet then
         -- Pets can have duplicate names so use GUID.
         local _, talentIcon, pointsSpent, fileName = GetTalentTabInfo(1, false, true, 1)
         local icon, name, level, type, talent = GetStablePetInfo(0)
