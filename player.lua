@@ -278,7 +278,6 @@ function Player:updateTalents()
         self:getTalent(self:getSpec(i), i)
     end
     self:updateGear()
-    self:updateGlyphs()
 end
 
 function Player:getTalent(spec, group)
@@ -296,16 +295,14 @@ function Player:getTalent(spec, group)
         end
     end
     spec.totalPoints = totalPoints
-    for i=1,2 do
-        spec.glyphs = {}
-        for j=1,6 do
-            -- This icon is transparent, we could load the item and not the spell,
-            -- it lacked it's own charm as all the glyphs for the same type and class are the same.
-            -- Requires using stpain's data dump.
-            -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
-            local enabled, type, spellId, icon = GetGlyphSocketInfo(j, i)
-            spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
-        end
+    spec.glyphs = {}
+    for j=1,6 do
+        -- This icon is transparent, we could load the item and not the spell,
+        -- it lacked it's own charm as all the glyphs for the same type and class are the same.
+        -- Requires using stpain's data dump.
+        -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
+        local enabled, type, spellId, icon = GetGlyphSocketInfo(j, group)
+        spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
     end
 end
 
@@ -336,7 +333,8 @@ function Player:getPets()
 end
 
 function Player:updateGear()
-    self.activeSpec = GetActiveTalentGroup()
+    local active = GetActiveTalentGroup()
+    self.activeSpec = active
     self.specs = self.specs or { {}, {} }
     self.specs[self.activeSpec] = self.specs[self.activeSpec] or {}
 

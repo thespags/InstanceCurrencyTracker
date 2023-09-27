@@ -127,10 +127,16 @@ local skillShowFrame = CreateFrame("Frame")
 skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
 skillShowFrame:SetScript("OnEvent", ICT:throttleFunction("Skills", 0.5, Player.updateSkills, ICT.UpdateDisplay))
 
+-- Delay update for new level, or using points until player is finished.
 local talentFrame = CreateFrame("Frame")
 talentFrame:RegisterEvent("CHARACTER_POINTS_CHANGED")
-talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+-- talentFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 talentFrame:SetScript("OnEvent", ICT:throttleFunction("Talent", 3, Player.updateTalents, ICT.UpdateDisplay))
+
+-- Update immediately after spec change.
+talentFrame = CreateFrame("Frame")
+talentFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+talentFrame:SetScript("OnEvent", ICT:throttleFunction("Talent", 0, Player.updateTalents, ICT.UpdateDisplay))
 
 local petFrame = CreateFrame("Frame")
 -- Bunch of different things to try to get a pet loaded.

@@ -132,6 +132,8 @@
         "GetStablePetInfo",
         "HasPetUI",
         "GetSpellBookItemInfo",
-        "ExpandTradeSkillSubClass"
+        "ExpandTradeSkillSubClass",
+        "GetActiveTalentGroup",
+        "GetNumTalentTabs"
     ]
 }
