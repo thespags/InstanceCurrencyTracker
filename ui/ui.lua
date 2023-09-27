@@ -279,7 +279,11 @@ function UI:addTab(frame, tab, name)
 	tabButton:SetText(name)
 	tabButton:SetScript("OnClick", self:selectTab(tab))
 	tab.button = tabButton
-	-- tabFrame:Hide()
+    -- Hide then show to ensure scroll bars load.
+	tabFrame:Hide()
+    if ICT.db.selectedTab == frame.numTabs then
+        tabFrame:Show()
+    end
 
 	if frame.numTabs == 1 then
 		tabButton:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 4, 3)
@@ -320,7 +324,7 @@ function UI:PrintPlayers()
         maxX = math.max(maxX, tab.X or 0)
         maxY = math.max(maxY, tab.Y or 0)
     end
-    self.maxX = maxX
+        self.maxX = maxX
     self.maxY = maxY
     ICT.resize:Init(ICT.frame, self.cellWidth + 40, self.defaultHeight - 200, self:calculateWidth(maxX) + 50, self:calculateHeight(maxY))
 end
