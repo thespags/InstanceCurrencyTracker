@@ -9,11 +9,3 @@ externals:
   Libs/LibStub: https://repos.curseforge.com/wow/libstub/trunk
   Libs/LibTradeSkillRecipes: https://github.com/thespags/LibTradeSkillRecipes/
   Libs/LibUIDropDownMenu: https://repos.wowace.com/wow/libuidropdownmenu/trunk/LibUIDropDownMenu
-  TacoTip: https://github.com/anzz1/TacoTip
-
-move-folders:
-  TacoTip/Libs/LibDetours: Libs/LibDetours
-  TacoTip/Libs/LibClassicInspector: Libs/LibClassicInspector
-
-ignore:
-  - TacoTip
