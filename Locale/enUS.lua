@@ -145,6 +145,8 @@ L["Show Level Slider"] = "Show Level Slider"
 L["ShowLevelSliderTooltip"] = "Displays the slider bar to control minimum character level."
 
 -- Tooltips
+L["Delete Player"] = "Delete Player"
+L["Delete Player Body"] = "Brings up a confirmation menu to delete the given player."
 L["LevelSliderTooltip"] = "Minimum level alts to show."
 L["EncountersSection"] = "Shows the available boss fights for the current lockout,\nout of the total for any given lockout."
 L["CurrencySection"] = "Shows the available currency for the current lockout,\nout of the total for any given lockout."

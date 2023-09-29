@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
 local UI = ICT.UI
 local Cells = {}
@@ -8,7 +9,7 @@ local Cell = {}
 Cell.__index = Cell
 
 function Cells:new(frame)
-    local t = { indent = "", cells = {}, frame = frame}
+    local t = { indent = "", cells = {}, frame = frame }
     setmetatable(t, self)
     self.__index = self
     return t
@@ -46,6 +47,7 @@ function Cells:get(x, y)
         cell.frame:HookScript("OnClick", function() if cell.clickable then cell.hookOnClick() end end)
         cell.frame:RegisterForClicks("AnyUp")
     end
+    _ = cell.ticker and cell.ticker:Cancel()
     -- Remove any cell action so we can reuse the cell.
     for _, button in pairs(cell.buttons) do
         button:Hide()
@@ -82,15 +84,17 @@ end
 
 function Cell:printTicker(title, key, expires, duration, colorOverride)
     local indent = self.parent.indent
-    local update = function()
-        local time, color = UI:countdown(expires, duration, Colors.red, Colors.green)
+    local update = function(ticker)
+        ICT:cancelTicker(ticker)
+        local time, color = ICT:countdown(expires, duration, Colors.red, Colors.green)
+        local old = self.parent.indent
         self.parent.indent = indent
-        self:printValue(title, time, nil, colorOverride or color)
-        self.parent.indent = ""
+        local offset = self:printValue(title, time, nil, colorOverride or color)
+        self.parent.indent = old
+        return offset
     end
-    ICT.UI.tickers[key] = { ticker = C_Timer.NewTicker(1, update) }
-    local time, color = UI:countdown(expires, duration, Colors.red, Colors.green)
-    return self:printValue(title, time, nil, colorOverride or color)
+    self.ticker = C_Timer.NewTicker(1, update)
+    return update()
 end
 
 -- Prints text in the associated cell.
@@ -143,17 +147,19 @@ function Cell:attachClickHover()
     local indent = self.parent.indent
     local leftColor = self.leftColor
     self.frame:HookScript("OnEnter", function()
+        local old = self.parent.indent
         self.parent.indent = indent
         self.hover = true
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
-        self.parent.indent = ""
+        self.parent.indent = old
         self.frame:SetNormalTexture("auctionhouse-nav-button-highlight")
     end)
     self.frame:HookScript("OnLeave", function()
+        local old = self.parent.indent
         self.parent.indent = indent
         self.hover = false
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
-        self.parent.indent = ""
+        self.parent.indent = old
         self.frame:ClearNormalTexture()
     end)
 end
@@ -205,22 +211,11 @@ function Cell:printPlayerTitle(player)
 end
 
 function Cell:deletePlayerButton(player)
-    local name = string.format("ICTDeletePlayer(%s, %s)", self.x, self.y)
-    local button = self.buttons[name]
-    if not button then
-        button = CreateFrame("Button", name , self.frame, "UIPanelButtonTemplate")
-        self.buttons[name] = button
-        button:SetParent(self.frame)
-        button:SetSize(12, 12)
-        button:SetPoint("RIGHT", self.frame, "RIGHT")
-        button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
-        ICT.Tooltips:new("Delete Player")
-        :printPlain("Brings up a confirmation menu to delete the given player.")
-        :create(name .. "Tooltip")
-        :attachFrame(button)
-    end
-    button:SetScript("OnClick", UI:openDeleteFrame(player))
-    button:Show()
+    local f = UI:openDeleteFrame(player)
+    local tooltip = function(tooltip) tooltip:printSectionTitle(L["Delete Player"]):printPlain(L["Delete Player Body"]) end
+    local button = self:attachButton("ICTDeletePlayer", tooltip, f)
+    button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
+    return button
 end
 
 function Cell:attachButton(key, tooltip, f)
@@ -233,7 +228,7 @@ function Cell:attachButton(key, tooltip, f)
         button:SetSize(12, 12)
         button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture(134396)
-        tooltip:create(name .. "Tooltip"):attachFrame(button)
+        ICT.Tooltip:new(name .. "Tooltip", tooltip):attachFrame(button)
     end
     button:SetScript("OnClick", f)
     button:Show()

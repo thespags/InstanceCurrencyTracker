@@ -2,9 +2,6 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
-local Colors = ICT.Colors
-local Player = ICT.Player
-local UI = ICT.UI
 
 local ProfessionsTab = {
 }

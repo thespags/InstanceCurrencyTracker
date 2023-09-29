@@ -1,7 +1,6 @@
 local addOn, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
-ICT.OneDay = 86400
 ICT.MaxLevel = 80
 ICT.ClassIcons = {
     ["WARRIOR"] = 626008,
@@ -299,41 +298,6 @@ function ICT:oprint(text, key, ...)
     if ICT.db.options.messages[key] then
         self:print(text, ...)
     end
-end
-
-function ICT:ConvertFrom32bitNegative(int32)
-    -- Is a 32bit negative value?
-    return int32 >= 0x80000000 / 1e3
-    -- If so then convert.
-    and int32 - 0x100000000 / 1e3
-    -- If positive return original.
-    or int32
-end
-
-function ICT:GetTime64()
-    return self:ConvertFrom32bitNegative(GetTime())
-end
-
-function ICT:GetTimeLeft(start, duration)
-    local now = ICT:GetTime64()
-    local serverNow = GetServerTime()
-    -- since start is relative to computer uptime it can be a negative if the cooldown started before you restarted your pc.
-    start = ICT:ConvertFrom32bitNegative(start)
-    if start > now then -- start negative 32b overflow while now is still negative (over 24d 20h 31m PC uptime)
-        start = start - 0x100000000 / 1e3 -- adjust relative to negative now
-    end
-    return start - now + serverNow + duration
-end
-
-function ICT:DisplayTime(time)
-    if not time then
-        return ""
-    end
-    local days = math.floor(time / ICT.OneDay)
-    local hours = math.floor(time % ICT.OneDay / 3600)
-    local minutes = math.floor(time % 3600 / 60)
-    local seconds = math.floor(time % 60)
-    return string.format("%d:%02d:%02d:%02d", days, hours, minutes, seconds)
 end
 
 local throttle = true

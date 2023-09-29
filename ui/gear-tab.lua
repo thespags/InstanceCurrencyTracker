@@ -1,8 +1,8 @@
 local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
-local Colors = ICT.Colors
 local Player = ICT.Player
+local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 
 local GearTab = {
@@ -62,7 +62,7 @@ function GearTab:printSpec(player, x, offset, spec)
 
     if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
         local f = function() SetActiveTalentGroup(spec.id) end
-        local tooltip = ICT.Tooltips:new(L["Activate Spec"]):printPlain(L["Activate Spec Body"])
+        local tooltip = function(tooltip) tooltip:printTitle(L["Activate Spec"]):printPlain(L["Activate Spec Body"]) end
         cell:attachButton("ICTSetSpec", tooltip, f):SetEnabled(not isActive)
     end
     if not cell:isSectionExpanded(key) then
@@ -71,7 +71,7 @@ function GearTab:printSpec(player, x, offset, spec)
 
     self.cells.indent = "  "
 
-    local tooltip = UI:specsSectionTooltip()
+    local tooltip = Tooltips:specsSectionTooltip()
     cell = self.cells:get(x, offset)
     offset = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3))
     tooltip:attach(cell)

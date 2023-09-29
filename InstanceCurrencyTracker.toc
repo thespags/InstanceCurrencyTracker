@@ -10,8 +10,7 @@
 
 Manifest.xml
 Locale\Locales.xml
-semver.lua
-utils.lua
+common\Manifest.xml
 currency.lua
 instances.lua
 quests.lua

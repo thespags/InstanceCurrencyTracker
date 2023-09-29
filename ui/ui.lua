@@ -101,7 +101,7 @@ function UI:resetFrameButton()
     button:SetScript("OnClick", function()
         self:drawFrame(self.defaultX, self.defaultY, self:calculateWidth(self.maxX) + 50, self:calculateHeight(self.maxY))
     end)
-    ICT.Tooltips:new("Reset size and position"):create("ICTResetFrameTooltip"):attachFrame(button)
+    ICT.Tooltip:new("ICTResetFrameTooltip", function(tooltip) tooltip:printTitle("Reset size and position") end):attachFrame(button)
 end
 
 function UI:calculateWidth(x)
@@ -201,9 +201,11 @@ function UI:resetOptionsButton()
     button:SetNormalTexture("Interface/common/help-i")
     button:SetPoint("TOPRIGHT", ICT.frame.options, "TOPLEFT", 18, -2)
     button:SetScript("OnClick", UI:openResetOptionsFrame())
-    ICT.Tooltips:new("Reset Options")
-    :printPlain("Opens a dialog to confirm to reset options to their default value.")
-    :create("ICTResetOptionsTooltip")
+    local f = function(tooltip) 
+        tooltip:printTitle("Reset Options")
+        tooltip:printPlain("Opens a dialog to confirm to reset options to their default value.")
+    end
+    ICT.Tooltip:new("ICTResetOptionsTooltip", f)
     :attachFrame(button)
 end
 
@@ -254,7 +256,7 @@ function UI:selectTab(tab)
         for i=1,parent.numTabs do
             parent.tabs[i]:hide()
         end
-        ICT.db.selectedTab = tab.button:GetID()
+            ICT.db.selectedTab = tab.button:GetID()
         self:PrintPlayers()
         tab:show()
         if tab.OnSelect then
@@ -294,7 +296,6 @@ function UI:addTab(frame, tab, name)
 end
 
 function UI:PrintPlayers()
-    self:hideTickers()
     ICT.Options:FlipSlider()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do

@@ -93,7 +93,7 @@ function Cooldown:update(player)
                 local start, duration = GetSpellCooldown(id)
                 player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
                 -- Check duration to filter out spell lock, wands and other CD triggers
-                player.cooldowns[id].expires = start ~= 0 and duration == v.info.duration and ICT:GetTimeLeft(start, duration) or 0
+                player.cooldowns[id].expires = start ~= 0 and duration == v.info.duration and ICT:getTimeLeft(start, duration) or 0
             else
                 -- Handles case if spell was known and no longer is.
                 player.cooldowns[id] = nil
@@ -102,7 +102,7 @@ function Cooldown:update(player)
             if GetItemCount(id, true) > 0 and C_PlayerInfo.CanUseItem(id) then
                 player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
                 local start, duration = C_Container.GetItemCooldown(id)
-                player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:GetTimeLeft(start, duration) or 0
+                player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:getTimeLeft(start, duration) or 0
             else
                 -- Handles case item is gone. Doesn't handle not being able to use item.
                 player.cooldowns[id] = nil
