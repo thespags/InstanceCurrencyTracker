@@ -3,6 +3,7 @@
   <Script file="cells.lua"/>
   <Script file="tooltip.lua"/>
   <Script file="tooltips.lua"/>
+  <Script file="talents.lua"/>
   <Script file="common.lua"/>
   <Script file="main-tab.lua"/>
   <Script file="gear-tab.lua"/>

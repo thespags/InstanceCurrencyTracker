@@ -134,6 +134,20 @@
         "GetSpellBookItemInfo",
         "ExpandTradeSkillSubClass",
         "GetActiveTalentGroup",
-        "GetNumTalentTabs"
+        "GetNumTalentTabs",
+        "PlayerTalentFrame",
+        "TalentFrame_LoadUI",
+        "TALENT_SPEC_PRIMARY",
+        "TALENT_SPEC_SECONDARY",
+        "TALENT_SPEC_PET_PRIMARY",
+        "PanelTemplates_GetSelectedTab",
+        "PlayerTalentFrameTitleText",
+        "HideUIPanel",
+        "ShowUIPanel",
+        "PlayerSpecTab_OnClick",
+        "PlayerTalentTab_OnClick",
+        "GLYPH_TALENT_TAB",
+        "DEFAULT_TALENT_TAB",
+        "TalentFrame_UpdateSpecInfoCache"
     ]
 }

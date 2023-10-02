@@ -166,9 +166,14 @@ L["Enqueue Instances"] = "Enqueue Instances"
 L["Enqueue Instances Body"] = "Enqueues all non locked instances for the given category.\nDequeues if already queued."
 
 -- Gear Tab
-L["Activate Spec"] = "Activate Spec"
-L["Activate Spec Body"] = "Click to activate this spec."
+L["Spec"] = "Spec"
+L["Click"] = "Click"
+L["Shift Click"] = "Shift+Click"
+L["Spec Click"] = "Activates the spec"
+L["Spec Shift Click"] = "Opens/Closes/Switches the Spec's Talent frame tab."
 L["ActivateSpecLoad"] = "Please activate the spec to load items."
+L["Section"] = "Expand/Collapse the section."
+L["Glyphs Shift Click"] = "Opens the Glyphs Talent frame tab."
 
 -- Professions Tab
 L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."

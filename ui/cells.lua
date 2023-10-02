@@ -44,15 +44,24 @@ function Cells:get(x, y)
         cell.right:SetJustifyH("RIGHT")
         cell.right:SetFont(UI.font, 10)
 
-        cell.frame:HookScript("OnClick", function() if cell.clickable then cell.hookOnClick() end end)
         cell.frame:RegisterForClicks("AnyUp")
+        cell.frame:HookScript("OnClick",
+            function()
+                if cell.hookOnShiftClick and IsShiftKeyDown() then
+                    cell.hookOnShiftClick()
+                elseif cell.hookOnClick then
+                    cell.hookOnClick()
+                end
+            end
+        )
     end
     _ = cell.ticker and cell.ticker:Cancel()
     -- Remove any cell action so we can reuse the cell.
     for _, button in pairs(cell.buttons) do
         button:Hide()
     end
-    cell.clickable = false
+    cell.hookOnClick = nil
+    cell.hookOnShiftClick = nil
     cell.frame:SetScript("OnEnter", nil)
     cell.frame:SetScript("OnLeave", nil)
     cell.frame:SetAttribute("type", nil)
@@ -64,6 +73,7 @@ end
 function Cells:hide()
     for _, cell in pairs(self.cells) do
         cell.frame:Hide()
+        _ = cell.ticker and cell.ticker:Cancel()
     end
 end
 
@@ -170,9 +180,9 @@ function Cell:attachSecureClick(itemName)
     self:attachClickHover()
 end
 
-function Cell:attachClick(f)
-    self.clickable = true
-    self.hookOnClick = f
+function Cell:attachClick(click, shiftClick)
+    self.hookOnClick = click
+    self:attachShiftClick(shiftClick)
     self:attachClickHover()
 end
 
@@ -205,6 +215,10 @@ function Cell:printSectionTitleValue(title, value, key, color)
     return self.y + 1
 end
 
+function Cell:attachShiftClick(hookOnShiftClick)
+    self.hookOnShiftClick = hookOnShiftClick
+end
+
 function Cell:printPlayerTitle(player)
     self:deletePlayerButton(player)
     return self:printLine(player:getNameWithIcon(), player:getClassColor())
@@ -212,13 +226,13 @@ end
 
 function Cell:deletePlayerButton(player)
     local f = UI:openDeleteFrame(player)
-    local tooltip = function(tooltip) tooltip:printSectionTitle(L["Delete Player"]):printPlain(L["Delete Player Body"]) end
+    local tooltip = function(tooltip) tooltip:printTitle(L["Delete Player"]):printPlain(L["Delete Player Body"]) end
     local button = self:attachButton("ICTDeletePlayer", tooltip, f)
     button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
     return button
 end
 
-function Cell:attachButton(key, tooltip, f)
+function Cell:attachButton(key, tooltip, click, shiftClick)
     local name = string.format("%s(%s, %s)", key, self.x, self.y)
     local button = self.buttons[name]
     if not button then
@@ -230,7 +244,14 @@ function Cell:attachButton(key, tooltip, f)
         button:SetNormalTexture(134396)
         ICT.Tooltip:new(name .. "Tooltip", tooltip):attachFrame(button)
     end
-    button:SetScript("OnClick", f)
+    button:SetScript("OnClick",
+        function()
+            if shiftClick and IsShiftKeyDown() then
+                shiftClick()
+            elseif click then
+                click()
+            end
+        end)
     button:Show()
     return button
 end

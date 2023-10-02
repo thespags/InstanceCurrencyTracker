@@ -5,13 +5,14 @@ local Colors = ICT.Colors
 local Instances = ICT.Instances
 local Player = ICT.Player
 local Reset = ICT.Reset
+local Talents = ICT.Talents
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 
 local MainTab = {
     paddings = {},
     realmGold = {},
-    tickers = {},
+    tickers = {}
 }
 ICT.MainTab = MainTab
 
@@ -128,8 +129,12 @@ function MainTab:printCharacterInfo(player, x, offset)
                     cell = self.cells:get(x, offset)
                     local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
                     local name = icon .. (spec.name or "")
-                    offset = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+                    offset = cell:printValue(name, string.format("%s/%s/%s    ", spec.tab1, spec.tab2, spec.tab3), specColor)
                     tooltip:attach(cell)
+                    -- local tooltip = ICT.Tooltips:new(L["Spec"])
+                    -- :printValue(L["Click"], L["Spec Click"])
+                    -- :printValue(L["Shift Click"], L["Spec Shift Click"])
+                    cell:attachButton("ICTSetSpec", tooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
                     offset = UI:printGearScore(self, spec, tooltip, x, offset)
                 end
             end
@@ -407,7 +412,7 @@ function MainTab:postPrint()
 end
 
 function MainTab:printMultiViewResetTicker(x, title, expires, duration)
-    local frame = UI.tickers[title] and UI.tickers[title].frame
+    local frame = self.tickers[title] and self.tickers[title].frame
     if not frame then
         frame = CreateFrame("Button", "ICTReset" .. title, ICT.frame)
         frame:SetAlpha(1)

@@ -243,7 +243,7 @@ end
 
 function Tooltips:timerSectionTooltip()
     local f = function(tooltip)
-        tooltip:printTtile(L["Reset Timers"])
+        tooltip:printTitle(L["Reset Timers"])
         :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
         :printPlain("\nNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.")
     end

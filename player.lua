@@ -272,38 +272,11 @@ function Player:getSpecs()
 end
 
 function Player:updateTalents()
-    -- GetActiveTalentGroup(false, false)
     self.activeSpec = GetActiveTalentGroup()
     for i=1,2 do
-        self:getTalent(self:getSpec(i), i)
+        ICT.Talents:updateSpec(self:getSpec(i), i)
     end
     self:updateGear()
-end
-
-function Player:getTalent(spec, group)
-    local max = 0
-    spec.id = group
-    local totalPoints = 0
-    for i = 1,GetNumTalentTabs() do
-        local name, icon, pointsSpent, _ = GetTalentTabInfo(i, false, false, group)
-        pointsSpent = pointsSpent or 0
-        spec["tab" .. i] = pointsSpent
-        totalPoints = totalPoints + pointsSpent
-        if pointsSpent > max then
-            spec.name = name
-            spec.icon = icon
-        end
-    end
-    spec.totalPoints = totalPoints
-    spec.glyphs = {}
-    for j=1,6 do
-        -- This icon is transparent, we could load the item and not the spell,
-        -- it lacked it's own charm as all the glyphs for the same type and class are the same.
-        -- Requires using stpain's data dump.
-        -- https://github.com/stpain/guildbook/blob/930bb6682b83072e078ccdf341da87efc5169d97/ItemData.lua#L59721
-        local enabled, type, spellId, icon = GetGlyphSocketInfo(j, group)
-        spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
-    end
 end
 
 function Player:recreatePets()
@@ -317,14 +290,7 @@ function Player:updatePets()
     self.pets = self.pets or {}
     local hasUI, isHunterPet = HasPetUI();
     if hasUI and isHunterPet then
-        -- Pets can have duplicate names so use GUID.
-        local _, talentIcon, pointsSpent, fileName = GetTalentTabInfo(1, false, true, 1)
-        local icon, name, level, type, talent = GetStablePetInfo(0)
-        local pet = { player = self, icon = icon, name = name, level = level, type = type, talent = talent, specs = {} }
-        self.pets[name] = ICT.Pet:new(pet)
-        local activeSpec = self:getSpec()
-        activeSpec.pets = activeSpec.pets or {}
-        activeSpec.pets[name] = { talentIcon = talentIcon, pointsSpent = pointsSpent, fileName = fileName }
+        ICT.Talents:updatePet(self)
     end
 end
 

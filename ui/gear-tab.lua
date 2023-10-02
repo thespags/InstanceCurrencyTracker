@@ -2,6 +2,8 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Player = ICT.Player
+local Talents = ICT.Talents
+local Tooltip = ICT.Tooltip
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 
@@ -61,9 +63,12 @@ function GearTab:printSpec(player, x, offset, spec)
     offset = cell:printSectionTitle(sectionName, key, isActive and ICT.lockedColor)
 
     if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
-        local f = function() SetActiveTalentGroup(spec.id) end
-        local tooltip = function(tooltip) tooltip:printTitle(L["Activate Spec"]):printPlain(L["Activate Spec Body"]) end
-        cell:attachButton("ICTSetSpec", tooltip, f):SetEnabled(not isActive)
+        local tooltip = function(tooltip)
+            tooltip:printTitle(L["Spec"])
+            :printValue(L["Click"], L["Spec Click"])
+            :printValue(L["Shift Click"], L["Spec Shift Click"])
+        end
+        cell:attachButton("ICTSetSpec", tooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
     end
     if not cell:isSectionExpanded(key) then
         return self.cells:get(x, offset):hide()
@@ -77,12 +82,31 @@ function GearTab:printSpec(player, x, offset, spec)
     tooltip:attach(cell)
     offset = UI:printGearScore(self, spec, tooltip, x, offset)
 
-    -- For hunters , how pets.
+    offset = self.cells:get(x, offset):hide()
+    cell = self.cells:get(x, offset)
+    offset = cell:printSectionTitle(L["Glyphs"])
+    cell:attachShiftClick(Talents:viewGlyphs(spec.id))
+    tooltip = function(tooltip)
+        tooltip:printTitle(L["Glyphs"])
+        :printValue(L["Click"], L["Section"])
+        :printValue(L["Shift Click"], L["Glyphs Shift Click"])
+    end
+    Tooltip:new("ICTGlyphs", tooltip):attach(cell)
+
+    if cell:isSectionExpanded(L["Glyphs"]) then
+        local padding = self:getPadding(offset, "glyphs", spec.id)
+        offset = self:printGlyph(spec, 1, L["Major"], x, offset)
+        offset = self:printGlyph(spec, 2, L["Minor"], x, offset)
+        offset = self.cells:hideRows(x, offset, padding)
+    end
+
+    -- For hunters, show pets.
     local padding = self:getPadding(offset, "pets", spec.id)
     for _, pet in ICT:nspairsByValue(player:getPets(), ICT.Pet.isVisible) do
         if spec.pets and spec.pets[pet.name] then
             local specPet = spec.pets[pet.name]
             cell = self.cells:get(x, offset)
+            cell:attachShiftClick(Talents:viewSpec(spec.id, true))
             offset = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
         end
     end
@@ -107,16 +131,6 @@ function GearTab:printSpec(player, x, offset, spec)
             offset = cell:printValue(string.format("|T%s:14|t%s", item.icon, item.link), text)
             cell:attachHyperLink()
         end
-        offset = self.cells:hideRows(x, offset, padding)
-    end
-    offset = self.cells:get(x, offset):hide()
-
-    cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(L["Glyphs"])
-    if cell:isSectionExpanded(L["Glyphs"]) then
-        local padding = self:getPadding(offset, "glyphs", spec.id)
-        offset = self:printGlyph(spec, 1, L["Major"], x, offset)
-        offset = self:printGlyph(spec, 2, L["Minor"], x, offset)
         offset = self.cells:hideRows(x, offset, padding)
     end
     offset = self.cells:get(x, offset):hide()
