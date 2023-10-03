@@ -3,6 +3,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "enUS", 
 L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Currency Tracker: %s..."
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
+L["No Currency"] = "No Currency"
 
 -- Tabs
 L["Main"] = "Main"

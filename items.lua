@@ -3,25 +3,24 @@ local addOn, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Player = ICT.Player
 
--- TODO check if this is available in wow db?
 ICT.CheckSlotEnchant = {
-	[INVSLOT_HEAD] = ICT:ReturnX(true),
-	[INVSLOT_NECK] = ICT:ReturnX(false),
-	[INVSLOT_SHOULDER] = ICT:ReturnX(true),
-	[INVSLOT_BACK] = ICT:ReturnX(true),
-	[INVSLOT_CHEST] = ICT:ReturnX(true),
-	[INVSLOT_BODY] = ICT:ReturnX(false),
-	[INVSLOT_TABARD] = ICT:ReturnX(false),
-	[INVSLOT_WRIST] = ICT:ReturnX(true),
-	[INVSLOT_HAND] = ICT:ReturnX(true),
+	[INVSLOT_HEAD] = ICT:returnX(true),
+	[INVSLOT_NECK] = ICT:returnX(false),
+	[INVSLOT_SHOULDER] = ICT:returnX(true),
+	[INVSLOT_BACK] = ICT:returnX(true),
+	[INVSLOT_CHEST] = ICT:returnX(true),
+	[INVSLOT_BODY] = ICT:returnX(false),
+	[INVSLOT_TABARD] = ICT:returnX(false),
+	[INVSLOT_WRIST] = ICT:returnX(true),
+	[INVSLOT_HAND] = ICT:returnX(true),
 	[INVSLOT_WAIST] = Player.isEngineer,
-	[INVSLOT_LEGS] = ICT:ReturnX(true),
-	[INVSLOT_FEET] = ICT:ReturnX(true),
+	[INVSLOT_LEGS] = ICT:returnX(true),
+	[INVSLOT_FEET] = ICT:returnX(true),
 	[INVSLOT_FINGER1] = Player.isEnchanter,
 	[INVSLOT_FINGER2] = Player.isEnchanter,
-	[INVSLOT_TRINKET1] = ICT:ReturnX(false),
-	[INVSLOT_TRINKET2] = ICT:ReturnX(false),
-	[INVSLOT_MAINHAND] = ICT:ReturnX(true),
+	[INVSLOT_TRINKET1] = ICT:returnX(false),
+	[INVSLOT_TRINKET2] = ICT:returnX(false),
+	[INVSLOT_MAINHAND] = ICT:returnX(true),
     [INVSLOT_RANGED] = function(player, _, _) return player.class == "HUNTER" end,
 	[INVSLOT_OFFHAND] = function(_, classId, subClassId) return classId == 4 and subClassId == 6 end,
 }
@@ -29,7 +28,7 @@ ICT.CheckSlotEnchant = {
 ICT.CheckSlotSocket = {
 	[INVSLOT_WRIST] = { check = Player.isBlacksmith, icon = 133273 },
 	[INVSLOT_HAND] = { check = Player.isBlacksmith, icon = 132984 },
-	[INVSLOT_WAIST] = { check = ICT:ReturnX(true), icon = 132525 },
+	[INVSLOT_WAIST] = { check = ICT:returnX(true), icon = 132525 },
 }
 
 ICT.ItemTypeToSlot = {
@@ -84,20 +83,19 @@ ICT.BagFamily = {
 
 function ICT:addGems(k, item, missingOnly)
     local gemTotal = 0
-    local text = ""
+    local text = {}
     for _, gem in pairs(item.gems) do
-        text = text .. string.format("|T%s:14|t", gem)
+        _ = not missingOnly and tinsert(text, string.format("|T%s:14|t", gem))
         gemTotal = gemTotal + 1
     end
-    text = missingOnly and "" or text
     -- Add '?' if you are missing ids.
     for _=gemTotal + 1,item.socketTotals do
-        text = text .. "|T134400:14|t"
+        tinsert(text, "|T134400:14|t")
     end
     if gemTotal < item.socketTotals and item.extraSocket then
-        text = text .. string.format("|T%s:14|t", ICT.CheckSlotSocket[k].icon)
+        tinsert(text, string.format("|T%s:14|t", ICT.CheckSlotSocket[k].icon))
     end
-    return text
+    return table.concat(text)
 end
 
 local x = {}

@@ -4,7 +4,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
-local Instances = ICT.Instances
+local Instance = ICT.Instance
 ICT.Player = {}
 local Player = ICT.Player
 
@@ -89,11 +89,10 @@ end
 
 function Player:createInstances()
     self.instances = self.instances or {}
-
     for id, info in pairs(LibInstances:GetInfos()) do
         for _, size in pairs(info:getSizes()) do
-            local key = Instances:key(id, size)
-            self.instances[key] = Instances:new(self.instances[key], id, size)
+            local key = Instance:key(id, size)
+            self.instances[key] = Instance:new(self.instances[key], id, size)
         end
     end
 end
@@ -122,14 +121,14 @@ end
 local dungeons = {}
 function Player:getDungeons(expansion)
     local key = self.fullName .. ":" .. (expansion and expansion or "")
-    dungeons[key] = dungeons[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instances.isDungeon, expansion)))
+    dungeons[key] = dungeons[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instance.isDungeon, expansion)))
     return dungeons[key]
 end
 
 local raids = {}
 function Player:getRaids(expansion)
     local key = self.fullName .. ":" .. (expansion and expansion or "")
-    raids[key] = raids[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instances.isRaid, expansion)))
+    raids[key] = raids[key] or ICT:toTable(ICT:nspairsByValue(self.instances, ICT:fWith(Instance.isRaid, expansion)))
     return raids[key]
 end
 
@@ -170,7 +169,7 @@ end
 -- Updates instances and currencies.
 -- We may want to decouple these things in the future.
 function Player:update()
-    for _, v in pairs(ICT.ResetInfo) do
+    for _, v in pairs(ICT.Resets) do
         v:reset()
     end
     for _, player in pairs(ICT.db.players) do
@@ -320,7 +319,7 @@ function Player:updateGear()
             item.gems[1] = details[4] and select(5, GetItemInfoInstant(details[4])) or nil
             item.gems[2] = details[5] and select(5, GetItemInfoInstant(details[5])) or nil
             item.gems[3] = details[6] and select(5, GetItemInfoInstant(details[6])) or nil
-            item.gemTotal = ICT:sumNonNil(item.gems[0], item.gems[1], item.gems[2], item.gems[3])
+            item.gemTotal = ICT:sumNonNil({item.gems[0], item.gems[1], item.gems[2], item.gems[3]})
 
             -- Requires the server to be loaded so we have level and invType.
             local _, _, _, level, _, _, _, _, invType, icon, _, classId, subClassId = GetItemInfo(itemLink)
@@ -466,7 +465,7 @@ function Player:updateCooldowns()
 end
 
 function Player:getInstance(id, maxPlayers)
-    return self.instances[Instances:key(id, maxPlayers)]
+    return self.instances[Instance:key(id, maxPlayers)]
 end
 
 -- You gain 5% rested ever 8 hours, so every second equals the follow xp. 

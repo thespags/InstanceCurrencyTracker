@@ -2,7 +2,6 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
-local Instances = ICT.Instances
 local Player = ICT.Player
 local Reset = ICT.Reset
 local Talents = ICT.Talents
@@ -19,23 +18,23 @@ ICT.MainTab = MainTab
 function MainTab:calculatePadding()
     local db = ICT.db
     local options = db.options
-    self.paddings.info = ICT:sumNonNil(options.player.showLevel, options.player.showGuild, options.player.showGuildRank, options.player.showMoney, options.player.showDurability)
+    self.paddings.info = ICT:sumNonNil({options.player.showLevel, options.player.showGuild, options.player.showGuildRank, options.player.showMoney, options.player.showDurability})
     -- If there is a viewable player under 80 then pad for XP info.
     self.paddings.rested = ICT:containsAnyValue(db.players, function(player) return player.level < ICT.MaxLevel and player:isEnabled() end)
-        and ICT:sumNonNil(options.player.showXP, options.player.showRestedXP, options.player.showRestedState)
+        and ICT:sumNonNil({options.player.showXP, options.player.showRestedXP, options.player.showRestedState})
         or 0
     self.paddings.bags = options.player.showBags
-        and ICT:max(db.players, function(player) return ICT:sum(player.bagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
+        and ICT:max(db.players, function(player) return ICT:sum(player.bagsTotal, ICT:returnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0
     self.paddings.bags = self.paddings.bags + (options.player.showBags and options.player.showBankBags
-        and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal or {}, ICT:ReturnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
+        and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal, ICT:returnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
         or 0)
     self.paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
     self.paddings.cooldowns = options.player.showCooldowns
-        and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns or {}, ICT:ReturnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
+        and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
     self.paddings.specs = TT_GS and 6 or 2
-    self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:ReturnX(1), player:isQuestVisible()) end, Player.isEnabled)
+    self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
 
 function MainTab:getPadding(offset, name)
@@ -123,7 +122,7 @@ function MainTab:printCharacterInfo(player, x, offset)
         if cell:isSectionExpanded("Specs") then
             padding = self:getPadding(offset, "specs")
             for _, spec in pairs(player:getSpecs()) do
-                if ICT:isValidSpec(spec) then
+                if Talents:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
                     local tooltip = Tooltips:specTooltip(player, spec)
                     cell = self.cells:get(x, offset)
@@ -131,10 +130,12 @@ function MainTab:printCharacterInfo(player, x, offset)
                     local name = icon .. (spec.name or "")
                     offset = cell:printValue(name, string.format("%s/%s/%s    ", spec.tab1, spec.tab2, spec.tab3), specColor)
                     tooltip:attach(cell)
-                    -- local tooltip = ICT.Tooltips:new(L["Spec"])
-                    -- :printValue(L["Click"], L["Spec Click"])
-                    -- :printValue(L["Shift Click"], L["Spec Shift Click"])
-                    cell:attachButton("ICTSetSpec", tooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
+                    local buttonTooltip = function(tooltip)
+                        tooltip:printTitle(L["Spec"])
+                        :printValue(L["Click"], L["Spec Click"])
+                        :printValue(L["Shift Click"], L["Spec Shift Click"])
+                    end
+                    cell:attachButton("ICTSetSpec", buttonTooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
                     offset = UI:printGearScore(self, spec, tooltip, x, offset)
                 end
             end
@@ -170,7 +171,7 @@ function MainTab:printCharacterInfo(player, x, offset)
 
         if cell:isSectionExpanded(L["Cooldowns"]) then
             padding = self:getPadding(offset, "cooldowns")
-            for _, v in ICT:nspairsByValue(player.cooldowns or {}, ICT.Cooldown.isVisible) do
+            for _, v in ICT:nspairsByValue(player.cooldowns, ICT.Cooldown.isVisible) do
                 cell = self.cells:get(x, offset)
                 local key = player:getFullName() .. v:getName()
                 offset = cell:printTicker(v:getNameWithIcon(), key, v.expires, v.duration)
@@ -275,7 +276,7 @@ function MainTab:printAllInstances(player, x, offset)
     for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
         local sizes = {}
         for k, v in ipairs(subSections) do
-            sizes[k] = ICT:size(v.instances(player, expansion), Instances.isVisible)
+            sizes[k] = ICT:size(v.instances(player, expansion), ICT.Instance.isVisible)
         end
         if ICT:sum(sizes) > 0 then
             local cell = self.cells:get(x, offset)
@@ -368,7 +369,7 @@ function MainTab:printResetTimers(x, offset)
         Tooltips:timerSectionTooltip():attach(cell)
 
         if cell:isSectionExpanded(L["Reset"]) then
-            for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
+            for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
                 offset = self.cells:get(x, offset):printTicker(v:getName(), v:getName(), v:expires(), v:duration())
             end
         end
@@ -380,7 +381,7 @@ end
 function MainTab:printPlayer(player, x)
     local offset = 1
     offset = self.cells:get(x, offset):printPlayerTitle(player)
-    if ICT:sumNonNilTable(ICT.db.options.player) > 0 then
+    if ICT:sumNonNil(ICT.db.options.player) > 0 then
         offset = self:printCharacterInfo(player, x, offset)
     end
     offset = self:printResetTimers(x, offset)
@@ -404,7 +405,7 @@ function MainTab:postPrint()
         -- local start = 32 + -60 * count / 2
         local start = 28 + -55 * count / 2
         local frame = nil
-        for _, v in ICT:nspairsByValue(ICT.ResetInfo, Reset.isVisible) do
+        for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
             start, frame = self:printMultiViewResetTicker(start, v:getName(), v:expires(), v:duration())
             tooltip:attachFrame(frame)
         end

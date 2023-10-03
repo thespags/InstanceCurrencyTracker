@@ -1,5 +1,7 @@
 local addOnName, ICT = ...
 
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+
 local isTournamentChainCompleted = function()
     -- Check for Death Knight and non Death Knight prereq quest.
     return C_QuestLog.IsQuestFlaggedCompleted(13794) or C_QuestLog.IsQuestFlaggedCompleted(13795)
@@ -56,28 +58,28 @@ end
 ICT.QuestInfo = {
     -- This counts the quest and bag together, instead of separately.
     ["Heroic Daily Dungeon"] = {
-        name = ICT:ReturnX("Heroic Daily Dungeon"),
+        name = ICT:returnX("Heroic Daily Dungeon"),
         ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
         amount = 5,
         currency = ICT.Triumph,
         prereq = level80,
     },
     ["Normal Daily Dungeon"] = {
-        name = ICT:ReturnX("Normal Daily Dungeon"),
+        name = ICT:returnX("Normal Daily Dungeon"),
         ids = { 13240, 13241, 13243, 13244 },
         amount = 2,
         currency = ICT.Conquest,
         prereq = level80,
     },
     ["Jewelcrafting Daily"] = {
-        name = ICT:ReturnX("Jewelcrafting Daily"),
+        name = ICT:returnX("Jewelcrafting Daily"),
         ids = { 12958, 12959, 12960, 12961, 12962, 12963, },
         amount = 1,
         currency = ICT.JewelcraftersToken,
         prereq = isJewelCrafter,
     },
     ["Cooking Daily"] = {
-        name = ICT:ReturnX("Cooking Daily"),
+        name = ICT:returnX("Cooking Daily"),
         ids = { 13112, 13113, 13114, 13115, 13116, 13100, 13101, 13103, 13102, 13107},
         -- Mustard Dogs drops 2, but that requires the ability to detect the active daily.
         amount = 1,
@@ -85,7 +87,7 @@ ICT.QuestInfo = {
         prereq = hasCooking,
     },
     ["Fishing Daily"] = {
-        name = ICT:ReturnX("Fishing Daily"),
+        name = ICT:returnX("Fishing Daily"),
         ids = { 13830, 13832, 13833, 13834, 13836 },
         amount = 0,
         prereq = hasFishing,
@@ -120,14 +122,14 @@ ICT.QuestInfo = {
         prereq = isTournamentChainCompleted
     },
     ["High Crusader Adelard"] = {
-        name = ICT:ReturnX("High Crusader Adelard"),
+        name = ICT:returnX("High Crusader Adelard"),
         ids = { 14101, 14102, 14104, 14105 },
         amount = 1,
         currency = ICT.ChampionsSeal,
         prereq = isExaltedTournamentFaction
     },
     ["Crusader Silverdawn"] = {
-        name = ICT:ReturnX("Crusader Silverdawn"),
+        name = ICT:returnX("Crusader Silverdawn"),
         ids = { 14108, 14107}, 
         amount = 1,
         currency = ICT.ChampionsSeal,
@@ -181,7 +183,7 @@ function Quests:isVisible()
 end
 
 function Quests:getCurrencyName()
-    return self.currency and self.currency:getNameWithIconTooltip() or "No Currency"
+    return self.currency and self.currency:getNameWithIconTooltip() or L["No Currency"]
 end
 
 -- This would be nicer if it wasn't player dependent.

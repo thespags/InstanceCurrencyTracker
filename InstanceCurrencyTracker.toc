@@ -11,13 +11,8 @@
 Manifest.xml
 Locale\Locales.xml
 common\Manifest.xml
-currency.lua
-instances.lua
-quests.lua
-pets.lua
+objects\Manifest.xml
 player.lua
-reset.lua
-cooldowns.lua
 items.lua
 ui\Manifest.xml
 options.lua

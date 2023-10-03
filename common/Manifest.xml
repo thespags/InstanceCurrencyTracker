@@ -1,6 +1,8 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Script file="semver.lua"/>
   <Script file="utils.lua"/>
+  <Script file="tables.lua"/>
+  <Script file="functions.lua"/>
   <Script file="colors.lua"/>
   <Script file="time.lua"/>
 </Ui>

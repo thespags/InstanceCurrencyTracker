@@ -308,7 +308,7 @@ function ICT.WipeRealm(realmName)
 end
 
 function ICT.WipeAllPlayers()
-    local count = ICT:sum(ICT.db.players, ICT:ReturnX(1))
+    local count = ICT:sum(ICT.db.players, ICT:returnX(1))
     ICT.db.players = {}
     ICT:print(L["Wiped %s characters"], count)
     ICT.CreateCurrentPlayer()

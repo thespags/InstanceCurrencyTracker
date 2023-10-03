@@ -253,7 +253,7 @@ end
 
 local function addObjectsOption(name, objects, level, filter)
     local info = createInfo(name)
-    filter = filter or ICT:ReturnX(true)
+    filter = filter or ICT:returnX(true)
     local contains = function(v) return filter(v) and v:isVisible() end
     info.checked = ICT:containsAllValues(objects, contains)
     info.menuList = info.text
@@ -346,7 +346,7 @@ function Options:CreateOptionDropdown()
                 addMenuOption(L["Gear Info"], ICT.db.options.gear, level, L["Gear Info Toolip"])
                 addMenuOption(L["Professions"], ICT.db.options.professions, level, L["Professions Toolip"])
                 addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
-                addObjectsOption(L["Reset Timers"], ICT.ResetInfo, level)
+                addObjectsOption(L["Reset Timers"], ICT.Resets, level)
                 addObjectsOption(L["Instances"], Instances.infos(), level)
                 addObjectsOption(L["Difficulty"], ICT.DifficultyInfo, level)
                 addMenuOption(L["Quests"], ICT.db.options.quests, level)
@@ -362,7 +362,7 @@ function Options:CreateOptionDropdown()
                         addObjectOption(player, level)
                     end
                 elseif menuList == L["Reset Timers"] then
-                    for _, v in ICT:spairs(ICT.ResetInfo) do
+                    for _, v in ICT:spairs(ICT.Resets) do
                         addObjectOption(v, level)
                     end
                 elseif menuList == L["Instances"] then
@@ -399,7 +399,7 @@ function Options:CreateOptionDropdown()
                 if subList == L["Instances"] then
                     local expansion = tonumber(filter)
                     local lastSize
-                    for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, ICT:fWith(Instances.fromExpansion, expansion)) do
+                    for _, v in ICT:spairsByValue(Instances.infos(), ICT.InstanceOptionSort, ICT:fWith(ICT.Instance.fromExpansion, expansion)) do
                         local size = v.legacy == expansion and v.legacySize or v.size
                         if lastSize and lastSize ~= size then
                             DDM:UIDropDownMenu_AddSeparator(level)

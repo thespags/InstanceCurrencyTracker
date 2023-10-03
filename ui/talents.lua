@@ -30,6 +30,10 @@ function Talents:updateSpec(spec, id)
     return spec
 end
 
+function Talents:isValidSpec(spec)
+    return not(spec.tab1 == 0 and spec.tab2 == 0 and spec.tab3 == 0)
+end
+
 function Talents:updatePet(player)
     local icon, name, level, type, talent = GetStablePetInfo(0)
     local pet = ICT.Pet:new({ player = player, icon = icon, name = name, level = level, type = type, talent = talent })

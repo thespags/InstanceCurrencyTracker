@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="cooldown.lua"/>
+  <Script file="cooldowns.lua"/>
+  <Script file="currency.lua"/>
+  <Script file="currencies.lua"/>
+  <Script file="difficulty.lua"/>
+  <Script file="instance.lua"/>
+  <Script file="pet.lua"/>
+  <Script file="reset.lua"/>
+  <!-- requires currencies to be loaded -->
+  <Script file="instances.lua"/> 
+  <Script file="quests.lua"/>
+</Ui>

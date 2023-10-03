@@ -115,7 +115,6 @@ function ProfessionsTab:updateSkills(player, skillLine)
     player.skills = player.skills or {}
     for _, p in pairs(player.professions or {}) do
         if p.skillLine == skillLine and p.spellId then
-            print(p.name .. " " .. p.spellId .. " " .. GetNumTradeSkills())
             CastSpellByID(p.spellId)
             for i=1,GetNumTradeSkills() do
                 local name, difficulty = GetTradeSkillInfo(i)

@@ -27,7 +27,7 @@ function Tooltips:bagTooltip(player)
         :printValue(L["Bag"], L["Free / Total"])
 
         local printBags = function(bags, title)
-            for _, v in ICT:spairs(bags or {}) do
+            for _, v in ICT:spairs(bags) do
                 tooltip:printSection(title)
                 local name = string.format("|T%s:14|t%s", v.icon or "", v.name)
                 tooltip:printValue(name, string.format("%s/%s", v.free, v.total))
@@ -71,7 +71,7 @@ function Tooltips:specTooltip(player, spec)
         end
 
         local printGlyph = function(type, typeName)
-            for index, glyph in ICT:fpairsByValue(spec.glyphs or {}, function(v) return v.type == type and v.enabled end) do
+            for index, glyph in ICT:fpairsByValue(spec.glyphs, function(v) return v.type == type and v.enabled end) do
                 tooltip:printSection(typeName)
                 local name = glyph.spellId and string.format("|T%s:14|t%s", glyph.icon, select(1, GetSpellInfo(glyph.spellId))) or L["Missing"]
                 tooltip:printValue(name, index)
@@ -84,7 +84,7 @@ function Tooltips:specTooltip(player, spec)
         printGlyph(2, L["Minor"])
 
         tooltip.shouldPrintTitle = true
-        for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
+        for _, item in ICT:fpairsByValue(spec.items, function(v) return v.shouldEnchant end) do
             tooltip:printSection(L["Enchants"])
             local enchant = item.enchantId and LibTradeSkillRecipes:GetEffect(item.enchantId) or L["Missing"]
             tooltip:printValue(_G[item.invType], enchant)

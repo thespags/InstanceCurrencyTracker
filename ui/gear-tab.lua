@@ -19,9 +19,9 @@ function GearTab:calculatePadding()
         function(player) return ICT:sum(player:getPets(), function(v) return 
         v:isVisible() and player:getSpec().pets[v:getName()] and 1 or 0 end) end, Player.isEnabled
     )
-    self.paddings.items = ICT:max(db.players, function(player) return ICT:size(player:getSpec().items or {}) end, Player.isEnabled)
-    self.paddings.glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
-    self.paddings.enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
+    self.paddings.items = ICT:max(db.players, function(player) return ICT:size(player:getSpec().items) end, Player.isEnabled)
+    self.paddings.glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().glyphs, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
+    self.paddings.enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().items, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     for i=1,2 do
         self.paddings[i] = {}
         self.paddings[i].pets = ICT:max(
@@ -29,9 +29,9 @@ function GearTab:calculatePadding()
             function(player) return ICT:sum(player:getPets(), function(v) return 
             v:isVisible() and player:getSpec(i).pets[v:getName()] and 1 or 0 end) end, Player.isEnabled
         )
-        self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player:getSpec(i).items or {}) end, Player.isEnabled)
-        self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).glyphs or {}, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
-        self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).items or {}, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
+        self.paddings[i].items = ICT:max(db.players, function(player) return ICT:size(player:getSpec(i).items) end, Player.isEnabled)
+        self.paddings[i].glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).glyphs, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)
+        self.paddings[i].enchants = ICT:max(db.players, function(player) return ICT:sum(player:getSpec(i).items, function(v) return v.shouldEnchant and 1 or 0 end) end, Player.isEnabled)
     end
 end
 
@@ -40,7 +40,7 @@ function GearTab:getPadding(offset, name, i)
 end
 
 function GearTab:printGlyph(spec, type, typeName, x, offset)
-    for index, glyph in ICT:fpairsByValue(spec.glyphs or {}, function(v) return v.type == type and v.enabled end) do
+    for index, glyph in ICT:fpairsByValue(spec.glyphs, function(v) return v.type == type and v.enabled end) do
         local name = ICT:getSpellLink(glyph.spellId)
         local nameWithIcon = name and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
         local cell = self.cells:get(x, offset)
@@ -51,7 +51,7 @@ function GearTab:printGlyph(spec, type, typeName, x, offset)
 end
 
 function GearTab:printSpec(player, x, offset, spec)
-    if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec) or not ICT:isValidSpec(spec) then
+    if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec) or not Talents:isValidSpec(spec) then
         return offset
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
@@ -139,7 +139,7 @@ function GearTab:printSpec(player, x, offset, spec)
     offset = cell:printSectionTitle(L["Enchants"])
     if cell:isSectionExpanded(L["Enchants"]) then
         padding = self:getPadding(offset, "enchants", spec.id)
-        for _, item in ICT:fpairsByValue(spec.items or {}, function(v) return v.shouldEnchant end) do
+        for _, item in ICT:fpairsByValue(spec.items, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
             local enchant = ICT:getEnchant(item.enchantId, slot) or L["Missing"]
             cell = self.cells:get(x, offset)
