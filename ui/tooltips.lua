@@ -10,10 +10,10 @@ local Tooltip = ICT.Tooltip
 local Tooltips = {}
 ICT.Tooltips= Tooltips
 
-function Tooltips:goldTooltip(player)
+function Tooltips:goldTooltip(player, realmGold)
     local f = function(tooltip)
         tooltip:printTitle(L["Realm Gold"])
-        :printValue(string.format("[%s]", player.realm), GetCoinTextureString(self.realmGold[player.realm]))
+        :printValue(string.format("[%s]", player.realm), GetCoinTextureString(realmGold))
         for _, player in ICT:nspairsByValue(ICT.db.players, function(p) return player.realm == p.realm end) do
             tooltip:printValue(player:getName(), GetCoinTextureString(player.money or 0), player:getClassColor())
         end

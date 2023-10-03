@@ -61,7 +61,7 @@ function MainTab:printCharacterInfo(player, x, offset)
     offset = self.cells:get(x, offset):printOptionalValue(options.player.showGuildRank, L["Guild Rank"], player.guildRank)
     cell = self.cells:get(x, offset)
     offset = cell:printOptionalValue(options.player.showMoney, L["Gold"], GetCoinTextureString(player.money or 0))
-    Tooltips:goldTooltip(player):attach(cell)
+    Tooltips:goldTooltip(player, self.realmGold[player.realm]):attach(cell)
     if not options.player.showSpecs then
         local spec = player:getSpec()
         local tooltip = self:specTooltip(player, spec)
