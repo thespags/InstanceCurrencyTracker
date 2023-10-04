@@ -33,7 +33,7 @@ function MainTab:calculatePadding()
     self.paddings.cooldowns = options.player.showCooldowns
         and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
-    self.paddings.specs = TT_GS and 6 or 2
+    self.paddings.specs = 2
     self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
 
@@ -62,14 +62,12 @@ function MainTab:printCharacterInfo(player, x, offset)
     cell = self.cells:get(x, offset)
     offset = cell:printOptionalValue(options.player.showMoney, L["Gold"], GetCoinTextureString(player.money or 0))
     Tooltips:goldTooltip(player, self.realmGold[player.realm]):attach(cell)
-    if not options.player.showSpecs then
-        local spec = player:getSpec()
-        local tooltip = self:specTooltip(player, spec)
-        offset = UI:printGearScore(self, spec, tooltip, x, offset)
-    end
     local durabilityColor = player.durability and Colors:gradient("FF00FF00", "FFFF0000", player.durability / 100) or "FF00FF00"
     offset = self.cells:get(x, offset):printOptionalValue(options.player.showDurability, L["Durability"], player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
     offset = self.cells:hideRows(x, offset, padding)
+    local spec = player:getSpec()
+    local tooltip = Tooltips:specTooltip(player, spec)
+    offset = UI:printGearScore(self, spec, tooltip, x, offset)
 
     padding = self:getPadding(offset, "rested")
     if player.level < ICT.MaxLevel then
@@ -117,26 +115,25 @@ function MainTab:printCharacterInfo(player, x, offset)
         offset = self.cells:get(x, offset):hide()
         cell = self.cells:get(x, offset)
         offset = cell:printSectionTitle(L["Specs"])
-        Tooltips:specsSectionTooltip():attach(cell)
 
         if cell:isSectionExpanded("Specs") then
             padding = self:getPadding(offset, "specs")
             for _, spec in pairs(player:getSpecs()) do
                 if Talents:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
-                    local tooltip = Tooltips:specTooltip(player, spec)
                     cell = self.cells:get(x, offset)
                     local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
                     local name = icon .. (spec.name or "")
-                    offset = cell:printValue(name, string.format("%s/%s/%s    ", spec.tab1, spec.tab2, spec.tab3), specColor)
-                    tooltip:attach(cell)
-                    local buttonTooltip = function(tooltip)
+                    offset = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+                    local f = function(tooltip)
                         tooltip:printTitle(L["Spec"])
                         :printValue(L["Click"], L["Spec Click"])
                         :printValue(L["Shift Click"], L["Spec Shift Click"])
                     end
-                    cell:attachButton("ICTSetSpec", buttonTooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
-                    offset = UI:printGearScore(self, spec, tooltip, x, offset)
+                    ICT.Tooltip:new("ICTSpecasdfsd" .. spec.id .. player:getFullName(), f):attach(cell)
+                    if player:isCurrentPlayer() then
+                        cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
+                    end
                 end
             end
             offset = self.cells:hideRows(x, offset, padding)

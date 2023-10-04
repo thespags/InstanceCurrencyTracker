@@ -118,7 +118,6 @@ function ProfessionsTab:updateSkills(player, skillLine)
             CastSpellByID(p.spellId)
             for i=1,GetNumTradeSkills() do
                 local name, difficulty = GetTradeSkillInfo(i)
-                print(name)
                 if name and difficulty ~= "header" then
                     local spellLink = GetTradeSkillRecipeLink(i)
                     local id = tonumber(ICT:enchantLinkSplit(spellLink)[1])

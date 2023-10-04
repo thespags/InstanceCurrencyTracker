@@ -19,6 +19,20 @@ function Cells:_call(x, y)
     return self:get(x, y)
 end
 
+function Cells:hide()
+    for _, cell in pairs(self.cells) do
+        cell.frame:Hide()
+        _ = cell.ticker and cell.ticker:Cancel()
+    end
+end
+
+function Cells:hideRows(x, startY, endY)
+    for j=startY,endY do
+        self:get(x, j):hide()
+    end
+    return startY < endY and endY or startY
+end
+
 -- Gets the associated cell or create it if it doesn't exist yet.
 function Cells:get(x, y)
     local name = string.format("ICTCell(%s, %s)", x, y)
@@ -66,22 +80,8 @@ function Cells:get(x, y)
     cell.frame:SetScript("OnLeave", nil)
     cell.frame:SetAttribute("type", nil)
     cell.frame:SetAttribute("item", nil)
-    cell.frame:GetNormalTexture()
+    cell.frame:ClearNormalTexture()
     return cell
-end
-
-function Cells:hide()
-    for _, cell in pairs(self.cells) do
-        cell.frame:Hide()
-        _ = cell.ticker and cell.ticker:Cancel()
-    end
-end
-
-function Cells:hideRows(x, startY, endY)
-    for j=startY,endY do
-        self:get(x, j):hide()
-    end
-    return startY < endY and endY or startY
 end
 
 function Cell:hide()
@@ -149,7 +149,7 @@ function Cell:attachHyperLink(f)
     end)
     self.frame:SetScript("OnHyperlinkLeave", function()
         GameTooltip:Hide()
-        _ = f and self.frame:ClearNormalTexture()
+        _ = f and self.frame:SetNormalTexture("groupfinder-button-cover")
     end)
 end
 
@@ -170,8 +170,9 @@ function Cell:attachClickHover()
         self.hover = false
         self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
         self.parent.indent = old
-        self.frame:ClearNormalTexture()
+        self.frame:SetNormalTexture("groupfinder-button-cover")
     end)
+    self.frame:SetNormalTexture("groupfinder-button-cover")
 end
 
 function Cell:attachSecureClick(itemName)
@@ -202,16 +203,9 @@ end
 
 function Cell:printSectionTitleValue(title, value, key, color)
     key = self.parent.frame:GetName() .. (key or title)
-    local expanded = ICT.db.options.collapsible[key]
-    local icon = expanded and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"
-    title = string.format("|T%s:12|t%s", icon, title)
+    title = string.format("    %s", title)
     self:printValue(title, value, color or ICT.sectionColor)
-    self:attachClick(
-        function()
-            ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
-            UI:PrintPlayers()
-        end
-    )
+    self:attachSectionButton(key)
     return self.y + 1
 end
 
@@ -251,6 +245,30 @@ function Cell:attachButton(key, tooltip, click, shiftClick)
             elseif click then
                 click()
             end
+        end)
+    button:Show()
+    return button
+end
+
+function Cell:attachSectionButton(key, tooltip)
+    local button = self.buttons[key]
+    if not button then
+        button = CreateFrame("Button", key, self.frame)
+        self.buttons[key] = button
+        button:SetParent(self.frame)
+        local x = string.len(self.parent.indent)
+        button:SetSize(10, 10)
+        button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
+        button:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight")
+        _ = tooltip and ICT.Tooltip:new(key .. "Tooltip", tooltip):attachFrame(button)
+    end
+    local expanded = ICT.db.options.collapsible[key]
+    local icon = expanded and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"
+    button:SetNormalTexture(icon)
+    button:SetScript("OnClick",
+        function()
+            ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
+            UI:PrintPlayers()
         end)
     button:Show()
     return button

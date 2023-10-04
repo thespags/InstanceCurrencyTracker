@@ -50,16 +50,18 @@ function GearTab:printGlyph(spec, type, typeName, x, offset)
     return offset
 end
 
-function GearTab:printGlyphs(spec, x, offset)
+function GearTab:printGlyphs(player, spec, x, offset)
     local cell = self.cells:get(x, offset)
     offset = cell:printSectionTitle(L["Glyphs"])
-    cell:attachShiftClick(Talents:viewGlyphs(spec.id))
-    local tooltip = function(tooltip)
-        tooltip:printTitle(L["Glyphs"])
-        :printValue(L["Click"], L["Section"])
-        :printValue(L["Shift Click"], L["Glyphs Shift Click"])
+    if player:isCurrentPlayer() then
+        cell:attachClick(Talents:viewGlyphs(spec.id))
+        local tooltip = function(tooltip)
+            tooltip:printTitle(L["Glyphs"])
+            :printValue(L["Click"], L["Section"])
+            :printValue(L["Shift Click"], L["Glyphs Shift Click"])
+        end
+        Tooltip:new("ICTGlyphs", tooltip):attach(cell)
     end
-    Tooltip:new("ICTGlyphs", tooltip):attach(cell)
 
     if cell:isSectionExpanded(L["Glyphs"]) then
         local padding = self:getPadding(offset, "glyphs", spec.id)
@@ -88,7 +90,8 @@ function GearTab:printSpec(player, x, offset, spec)
             :printValue(L["Click"], L["Spec Click"])
             :printValue(L["Shift Click"], L["Spec Shift Click"])
         end
-        cell:attachButton("ICTSetSpec", tooltip, Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
+        Tooltip:new("ICTSetSpec", tooltip):attach(cell)
+        cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
     end
     if not cell:isSectionExpanded(key) then
         return self.cells:get(x, offset):hide()
@@ -108,14 +111,16 @@ function GearTab:printSpec(player, x, offset, spec)
         if spec.pets and spec.pets[pet.name] then
             local specPet = spec.pets[pet.name]
             cell = self.cells:get(x, offset)
-            cell:attachShiftClick(Talents:viewSpec(spec.id, true))
             offset = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
+            if player:isCurrentPlayer() and pet.name == select(2, GetStablePetInfo(0)) then
+                cell:attachClick(Talents:viewSpec(3, true))
+            end
         end
     end
     offset = self.cells:hideRows(x, offset, padding)
     offset = self.cells:get(x, offset):hide()
 
-    offset = self:printGlyphs(spec, x, offset)
+    offset = self:printGlyphs(player, spec, x, offset)
 
     -- Requires spec activation so short circuit.
     if not spec.items then

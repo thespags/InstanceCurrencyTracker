@@ -94,7 +94,7 @@ function Tooltips:specTooltip(player, spec)
         :printPlain("an item that can have an extra slot, such as your belt.")
         :printPlain("\nAlso, enchants aren't localized.")
     end
-    return Tooltip:new("ICTSpec" .. spec.id .. player:getFullName(), f)
+    return Tooltip:new("ICTGear" .. player:getFullName(), f)
 end
 
 -- Tooltip for instance information upon entering the cell.

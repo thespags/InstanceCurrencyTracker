@@ -53,10 +53,11 @@ end
 
 -- Returns the provided player or current player if none provided.
 function ICT.GetPlayer(playerName)
-    playerName = playerName or Player.GetCurrentPlayer()
-    local player = ICT.db.players[playerName]
-    ICT.db.players[playerName] = player
-    return player
+    if not playerName then
+        ICT.currentPlayer = ICT.currentPlayer or ICT.db.players[Player.GetCurrentPlayer()]
+        return ICT.currentPlayer
+    end
+    return ICT.db.players[playerName]
 end
 
 -- Called when the addon is loaded to update any fields.
@@ -554,7 +555,7 @@ function Player:isMaxLevel()
 end
 
 function Player:isCurrentPlayer()
-    return self.fullName == Player.GetCurrentPlayer()
+    return self == ICT.GetPlayer()
 end
 
 function Player:isVisible()
