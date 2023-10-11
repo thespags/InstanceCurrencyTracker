@@ -148,6 +148,7 @@
         "PlayerTalentTab_OnClick",
         "GLYPH_TALENT_TAB",
         "DEFAULT_TALENT_TAB",
-        "TalentFrame_UpdateSpecInfoCache"
+        "TalentFrame_UpdateSpecInfoCache",
+        "GroupFinderFrame"
     ]
 }

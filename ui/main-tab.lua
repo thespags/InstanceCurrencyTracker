@@ -241,7 +241,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, off
     Tooltips:instanceSectionTooltip():attach(cell)
     local canQueue = not IsInGroup() or UnitIsGroupLeader("player")
     local cantQueue = function() ICT:print(L["Cannot queue, not currently the group leader."]) end
-    if player:isCurrentPlayer() then
+    if false and player:isCurrentPlayer() then
         local f = canQueue and enqueueAll(title, subTitle, instances) or cantQueue
         local tooltip = function(tooltip) tooltip:printTitle(L["Enqueue Instances"]):printPlain(L["Enqueue Instances Body"]) end
         cell:attachButton("ICTEnqueueAll", tooltip, f)
@@ -255,7 +255,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, off
                 cell = self.cells:get(x, offset)
                 offset = cell:printLine(instance:getName(), color)
                 Tooltips:instanceTooltip(player, instance):attach(cell)
-                if player:isCurrentPlayer() then
+                if false and player:isCurrentPlayer() then
                     if canQueue then
                         cell:attachClick(enqueue(instance))
                     else

@@ -57,20 +57,28 @@ end
 -- TODO display quest names associated with a specific "type"
 ICT.QuestInfo = {
     -- This counts the quest and bag together, instead of separately.
-    ["Heroic Daily Dungeon"] = {
-        name = ICT:returnX("Heroic Daily Dungeon"),
-        ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 },
-        amount = 5,
-        currency = ICT.Triumph,
+    ["Titan Rune Gama Daily"] = {
+        name = ICT:returnX("Titan Rune Gama Daily"),
+        ids = { 78752 },
+        amount = 3,
+        currency = ICT.Frost,
         prereq = level80,
     },
-    ["Normal Daily Dungeon"] = {
-        name = ICT:returnX("Normal Daily Dungeon"),
-        ids = { 13240, 13241, 13243, 13244 },
+    ["Heroic Daily"] = {
+        name = ICT:returnX("Heroic Daily"),
+        -- ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 }
+        ids = { 78753 },
         amount = 2,
-        currency = ICT.Conquest,
+        currency = ICT.Frost,
         prereq = level80,
     },
+    -- ["Normal Daily Dungeon"] = {
+    --     name = ICT:returnX("Normal Daily Dungeon"),
+    --     ids = { 13240, 13241, 13243, 13244 },
+    --     amount = 2,
+    --     currency = ICT.Conquest,
+    --     prereq = level80,
+    -- },
     ["Jewelcrafting Daily"] = {
         name = ICT:returnX("Jewelcrafting Daily"),
         ids = { 12958, 12959, 12960, 12961, 12962, 12963, },

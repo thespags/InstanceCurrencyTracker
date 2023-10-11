@@ -31,8 +31,6 @@ local function flipFrame()
 end
 
 function ICT.UpdateDisplay()
-    local player = ICT.GetPlayer()
-    player.time = GetServerTime();
     -- Defer updating the display if it's not currently viewed.
     if ICT.frame and ICT.frame:IsVisible() then
         UI:PrintPlayers()
@@ -62,8 +60,17 @@ end
 
 local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
-    if eventAddOn == "Blizzard_LookingForGroupUI" then
+    if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
+        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.29") then
+            ICT:print("Updating currencies and instances...")
+            ICT.db.options.currency[ICT.Frost.id] = true
+            ICT.db.options.currency[ICT.DefilersScourgeStone.id] = true
+            ICT.db.options.displayInstances[2][632] = true
+            ICT.db.options.displayInstances[2][658] = true
+            ICT.db.options.displayInstances[2][668] = true
+            ICT.db.options.displayInstances[2][631] = true
+        end
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.3") then
             ICT:print("Old version detected, reseting options to default...")
             ICT.Options:setDefaultOptions(true)
@@ -90,8 +97,10 @@ local function initEvent(self, event, eventAddOn)
         ICT.UI:CreateFrame()
         ICT.selectedPlayer = Player.GetCurrentPlayer()
         ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
-        LFGParentFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
-        LFGParentFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)
+        if GroupFinderFrame then
+            GroupFinderFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
+            GroupFinderFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)
+        end
     end
 end
 local initFrame = CreateFrame("Frame")

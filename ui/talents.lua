@@ -35,14 +35,17 @@ function Talents:isValidSpec(spec)
 end
 
 function Talents:updatePet(player)
+    player.pets = player.pets or {}
     local icon, name, level, type, talent = GetStablePetInfo(0)
-    local pet = ICT.Pet:new({ player = player, icon = icon, name = name, level = level, type = type, talent = talent })
-    player.pets[name] = ICT.Pet:new(pet)
+    if name then
+        local pet = ICT.Pet:new({ player = player, icon = icon, name = name, level = level, type = type, talent = talent })
+        player.pets[name] = ICT.Pet:new(pet)
 
-    local activeSpec = player:getSpec()
-    activeSpec.pets = activeSpec.pets or {}
-    local _, talentIcon, pointsSpent, fileName = GetTalentTabInfo(1, false, true, 1)
-    activeSpec.pets[name] = { talentIcon = talentIcon, pointsSpent = pointsSpent, fileName = fileName }
+        local activeSpec = player:getSpec()
+        activeSpec.pets = activeSpec.pets or {}
+        local _, talentIcon, pointsSpent, fileName = GetTalentTabInfo(1, false, true, 1)
+        activeSpec.pets[name] = { talentIcon = talentIcon, pointsSpent = pointsSpent, fileName = fileName }
+    end
 end
 
 function Talents:activateSpec(specId)

@@ -3,6 +3,8 @@ local addOnName, ICT = ...
 
 local Currency = ICT.Currency
 
+ICT.Frost = Currency:new(341)
+ICT.DefilersScourgeStone = Currency:new(2711)
 ICT.Triumph = Currency:new(301)
 ICT.SiderealEssence = Currency:new(2589)
 ICT.ChampionsSeal = Currency:new(241)
@@ -17,6 +19,8 @@ ICT.WintergraspMark = Currency:new(126)
 ICT.DungeonEmblem = ICT.Conquest
 
 ICT.Currencies = {
+    ICT.Frost,
+    ICT.DefilersScourgeStone,
     ICT.Triumph,
     ICT.SiderealEssence,
     ICT.ChampionsSeal,

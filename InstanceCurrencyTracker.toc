@@ -1,4 +1,4 @@
-## Interface: 30402
+## Interface: 30403
 ## Title: InstanceCurrencyTracker
 ## Version: @project-version@
 ## X-Date: @project-date-iso@

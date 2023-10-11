@@ -52,6 +52,7 @@ local voaIndex = {
     [ICT.Valor] = 1,
     [ICT.Conquest] = 2,
     [ICT.Triumph] = 3,
+    [ICT.Frost] = 4,
 }
 local voaEmblems = function(instance, currency)
     return instance:isEncounterKilled(voaIndex[currency]) and 0 or 2
@@ -63,19 +64,19 @@ local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
     end
 end
 
-local dungeonEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence)
+local dungeonEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence, ICT.DefilersScourgeStone)
 local totcEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence, ICT.ChampionsSeal)
 local availableDungeonEmblems = function(instance, currency)
     if currency == ICT.SiderealEssence then
         return isLastBossKilled(instance) and 0 or 1
-    elseif currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
+    elseif currency == ICT.DefilersScourgeStone or currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
         return sameEmblemsPerBoss(1)(instance)
     end
 end
 local maxDungeonEmblems = function(instance, currency)
     if currency == ICT.SiderealEssence then
         return 1
-    elseif currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
+    elseif currency == ICT.DefilersScourgeStone or currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
         return instance:numOfEncounters()
     end
 end
@@ -109,6 +110,12 @@ Instances.currency = {
     [619] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Trial of the Champion"
     [650] = { currencies = totcEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
+    -- The Forge of Souls
+    [632] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
+    -- Pit of Saron
+    [658] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
+    -- Halls of Reflection
+    [668] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Vault of Archavon
     [624] = { currencies = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), availableCurrency = voaEmblems, maxCurrency = ICT:returnX(2) },
     -- Naxxramas
@@ -122,7 +129,9 @@ Instances.currency = {
     -- Onyxia's Lair
     [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
     -- Trial of the Crusader
-    [649] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
+    [649] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(8, 10), maxCurrency = maxEmblemsPerSize(8, 10) },
+    -- Icecrown Citadel
+    [631] = { currencies = ICT:set(ICT.Frost), availableCurrency = sameEmblemsPerBossPerSize(2, 2), maxCurrency = maxEmblemsPerSize(2, 2) },
 }
 -- End Currency Helpers
 
