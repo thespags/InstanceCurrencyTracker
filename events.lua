@@ -62,6 +62,7 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
+        ICT.Options:setDefaultOptions()
         if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.29") then
             ICT:print("Updating currencies and instances...")
             ICT.db.options.currency[ICT.Frost.id] = true

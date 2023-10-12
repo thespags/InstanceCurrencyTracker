@@ -320,7 +320,6 @@ function Options:CreateOptionDropdown()
     DDM:UIDropDownMenu_SetWidth(dropdown, 80)
     DDM:UIDropDownMenu_SetText(dropdown, "Options")
     local options = ICT.db.options
-    self:setDefaultOptions()
 
     ICT:putIfAbsent(options, "multiPlayerView", false)
     DDM:UIDropDownMenu_Initialize(
