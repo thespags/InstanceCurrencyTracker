@@ -8,8 +8,8 @@ function ICT:spairs(t, comparator, filter)
         return noop
     end
     local keys = {}
-    for k, _ in pairs(t) do
-        if not filter or filter(k) then
+    for k, v in pairs(t) do
+        if not filter or filter(k, v) then
             table.insert(keys, k)
         end
     end

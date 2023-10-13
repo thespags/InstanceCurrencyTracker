@@ -83,17 +83,17 @@ function MainTab:printCharacterInfo(player, x, offset)
     end
     offset = self.cells:hideRows(x, offset, padding)
 
-    local bags = player.bagsTotal or {}
     if options.player.showBags then
         offset = self.cells:get(x, offset):hide()
-        local tooltip = Tooltips:bagTooltip(player)
+        tooltip = Tooltips:bagTooltip(player)
         cell = self.cells:get(x, offset)
         offset = cell:printSectionTitle(L["Bags"])
         tooltip:attach(cell)
 
         if cell:isSectionExpanded(L["Bags"]) then
             padding = self:getPadding(offset, "bags")
-            for k, bag in ICT:nspairs(bags, function(k) return bags[k].total > 0 end) do
+            local bags = player.bagsTotal or {}
+            for k, bag in ICT:nspairs(bags, function(k, v) return v.total > 0 end) do
                 cell = self.cells:get(x, offset)
                 offset = cell:printValue(string.format("|T%s:12|t%s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                 tooltip:attach(cell)
@@ -101,7 +101,7 @@ function MainTab:printCharacterInfo(player, x, offset)
 
             local bankBags = player.bankBagsTotal or {}
             if options.player.showBankBags and ICT:sum(bankBags, function(v) return v.total end) > 0 then
-                for k, bag in ICT:nspairs(bankBags, function(k) return bags[k].total > 0 end) do
+                for k, bag in ICT:nspairs(bankBags, function(k, v) return v.total > 0 end) do
                     cell = self.cells:get(x, offset)
                     offset = cell:printValue(string.format("|T%s:12|t[Bank] %s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                     tooltip:attach(cell)

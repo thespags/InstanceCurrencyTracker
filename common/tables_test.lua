@@ -40,7 +40,10 @@ assertOrderedEquals({}, actual)
 actual = ICT:nspairs({a=1, b=2, c=3})
 assertOrderedEquals({1, 2, 3}, actual)
 
-actual = ICT:nspairs({a=1, b=2, c=3}, function(v) return v ~= "b" end)
+actual = ICT:nspairs({a=1, b=2, c=3}, function(k) return k ~= "b" end)
+assertOrderedEquals({1, 3}, actual)
+
+actual = ICT:nspairs({a=1, b=2, c=3}, function(_, v) return v ~= 2 end)
 assertOrderedEquals({1, 3}, actual)
 
 actual = ICT:nspairs(nil)
