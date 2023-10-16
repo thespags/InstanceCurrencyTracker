@@ -328,15 +328,21 @@ function Player:updateGear()
             item.invType = invType
             item.icon = icon
             item.shouldEnchant = ICT.CheckSlotEnchant[i](self, classId, subClassId)
-
-            local stats = GetItemStats(itemLink, {})
             item.sockets = {}
-            item.sockets.red = stats["EMPTY_SOCKET_RED"] or 0
-            item.sockets.blue = stats["EMPTY_SOCKET_BLUE"] or 0
-            item.sockets.yellow = stats["EMPTY_SOCKET_YELLOW"] or 0
-            item.sockets.meta = stats["EMPTY_SOCKET_META"] or 0
-            item.extraSocket = ICT.CheckSlotSocket[i] and ICT.CheckSlotSocket[i].check(self) or false
-            item.socketTotals = ICT:sum(item.sockets) + (item.extraSocket and 1 or 0)
+            item.extraSocket = 0
+            item.socketTotals = 0
+
+            local mixin = Item:CreateFromItemLink(itemLink)
+            mixin:ContinueOnItemLoad(function()
+                -- GetItemStats requites the item to be cached, so wait until the item is loaded.
+                local stats = GetItemStats(itemLink, {})
+                item.sockets.red = stats["EMPTY_SOCKET_RED"] or 0
+                item.sockets.blue = stats["EMPTY_SOCKET_BLUE"] or 0
+                item.sockets.yellow = stats["EMPTY_SOCKET_YELLOW"] or 0
+                item.sockets.meta = stats["EMPTY_SOCKET_META"] or 0
+                item.extraSocket = ICT.CheckSlotSocket[i] and ICT.CheckSlotSocket[i].check(self) or false
+                item.socketTotals = ICT:sum(item.sockets) + (item.extraSocket and 1 or 0)
+            end)
 
             items[i] = item
         end
