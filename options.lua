@@ -64,7 +64,6 @@ local frameOptions = {
     { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
     { name = L["Show Minimap Icon"], key = "showMinimapIcon", func = Options.minimap },
     { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, tooltip = L["OrderLockLastTooltip"], },
-    { name = L["Verbose Currency"], key = "verboseCurrency", defaultFalse = true, tooltip = L["VerboseCurrencyTooltip"], },
     { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
     { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
     { name = L["Show Level Slider"], key = "showLevelSlider", tooltip = L["ShowLevelSliderTooltip"], },

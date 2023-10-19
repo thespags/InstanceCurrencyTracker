@@ -11,6 +11,11 @@ function Currency:new(id, unlimited)
     return currency
 end
 
+-- With Random LFD, currency is no longer limited.
+function Currency:showLimit()
+    return false
+end
+
 local function getNameWithIconTooltipSize(id, size)
     local currency = C_CurrencyInfo.GetCurrencyInfo(id)
     return string.format("|T%s:%s|t%s", currency["iconFileID"], size, currency["name"])
@@ -40,7 +45,6 @@ end
 
 function Currency:calculateAvailable(instances)
     local sum = 0
-
     for _, instance in pairs(instances) do
         if instance:hasCurrency(self) then
             instance.available = instance.available or {}
@@ -59,10 +63,18 @@ function Currency:calculateAvailableRaid(player)
     return self:calculateAvailable(player:getRaids())
 end
 
-function Currency:calculateAvailableQuest(player)
-    local op = function(quest) return quest.prereq(player) and not quest:isDailyCompleted() and quest.amount or 0 end
+function Currency:calculateAvailableQuest(player, f)
+    local op = function(quest) return f(quest) and quest.prereq(player) and not quest:isCompleted() and quest.amount or 0 end
     local filter = self:fromQuest()
     return ICT:sum(ICT.QuestInfo, op, filter)
+end
+
+function Currency:calculateAvailableDailyQuest(player)
+    return self:calculateAvailableQuest(player, ICT.Quest.isDaily)
+end
+
+function Currency:calculateAvailableWeeklyQuest(player)
+    return self:calculateAvailableQuest(player, ICT.Quest.isWeekly)
 end
 
 function Currency:calculateMax(instances)
@@ -81,10 +93,18 @@ function Currency:calculateMaxRaid(player)
     return self.maxRaid
 end
 
-function Currency:calculateMaxQuest(player)
-    local op = function(quest) return quest.prereq(player) and quest.amount or 0 end
+function Currency:calculateMaxQuest(player, f)
+    local op = function(quest) return f(quest) and quest.prereq(player) and quest.amount or 0 end
     local filter = self:fromQuest()
     return ICT:sum(ICT.QuestInfo, op, filter)
+end
+
+function Currency:calculateMaxDailyQuest(player)
+    return self:calculateMaxQuest(player, ICT.Quest.isDaily)
+end
+
+function Currency:calculateMaxWeeklyQuest(player)
+    return self:calculateMaxQuest(player, ICT.Quest.isWeekly)
 end
 
 function Currency:fromQuest()

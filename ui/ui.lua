@@ -356,8 +356,8 @@ function UI:CreatePlayerSlider()
     levelSlider:Hide()
 
     local function EditBox_OnEnterPressed(frame)
-        local value = frame:GetText();
-        value = tonumber(value);
+        local value = frame:GetText()
+        value = tonumber(value)
         if value then
             value = math.max(math.min(ICT.MaxLevel, value), 1)
             ICT.db.options.minimumLevel = value

@@ -9,5 +9,6 @@
   <Script file="reset.lua"/>
   <!-- requires currencies to be loaded -->
   <Script file="instances.lua"/> 
+  <Script file="quest.lua"/>
   <Script file="quests.lua"/>
 </Ui>

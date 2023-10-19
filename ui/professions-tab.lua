@@ -2,9 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
-
-local ProfessionsTab = {
-}
+local ProfessionsTab = {}
 ICT.ProfessionsTab = ProfessionsTab
 
 local getDifficultyColor = function(difficulty)

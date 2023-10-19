@@ -32,7 +32,7 @@ function ICT.CreateCurrentPlayer()
         weekly = {},
         daily = {},
         maxDaily = {},
-        -- There's no prereq for weekly currencies so no player based max weekly.
+        maxWeekly = {},
     }
     ICT.db.players[fullName] = player
     player:createInstances()
@@ -48,6 +48,7 @@ function Player:new(player)
     player = player or {}
     setmetatable(player, self)
     self.__index = self
+    ICT:putIfAbsent(player.currency, "maxWeekly", {})
     return player
 end
 
@@ -102,14 +103,22 @@ function Player:dailyReset()
     for _, currency in ipairs(ICT.Currencies) do
         self.currency.daily[currency.id] = self.currency.maxDaily[currency.id] or 0
     end
-    for k, _ in pairs(ICT.QuestInfo) do
-        self.quests.completed[k] = false
+    for k, quest in pairs(ICT.QuestInfo) do
+        if quest:isDaily() then
+            self.quests.completed[k] = false
+        end
     end
 end
 
 function Player:weeklyReset()
     for _, currency in ipairs(ICT.Currencies) do
         self.currency.weekly[currency.id] = currency:calculateMaxRaid(self)
+        self.currency.maxWeekly[currency.id] = currency:calculateMaxRaid(self)
+    end
+    for k, quest in pairs(ICT.QuestInfo) do
+        if quest:isWeekly() then
+            self.quests.completed[k] = false
+        end
     end
 end
 
@@ -137,23 +146,22 @@ function Player:calculateCurrency()
     for _, currency in ipairs(ICT.Currencies) do
         local id = currency.id
         self.currency.wallet[id] = currency:getAmount()
-        -- There's no weekly raid quests so just add raid currency.
-        self.currency.weekly[id] = currency:calculateAvailableRaid(self)
-        self.currency.daily[id] = currency:calculateAvailableDungeon(self) + currency:calculateAvailableQuest(self)
-        self.currency.maxDaily[id] = currency:calculateMaxDungeon(self) + currency:calculateMaxQuest(self)
-        -- Because there's no weekly raid quests, there's no variable max hence we don't need to track maxWeekly.
+        self.currency.weekly[id] = currency:calculateAvailableRaid(self) + currency:calculateAvailableWeeklyQuest(self)
+        self.currency.daily[id] = currency:calculateAvailableDungeon(self) + currency:calculateAvailableDailyQuest(self)
+        self.currency.maxDaily[id] = currency:calculateMaxDungeon(self) + currency:calculateMaxDailyQuest(self)
+        self.currency.maxWeekly[id] = currency:calculateMaxRaid(self) + currency:calculateMaxWeeklyQuest(self)
     end
 end
 
 function Player:availableCurrency(currency)
-    if currency.unlimited then
-        return "N/A"
+    if currency:showLimit() then
+        local id = currency.id
+        if not self.currency.weekly[id] or not self.currency.daily[id] then
+            return 0
+        end
+        return self.currency.weekly[id] + self.currency.daily[id]
     end
-    local id = currency.id
-    if not self.currency.weekly[id] or not self.currency.daily[id] then
-        return 0
-    end
-    return self.currency.weekly[id] + self.currency.daily[id]
+    return nil
 end
 
 function Player:totalCurrency(currency)
@@ -163,7 +171,7 @@ end
 function Player:calculateQuest()
     for k, quest in pairs(ICT.QuestInfo) do
         self.quests.prereq[k] = quest.prereq(self)
-        self.quests.completed[k] = quest:isDailyCompleted()
+        self.quests.completed[k] = quest:isCompleted()
     end
 end
 
@@ -368,6 +376,9 @@ local function addBags(index, bags, bagsTotal)
         name = name == "" and GetBagName(0) or name
         local free, type = GetContainerNumFreeSlots(index)
         -- By name requires the item in your inventory so store this for the player.
+        if not name then
+            print("no bag name " .. index)
+        end
         local icon = select(5, GetItemInfoInstant(name))
         icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
         bags[index] = { name = name, free = free, type = type, total = total, icon = icon }

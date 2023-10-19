@@ -16,7 +16,7 @@ ICT.JewelcraftersToken = Currency:new(61)
 ICT.StoneKeepersShards = Currency:new(161)
 ICT.WintergraspMark = Currency:new(126)
 -- Phase 3 dungeons grant conquest.
-ICT.DungeonEmblem = ICT.Conquest
+ICT.DungeonEmblem = ICT.Triumph
 
 ICT.Currencies = {
     ICT.Frost,

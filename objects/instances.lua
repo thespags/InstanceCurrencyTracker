@@ -5,10 +5,14 @@ local Instance = ICT.Instance
 local Instances = {}
 ICT.Instances = Instances
 
--- Start currency helpers
 local sameEmblemsPerBoss = function(emblemsPerEncounter)
     return function(instance)
         return emblemsPerEncounter * instance:encountersLeft()
+    end
+end
+local maxSameEmblemsPerBoss = function(emblemsPerEncounter)
+    return function(instance)
+        return emblemsPerEncounter * instance:numOfEncounters()
     end
 end
 
@@ -28,7 +32,9 @@ local addOneLastBossAlive = function(instance)
     return isLastBossKilled(instance) and 0 or 1
 end
 
-local onePerBossPlusOneLastBoss = ICT:add(sameEmblemsPerBoss(1), addOneLastBossAlive)
+-- Old Phase 1 Raids.
+-- local onePerBossPlusOneLastBoss = ICT:add(sameEmblemsPerBoss(1), addOneLastBossAlive)
+-- local maxNumEncountersPlusOne = function(instance) return instance:numOfEncounters() + 1 end
 
 -- Ulduar has different amounts per boss
 -- FL(4)/Ignis(1)/Razorscale(1)/XT(2)/IC(2)/Kolo(1)/Auriaya(1)/Thorim(2)/Hodir(2)/Freya(5)/Mim(2)/Vezak(2)/Yogg(2)/Alg(2)
@@ -64,8 +70,8 @@ local maxEmblemsPerSize = function(emblemsPer10, emblemsPer25)
     end
 end
 
-local dungeonEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence, ICT.DefilersScourgeStone)
-local totcEmblems = ICT:set(ICT.DungeonEmblem, ICT.SiderealEssence, ICT.ChampionsSeal)
+local dungeonEmblems = ICT:set(ICT.StoneKeepersShard, ICT.DungeonEmblem, ICT.SiderealEssence, ICT.DefilersScourgeStone)
+local totcEmblems = ICT:set(ICT.StoneKeepersShard, ICT.DungeonEmblem, ICT.SiderealEssence, ICT.DefilersScourgeStone, ICT.ChampionsSeal)
 local availableDungeonEmblems = function(instance, currency)
     if currency == ICT.SiderealEssence then
         return isLastBossKilled(instance) and 0 or 1
@@ -76,12 +82,18 @@ end
 local maxDungeonEmblems = function(instance, currency)
     if currency == ICT.SiderealEssence then
         return 1
-    elseif currency == ICT.DefilersScourgeStone or currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
+    elseif currency == ICT.StoneKeepersShard then
+        return instance:numOfEncounters() * 4
+    elseif currency == ICT.ChampionsSeal or currency == ICT.DungeonEmblem then
         return instance:numOfEncounters()
+    elseif currency == ICT.DefilersScourgeStone then
+        local total = instance:numOfEncounters()
+        if instance.id == 578 then
+            total = total + 2
+        end
+        return total
     end
 end
-
-local maxNumEncountersPlusOne = function(instance) return instance:numOfEncounters() + 1 end
 
 Instances.currency = {
     -- Utgarde Keep
@@ -117,15 +129,19 @@ Instances.currency = {
     -- Halls of Reflection
     [668] = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems },
     -- Vault of Archavon
-    [624] = { currencies = ICT:set(ICT.Triumph, ICT.Conquest, ICT.Valor), availableCurrency = voaEmblems, maxCurrency = ICT:returnX(2) },
+    [624] = { currencies = ICT:set(ICT.Frost, ICT.Triumph, ICT.Conquest, ICT.Valor), availableCurrency = voaEmblems, maxCurrency = ICT:returnX(2) },
     -- Naxxramas
-    [533] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    -- [533] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    [533] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBoss(1), maxCurrency = maxSameEmblemsPerBoss(1) },
     -- The Obsidian Sanctum
-    [615] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    -- [615] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    [615] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBoss(1), maxCurrency = maxSameEmblemsPerBoss(1) },
     -- The Eye of Eternity
-    [616] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    -- [616] = { currencies = ICT:set(ICT.Valor), availableCurrency = onePerBossPlusOneLastBoss, maxCurrency = maxNumEncountersPlusOne },
+    [616] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBoss(1), maxCurrency = maxSameEmblemsPerBoss(1) },
     -- Ulduar
-    [603] = { currencies = ICT:set(ICT.Conquest), availableCurrency = ulduarEmblems, maxCurrency = ICT:returnX(maxUlduarEmblems) },
+    -- [603] = { currencies = ICT:set(ICT.Conquest), availableCurrency = ulduarEmblems, maxCurrency = ICT:returnX(maxUlduarEmblems) },
+    [603] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBoss(1), maxCurrency = maxSameEmblemsPerBoss(1) },
     -- Onyxia's Lair
     [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
     -- Trial of the Crusader

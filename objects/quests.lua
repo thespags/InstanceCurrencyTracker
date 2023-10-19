@@ -1,7 +1,5 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
-
 local isTournamentChainCompleted = function()
     -- Check for Death Knight and non Death Knight prereq quest.
     return C_QuestLog.IsQuestFlaggedCompleted(13794) or C_QuestLog.IsQuestFlaggedCompleted(13795)
@@ -54,11 +52,25 @@ local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllian
     end
 end
 
--- TODO display quest names associated with a specific "type"
 ICT.QuestInfo = {
-    -- This counts the quest and bag together, instead of separately.
-    ["Titan Rune Gama Daily"] = {
-        name = ICT:returnX("Titan Rune Gama Daily"),
+    ["Raid Weekly"] = {
+        name = ICT:returnX("Raid Weekly"),
+        ids = { 24579 },
+        currency = ICT.Frost,
+        amount = 10,
+        prereq = level80,
+        weekly = true
+    },
+    ["ICC Weekly"] = {
+        name = ICT:returnX("ICC Weekly"),
+        ids = { 24876 },
+        currency = ICT.Frost,
+        amount = 10,
+        prereq = level80,
+        weekly = true
+    },
+    ["Titan Rune Gamma Daily"] = {
+        name = ICT:returnX("Titan Rune Gamma Daily"),
         ids = { 78752 },
         amount = 3,
         currency = ICT.Frost,
@@ -161,59 +173,8 @@ ICT.QuestInfo = {
     }
 }
 
-local Quests = {}
--- Adds all the functions to the player.
-function Quests:new(quest)
-    setmetatable(quest, self)
-    self.__index = self
-    return quest
-end
-
 -- Set the key on the value for convenient lookups to other tables, i.e. player infos.
 for k, v in pairs(ICT.QuestInfo) do
     v.key = k
-    ICT.QuestInfo[k] = Quests:new(v)
-end
-
--- As far as I can tell, WOW groups daily quests, i.e. we could check a single quest of the group to check completed.
--- However, to be overly cautious check all quests in the groups looking for any true value.
-function Quests:isDailyCompleted()
-    for _, id in pairs(self.ids) do
-        if C_QuestLog.IsQuestFlaggedCompleted(id) then
-            return true
-        end
-    end
-    return false
-end
-
-function Quests:isVisible()
-    return self.currency and self.currency:isVisible() or ICT.db.options.quests[self.key]
-end
-
-function Quests:getCurrencyName()
-    return self.currency and self.currency:getNameWithIconTooltip() or L["No Currency"]
-end
-
--- This would be nicer if it wasn't player dependent.
--- In general, I believe quests are the same name across factions but may have different quest givers.
--- However, I don't always have a common name for "some group of quests".
--- If we had enough users we could share the specific quest id, but that isn't the same across realms (and probably not factions).
-function ICT.QuestSort(player)
-    return function(a, b)
-        if ICT.db.options.frame.orderLockLast then
-            if player:isQuestCompleted(a) and not player:isQuestCompleted(b) then
-                return false
-            end
-            if not player:isQuestCompleted(a) and player:isQuestCompleted(b) then
-                return true
-            end
-        end
-        if a.currency == b.currency then
-            return a.name(player) < b.name(player)
-        elseif a.currency and b.currency then
-            return a.currency < b.currency
-        else
-            return a.currency ~= nil
-        end
-    end
+    ICT.QuestInfo[k] = ICT.Quest:new(v)
 end

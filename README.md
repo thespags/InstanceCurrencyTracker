@@ -9,16 +9,8 @@ Be sure to hover over items to see tooltips for more details.
 
 The addon uses IDs so should work in any language however labels are not localized.
 
-Feel free to comment for additional features or suggestions.
-
-## Queuing
-For the current player, you can queue to a single instance or all unlocked instances by the icon for the instance type.
-You can dequeue by clicking the instance again or the icon which will dequeue all instances. 
-
-By default, the difficulty is set to the highest (as of phase 3 that's Titan Runed Beta). However you can select which difficulty under the options
-tab. If multiple difficulties are selected, you will be queued to all types for that instance. Currently, difficulty is _not_ per character but account wide.
-
-Note: Blizzard does not let you queue across instance types. i.e. You cannot queue to dungeons and raids.
+Feel free to comment for additional features or suggestions.  
+Or visit my dev discord: https://discord.gg/yY6Q6EgNRu
 
 ## Viewing Frame
 By default the addon window is anchored to the Looking For Group Frame (`i` by default).  
@@ -89,14 +81,12 @@ _Select the cooldowns you wish to view, sorted by expansion._
 + Frame  
     + Display  
     _Enable/Disable anchoring to the LFG frame and viewing the mini map icon._
-    + Order Lock Last"  
+    + Order Lock Last
     _Orders locked instances and completed quests after available instances and quests._
-    + Verbose Currency  
-    _Multi-line currency versus single line currency information_
     + Simple Currency Tooltip  
     _Shows only current and available currency per player, otherwise includes instances and quests collected._
 + Minimum Character Level Slider  
-_Controsl the characters visible based on level._
+_Controls the characters visible based on level._
 
 ## Color Codes
 **Purple** Locked Instances and Completed Dailies  

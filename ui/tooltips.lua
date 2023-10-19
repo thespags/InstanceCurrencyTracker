@@ -202,7 +202,8 @@ function Tooltips:currencyTooltip(selectedPlayer, currency)
         for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
             local available = player:availableCurrency(currency)
             local total = player:totalCurrency(currency)
-            tooltip:printValue(player:getNameWithIcon(), string.format("%s (%s)", total, available), player:getClassColor())
+            local value = available and string.format("%s (%s)", total, available) or total
+            tooltip:printValue(player:getNameWithIcon(), value, player:getClassColor())
         end
 
         if ICT.db.options.frame.verboseCurrencyTooltip then

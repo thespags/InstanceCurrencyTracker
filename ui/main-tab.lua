@@ -293,28 +293,11 @@ function MainTab:printAllInstances(player, x, offset)
     return offset
 end
 
--- Prints currency with multi line information.
-function MainTab:printCurrencyVerbose(player, currency, x, offset)
-    local cell = self.cells:get(x, offset)
-    offset = cell:printValue(currency:getNameWithIcon(), nil, ICT.subtitleColor)
-    local tooltip = Tooltips:currencyTooltip(player, currency)
-    tooltip:attach(cell)
-    local available = player:availableCurrency(currency)
-    cell = self.cells:get(x, offset)
-    offset = cell:printValue(L["Available"], available, ICT.textColor)
-    tooltip:attach(cell)
-    local current = player:totalCurrency(currency)
-    cell = self.cells:get(x, offset)
-    offset = cell:printValue(L["Current"], current, ICT.textColor)
-    tooltip:attach(cell)
-    return self.cells:get(x, offset):hide()
-end
-
 -- Prints currency single line information.
 function MainTab:printCurrencyShort(player, currency, x, offset)
     local current = player:totalCurrency(currency)
     local available = player:availableCurrency(currency)
-    local value = string.format("%s (%s)", current, available)
+    local value = available and string.format("%s (%s)", current, available) or current
     local cell = self.cells:get(x, offset)
     offset = cell:printValue(currency:getNameWithIcon(), value)
     Tooltips:currencyTooltip(player, currency):attach(cell)
@@ -327,10 +310,9 @@ function MainTab:printCurrency(player, x, offset)
         offset = cell:printSectionTitle(L["Currency"])
         Tooltips:currencySectionTooltip():attach(cell)
         if cell:isSectionExpanded(L["Currency"]) then
-            local printCurrency = ICT.db.options.frame.verboseCurrency and self.printCurrencyVerbose or self.printCurrencyShort
             for _, currency in ipairs(ICT.Currencies) do
                 if currency:isVisible() then
-                    offset = printCurrency(self, player, currency, x, offset)
+                    offset = self:printCurrencyShort(player, currency, x, offset)
                 end
             end
         end
