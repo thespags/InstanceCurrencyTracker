@@ -219,7 +219,7 @@ function Tooltips:questTooltip(name, quest)
     local f = function(tooltip)
         tooltip:printTitle(name)
 
-        for currency, amount in ICT:spairs(quest:currencies()) do
+        for currency, amount in ICT:spairs(quest.currencies) do
             tooltip:printValue(currency:getNameWithIconTooltip(), amount)
         end
 

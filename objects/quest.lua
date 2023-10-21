@@ -23,7 +23,7 @@ function Quest:isCompleted()
 end
 
 function Quest:isVisible()
-    return ICT:containsAnyValue(self.currencies, ICT.Currency.isVisible) or ICT.db.options.quests[self.key]
+    return ICT:containsAnyKey(self.currencies, ICT.Currency.isVisible) or ICT.db.options.quests[self.key]
 end
 
 function Quest:isWeekly()

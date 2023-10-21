@@ -34,6 +34,7 @@ ICT.DifficultyInfo = {
     Difficulty:new("Heroic"),
     Difficulty:new("Titan Runed: Alpha"),
     Difficulty:new("Titan Runed: Beta"),
+    Difficulty:new("Titan Runed: Gamma"),
 }
 
 for k, v in pairs(ICT.DifficultyInfo) do

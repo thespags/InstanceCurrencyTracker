@@ -73,7 +73,7 @@ function MainTab:printCharacterInfo(player, x, y)
     if player.level < ICT.MaxLevel then
         local currentXP = player.currentXP or 0
         local maxXP = player.maxXP or 1
-        local xpPercentage = currentXP / maxXP * 100 
+        local xpPercentage = currentXP / maxXP * 100
         y = self.cells(x, y):printOptionalValue(options.player.showXP, L["XP"], string.format("%s/%s (%.0f%%)", currentXP, maxXP, xpPercentage))
         local restedPercentage = player:getRestedXP()
         local bubbles = restedPercentage * 20

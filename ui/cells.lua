@@ -7,7 +7,6 @@ local Cells = {}
 setmetatable(Cells, Cells)
 ICT.Cells = Cells
 local Cell = {}
-setmetatable(Cell, Cell)
 
 function Cells:new(frame)
     local t = { indent = "", cells = {}, frame = frame }
@@ -25,7 +24,7 @@ end
 
 function Cells:hideRows(x, startY, endY)
     for j=startY,endY do
-        self:get(x, j):hide()
+        self(x, j):hide()
     end
     return startY < endY and endY or startY
 end
@@ -80,12 +79,13 @@ function Cells:__call(x, y)
     return cell
 end
 
-function Cell:__call(parent, x, y)
+function Cell:new(parent, x, y)
     local cell = { parent = parent, x = x, y = y }
     setmetatable(cell, self)
     self.__index = self
     return cell
 end
+setmetatable(Cell, { __call = function(...) return Cell.new(...) end })
 
 function Cell:hide()
     for _, button in pairs(self.buttons) do

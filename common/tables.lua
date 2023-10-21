@@ -85,6 +85,18 @@ function ICT:containsAllValues(t, op)
     return true
 end
 
+function ICT:containsAnyKey(t, op)
+    if not op then
+        return true
+    end
+    for k, _ in pairs(t or {}) do
+        if op and op(k) then
+            return true
+        end
+    end
+    return false
+end
+
 --- Returns true if any value or mapped value in the table are true, otherwise false.
 ---@generic V : any
 ---@param t table<any, V>
