@@ -9,7 +9,7 @@ function Cooldown:update(player)
             local spellKnown = IsPlayerSpell(id)
             if spellKnown then
                 local start, duration = GetSpellCooldown(id)
-                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v.info)
                 -- Check duration to filter out spell lock, wands and other CD triggers
                 player.cooldowns[id].expires = start ~= 0 and duration == v.info.duration and ICT:getTimeLeft(start, duration) or 0
             else
@@ -17,8 +17,10 @@ function Cooldown:update(player)
                 player.cooldowns[id] = nil
             end
         elseif v:getItem() then
-            if GetItemCount(id, true) > 0 and C_PlayerInfo.CanUseItem(id) then
-                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v)
+            local available = (v:isToy() and PlayerHasToy(id) and C_ToyBox.IsToyUsable(id))
+                or (GetItemCount(id, true) > 0 and C_PlayerInfo.CanUseItem(id))
+            if available then
+                player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v.info)
                 local start, duration = C_Container.GetItemCooldown(id)
                 player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:getTimeLeft(start, duration) or 0
             else
@@ -59,6 +61,10 @@ end
 
 function Cooldown:getItem()
     return self.info.itemName
+end
+
+function Cooldown:isToy()
+    return self.info.toy
 end
 
 function Cooldown:getNameWithIcon()
