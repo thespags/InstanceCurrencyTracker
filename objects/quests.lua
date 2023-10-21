@@ -56,119 +56,98 @@ ICT.QuestInfo = {
     ["Raid Weekly"] = {
         name = ICT:returnX("Raid Weekly"),
         ids = { 24579 },
-        currency = ICT.Frost,
-        amount = 10,
+        currencies = { [ICT.Frost] = 10, [ICT.Triumph] = 5 },
         prereq = level80,
         weekly = true
     },
     ["ICC Weekly"] = {
         name = ICT:returnX("ICC Weekly"),
         ids = { 24876 },
-        currency = ICT.Frost,
-        amount = 10,
+        currency = { [ICT.Frost] = 10 },
         prereq = level80,
         weekly = true
     },
     ["Titan Rune Gamma Daily"] = {
         name = ICT:returnX("Titan Rune Gamma Daily"),
         ids = { 78752 },
-        amount = 3,
-        currency = ICT.Frost,
+        currencies = { [ICT.Frost] = 3 },
         prereq = level80,
     },
     ["Heroic Daily"] = {
         name = ICT:returnX("Heroic Daily"),
         -- ids = { 13245, 13246, 13247, 13248, 13249, 13250, 13251, 13252, 13253, 13254, 13255, 13256 }
         ids = { 78753 },
-        amount = 2,
-        currency = ICT.Frost,
+        currencies = { [ICT.Frost] = 2 },
         prereq = level80,
     },
-    -- ["Normal Daily Dungeon"] = {
-    --     name = ICT:returnX("Normal Daily Dungeon"),
-    --     ids = { 13240, 13241, 13243, 13244 },
-    --     amount = 2,
-    --     currency = ICT.Conquest,
-    --     prereq = level80,
-    -- },
     ["Jewelcrafting Daily"] = {
         name = ICT:returnX("Jewelcrafting Daily"),
         ids = { 12958, 12959, 12960, 12961, 12962, 12963, },
-        amount = 1,
-        currency = ICT.JewelcraftersToken,
+        currencies = { [ICT.JewelcraftersToken] = 1 },
         prereq = isJewelCrafter,
     },
     ["Cooking Daily"] = {
         name = ICT:returnX("Cooking Daily"),
         ids = { 13112, 13113, 13114, 13115, 13116, 13100, 13101, 13103, 13102, 13107},
         -- Mustard Dogs drops 2, but that requires the ability to detect the active daily.
-        amount = 1,
-        currency = ICT.Epicurean,
+        currencies = { [ICT.Epicurean] = 1 },
         prereq = hasCooking,
     },
     ["Fishing Daily"] = {
         name = ICT:returnX("Fishing Daily"),
         ids = { 13830, 13832, 13833, 13834, 13836 },
-        amount = 0,
+        currencies = {},
         prereq = hasFishing,
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     ["Threat From Above"] = {
         name = tournamentQuestName(13682, 13788, 13809, 13812),
         ids = { 13682, 13788, 13809, 13812 },
-        amount = 2,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 2 },
         prereq = isTournamentChainCompleted
     },
     ["Battle Before The Citadel"] = {
         name = tournamentQuestName(13861, 13864, 13862, 13863),
         ids = { 13861, 13862, 13863, 13864 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isTournamentChainCompleted
     },
     ["Among the Champions"] = {
         name = tournamentQuestName(13790, 13793, 13811, 13814),
         ids = { 13790, 13793, 13811, 13814 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isTournamentChainCompleted
     },
     ["Taking Battle To The Enemy"] = {
         name = tournamentQuestName(13789, 13791, 13810, 13813),
         ids = { 13789, 13791, 13810, 13813 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isTournamentChainCompleted
     },
     ["High Crusader Adelard"] = {
         name = ICT:returnX("High Crusader Adelard"),
         ids = { 14101, 14102, 14104, 14105 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentFaction
     },
     ["Crusader Silverdawn"] = {
         name = ICT:returnX("Crusader Silverdawn"),
-        ids = { 14108, 14107}, 
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        ids = { 14108, 14107},
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentFaction,
     },
     ["Savinia Loresong"] = {
         name = factionQuestName("Savinia Loresong", "Tylos Dawnrunner"),
         -- Breakfast Of Champions / Gormok Wants His Snobolds / What Do You Feed a Yeti, Anyway?
         ids = { 14076, 14092, 14090, 14141, 14112, 14145 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentChampion,
     },
     ["Narasi Snowdawn"] = {
         name = factionQuestName("Narasi Snowdawn", "Girana the Blooded"),
         -- You've Really Done It This Time, Kul / A Leg Up / Rescue at Sea / Stop The Aggressors / The Light's Mercy
         ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
-        amount = 1,
-        currency = ICT.ChampionsSeal,
+        currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentChampion,
     }
 }

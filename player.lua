@@ -146,10 +146,10 @@ function Player:calculateCurrency()
     for _, currency in ipairs(ICT.Currencies) do
         local id = currency.id
         self.currency.wallet[id] = currency:getAmount()
-        self.currency.weekly[id] = currency:calculateAvailableRaid(self) + currency:calculateAvailableWeeklyQuest(self)
-        self.currency.daily[id] = currency:calculateAvailableDungeon(self) + currency:calculateAvailableDailyQuest(self)
-        self.currency.maxDaily[id] = currency:calculateMaxDungeon(self) + currency:calculateMaxDailyQuest(self)
-        self.currency.maxWeekly[id] = currency:calculateMaxRaid(self) + currency:calculateMaxWeeklyQuest(self)
+        self.currency.weekly[id] = currency:calculateAvailableRaid(self) + currency:calculateAvailableWeeklyQuest(self, currency)
+        self.currency.daily[id] = currency:calculateAvailableDungeon(self) + currency:calculateAvailableDailyQuest(self, currency)
+        self.currency.maxDaily[id] = currency:calculateMaxDungeon(self) + currency:calculateMaxDailyQuest(self, currency)
+        self.currency.maxWeekly[id] = currency:calculateMaxRaid(self) + currency:calculateMaxWeeklyQuest(self, currency)
     end
 end
 

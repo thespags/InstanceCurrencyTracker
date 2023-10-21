@@ -1,6 +1,5 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Quest = {}
 ICT.Quest = Quest
 
@@ -8,6 +7,7 @@ ICT.Quest = Quest
 function Quest:new(quest)
     setmetatable(quest, self)
     self.__index = self
+    quest.order = ICT:maxKey(quest.currencies)
     return quest
 end
 
@@ -23,11 +23,7 @@ function Quest:isCompleted()
 end
 
 function Quest:isVisible()
-    return self.currency and self.currency:isVisible() or ICT.db.options.quests[self.key]
-end
-
-function Quest:getCurrencyName()
-    return self.currency and self.currency:getNameWithIconTooltip() or L["No Currency"]
+    return ICT:containsAnyValue(self.currencies, ICT.Currency.isVisible) or ICT.db.options.quests[self.key]
 end
 
 function Quest:isWeekly()
@@ -38,10 +34,6 @@ function Quest:isDaily()
     return not self.weekly
 end
 
--- This would be nicer if it wasn't player dependent.
--- In general, I believe quests are the same name across factions but may have different quest givers.
--- However, I don't always have a common name for "some group of quests".
--- If we had enough users we could share the specific quest id, but that isn't the same across realms (and probably not factions).
 function ICT.QuestSort(player)
     return function(a, b)
         if ICT.db.options.frame.orderLockLast then
@@ -52,12 +44,13 @@ function ICT.QuestSort(player)
                 return true
             end
         end
-        if a.currency == b.currency then
+
+        if a.order == b.order then
             return a.name(player) < b.name(player)
-        elseif a.currency and b.currency then
-            return a.currency < b.currency
+        elseif a.order and b.order then
+            return a.order < b.order
         else
-            return a.currency ~= nil
+            return a.order ~= nil
         end
     end
 end

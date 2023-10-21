@@ -218,7 +218,10 @@ end
 function Tooltips:questTooltip(name, quest)
     local f = function(tooltip)
         tooltip:printTitle(name)
-        :printValue(quest:getCurrencyName(), quest.amount or "")
+
+        for currency, amount in ICT:spairs(quest:currencies()) do
+            tooltip:printValue(currency:getNameWithIconTooltip(), amount)
+        end
 
         for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
             if player:isQuestVisible(quest) then

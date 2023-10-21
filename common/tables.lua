@@ -32,7 +32,6 @@ end
 
 -- Sorted pairs iterator determined by mapping the values.
 function ICT:spairsByValue(t, comparator, filter)
-    -- If comparator is nil use nspairsByValue but be safe
     comparator = comparator or function(a, b) return a < b end
     return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
 end
@@ -52,8 +51,8 @@ function ICT:fpairs(t, filter)
         return noop
     end
     local keys = {}
-    for k, _ in pairs(t) do
-        if not filter or filter(k) then
+    for k, v in pairs(t) do
+        if not filter or filter(k, v) then
             table.insert(keys, k)
         end
     end
@@ -128,6 +127,21 @@ function ICT:max(t, op, filter)
         end
     end
     return max
+end
+
+function ICT:maxKey(t, op, filter)
+    local max = nil
+    local key = nil
+    for k, _ in pairs(t or {}) do
+        if not filter or filter(k) then
+            local value = (op and op(k) or k)
+            if not max or value > max then
+                max = value
+                key = k
+            end
+        end
+    end
+    return key
 end
 
 function ICT:putIfAbsent(t, key, value)
