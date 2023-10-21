@@ -37,8 +37,8 @@ function MainTab:calculatePadding()
     self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
 
-function MainTab:getPadding(offset, name)
-    return offset + (true and self.paddings[name] or 0)
+function MainTab:getPadding(y, name)
+    return y + (true and self.paddings[name] or 0)
 end
 
 function MainTab:calculateGold()
@@ -47,84 +47,84 @@ function MainTab:calculateGold()
     end
 end
 
-function MainTab:printCharacterInfo(player, x, offset)
-    local cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(L["Info"])
+function MainTab:printCharacterInfo(player, x, y)
+    local cell = self.cells(x, y)
+    y = cell:printSectionTitle(L["Info"])
     local options = ICT.db.options
     if not cell:isSectionExpanded(L["Info"]) then
-        return self.cells:get(x, offset):hide()
+        return self.cells(x, y):hide()
     end
     self.cells.indent = "  "
-    local padding = self:getPadding(offset, "info")
-    offset = self.cells:get(x, offset):printOptionalValue(options.player.showLevel, L["Level"], player.level)
-    offset = self.cells:get(x, offset):printOptionalValue(options.player.showGuild, L["Guild"], player.guild)
-    offset = self.cells:get(x, offset):printOptionalValue(options.player.showGuildRank, L["Guild Rank"], player.guildRank)
-    cell = self.cells:get(x, offset)
-    offset = cell:printOptionalValue(options.player.showMoney, L["Gold"], GetCoinTextureString(player.money or 0))
+    local padding = self:getPadding(y, "info")
+    y = self.cells(x, y):printOptionalValue(options.player.showLevel, L["Level"], player.level)
+    y = self.cells(x, y):printOptionalValue(options.player.showGuild, L["Guild"], player.guild)
+    y = self.cells(x, y):printOptionalValue(options.player.showGuildRank, L["Guild Rank"], player.guildRank)
+    cell = self.cells(x, y)
+    y = cell:printOptionalValue(options.player.showMoney, L["Gold"], GetCoinTextureString(player.money or 0))
     Tooltips:goldTooltip(player, self.realmGold[player.realm]):attach(cell)
     local durabilityColor = player.durability and Colors:gradient("FF00FF00", "FFFF0000", player.durability / 100) or "FF00FF00"
-    offset = self.cells:get(x, offset):printOptionalValue(options.player.showDurability, L["Durability"], player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
-    offset = self.cells:hideRows(x, offset, padding)
+    y = self.cells(x, y):printOptionalValue(options.player.showDurability, L["Durability"], player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
+    y = self.cells:hideRows(x, y, padding)
     local spec = player:getSpec()
     local tooltip = Tooltips:specTooltip(player, spec)
-    offset = UI:printGearScore(self, spec, tooltip, x, offset)
+    y = UI:printGearScore(self, spec, tooltip, x, y)
 
-    padding = self:getPadding(offset, "rested")
+    padding = self:getPadding(y, "rested")
     if player.level < ICT.MaxLevel then
         local currentXP = player.currentXP or 0
         local maxXP = player.maxXP or 1
         local xpPercentage = currentXP / maxXP * 100 
-        offset = self.cells:get(x, offset):printOptionalValue(options.player.showXP, L["XP"], string.format("%s/%s (%.0f%%)", currentXP, maxXP, xpPercentage))
+        y = self.cells(x, y):printOptionalValue(options.player.showXP, L["XP"], string.format("%s/%s (%.0f%%)", currentXP, maxXP, xpPercentage))
         local restedPercentage = player:getRestedXP()
         local bubbles = restedPercentage * 20
-        offset = self.cells:get(x, offset):printOptionalValue(options.player.showRestedXP, L["Rested XP"], string.format("%.1f %s (%.0f%%)", bubbles, L["Bubbles"], restedPercentage * 100))
+        y = self.cells(x, y):printOptionalValue(options.player.showRestedXP, L["Rested XP"], string.format("%.1f %s (%.0f%%)", bubbles, L["Bubbles"], restedPercentage * 100))
         local resting = player.resting and L["Resting"] or L["Not Resting"]
-        offset = self.cells:get(x, offset):printOptionalValue(options.player.showRestedState, L["Resting State"], resting)
+        y = self.cells(x, y):printOptionalValue(options.player.showRestedState, L["Resting State"], resting)
     end
-    offset = self.cells:hideRows(x, offset, padding)
+    y = self.cells:hideRows(x, y, padding)
 
     if options.player.showBags then
-        offset = self.cells:get(x, offset):hide()
+        y = self.cells(x, y):hide()
         tooltip = Tooltips:bagTooltip(player)
-        cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Bags"])
+        cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Bags"])
         tooltip:attach(cell)
 
         if cell:isSectionExpanded(L["Bags"]) then
-            padding = self:getPadding(offset, "bags")
+            padding = self:getPadding(y, "bags")
             local bags = player.bagsTotal or {}
             for k, bag in ICT:nspairs(bags, function(k, v) return v.total > 0 end) do
-                cell = self.cells:get(x, offset)
-                offset = cell:printValue(string.format("|T%s:12|t%s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
+                cell = self.cells(x, y)
+                y = cell:printValue(string.format("|T%s:12|t%s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                 tooltip:attach(cell)
             end
 
             local bankBags = player.bankBagsTotal or {}
             if options.player.showBankBags and ICT:sum(bankBags, function(v) return v.total end) > 0 then
                 for k, bag in ICT:nspairs(bankBags, function(k, v) return v.total > 0 end) do
-                    cell = self.cells:get(x, offset)
-                    offset = cell:printValue(string.format("|T%s:12|t[Bank] %s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
+                    cell = self.cells(x, y)
+                    y = cell:printValue(string.format("|T%s:12|t[Bank] %s", ICT.BagFamily[k].icon, ICT.BagFamily[k].name), string.format("%s/%s", bag.free, bag.total))
                     tooltip:attach(cell)
                 end
             end
-            offset = self.cells:hideRows(x, offset, padding)
+            y = self.cells:hideRows(x, y, padding)
         end
     end
 
     if options.player.showSpecs then
-        offset = self.cells:get(x, offset):hide()
-        cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Specs"])
+        y = self.cells(x, y):hide()
+        cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Specs"])
 
         if cell:isSectionExpanded("Specs") then
-            padding = self:getPadding(offset, "specs")
+            padding = self:getPadding(y, "specs")
             for _, spec in pairs(player:getSpecs()) do
                 if Talents:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
-                    cell = self.cells:get(x, offset)
+                    cell = self.cells(x, y)
                     local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
                     local name = icon .. (spec.name or "")
-                    offset = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+                    y = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
                     local f = function(tooltip)
                         tooltip:printTitle(L["Spec"])
                         :printValue(L["Click"], L["Spec Click"])
@@ -136,42 +136,41 @@ function MainTab:printCharacterInfo(player, x, offset)
                     end
                 end
             end
-            offset = self.cells:hideRows(x, offset, padding)
+            y = self.cells:hideRows(x, y, padding)
         end
     end
 
     -- This should be already indexed primary over secondary professions.
     if options.player.showProfessions then
-        offset = self.cells:get(x, offset):hide()
-        cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Professions"])
+        y = self.cells(x, y):hide()
+        cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Professions"])
 
         if cell:isSectionExpanded(L["Professions"]) then
-            padding = self:getPadding(offset, "professions")
+            padding = self:getPadding(y, "professions")
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
                 local nameWithIcon = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
-                cell = self.cells:get(x, offset)
-                offset = cell:printValue(nameWithIcon, string.format("%s/%s", v.rank, v.max))
+                cell = self.cells(x, y)
+                y = cell:printValue(nameWithIcon, string.format("%s/%s", v.rank, v.max))
                 if v.spellId and player:isCurrentPlayer() then
                     cell:attachClick(function() CastSpellByID(v.spellId) end)
                 end
             end
-            offset = self.cells:hideRows(x, offset, padding)
+            y = self.cells:hideRows(x, y, padding)
         end
     end
 
     if ICT.db.options.player.showCooldowns and ICT:containsAnyValue(ICT.db.options.displayCooldowns) then
-        offset = self.cells:get(x, offset):hide()
-        cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Cooldowns"])
+        y = self.cells(x, y):hide()
+        cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Cooldowns"])
 
         if cell:isSectionExpanded(L["Cooldowns"]) then
-            padding = self:getPadding(offset, "cooldowns")
+            padding = self:getPadding(y, "cooldowns")
             for _, v in ICT:nspairsByValue(player.cooldowns, ICT.Cooldown.isVisible) do
-                cell = self.cells:get(x, offset)
-                local key = player:getFullName() .. v:getName()
-                offset = cell:printTicker(v:getNameWithIcon(), key, v.expires, v.duration)
+                cell = self.cells(x, y)
+                y = cell:printTicker(v:getNameWithIcon(), v.expires, v.duration)
                 if player:isCurrentPlayer() then
                     if v:getSpell() then
                         cell:attachClick(function() v:cast(player) end)
@@ -180,12 +179,12 @@ function MainTab:printCharacterInfo(player, x, offset)
                     end
                 end
             end
-            offset = self.cells:hideRows(x, offset, padding)
+            y = self.cells:hideRows(x, y, padding)
         end
     end
-    offset = self.cells:get(x, offset):hide()
+    y = self.cells(x, y):hide()
     self.cells.indent = ""
-    return offset
+    return y
 end
 
 local function enqueueAll(title, subTitle, instances)
@@ -230,14 +229,14 @@ local function enqueue(instance)
 end
 
 -- Prints all the instances with associated tooltips.
-function MainTab:printInstances(player, title, subTitle, size, instances, x, offset)
+function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     if size == 0 then
-        return offset
+        return y
     end
 
-    local cell = self.cells:get(x, offset)
+    local cell = self.cells(x, y)
     local key = title .. subTitle
-    offset = cell:printSectionTitle(subTitle, key)
+    y = cell:printSectionTitle(subTitle, key)
     Tooltips:instanceSectionTooltip():attach(cell)
     local canQueue = not IsInGroup() or UnitIsGroupLeader("player")
     local cantQueue = function() ICT:print(L["Cannot queue, not currently the group leader."]) end
@@ -252,8 +251,8 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, off
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
                 local color = player:isCurrentPlayer() and instance:queued() and Colors:getSelectedQueueColor(instance.locked) or Colors:getSelectedColor(instance.locked)
-                cell = self.cells:get(x, offset)
-                offset = cell:printLine(instance:getName(), color)
+                cell = self.cells(x, y)
+                y = cell:printLine(instance:getName(), color)
                 Tooltips:instanceTooltip(player, instance):attach(cell)
                 if false and player:isCurrentPlayer() then
                     if canQueue then
@@ -265,10 +264,10 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, off
             end
         end
     end
-    return self.cells:get(x, offset):hide()
+    return self.cells(x, y):hide()
 end
 
-function MainTab:printAllInstances(player, x, offset)
+function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
     for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
         local sizes = {}
@@ -276,98 +275,98 @@ function MainTab:printAllInstances(player, x, offset)
             sizes[k] = ICT:size(v.instances(player, expansion), ICT.Instance.isVisible)
         end
         if ICT:sum(sizes) > 0 then
-            local cell = self.cells:get(x, offset)
-            offset = cell:printSectionTitle(name)
+            local cell = self.cells(x, y)
+            y = cell:printSectionTitle(name)
 
             if cell:isSectionExpanded(name) then
                 self.cells.indent = "  "
                 for k, v in ipairs(subSections) do
-                    offset = self:printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, offset)
+                    y = self:printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, y)
                 end
                 self.cells.indent = ""
             else
-                offset = self.cells:get(x, offset):hide()
+                y = self.cells(x, y):hide()
             end
         end
     end
-    return offset
+    return y
 end
 
 -- Prints currency single line information.
-function MainTab:printCurrencyShort(player, currency, x, offset)
+function MainTab:printCurrencyShort(player, currency, x, y)
     local current = player:totalCurrency(currency)
     local available = player:availableCurrency(currency)
     local value = available and string.format("%s (%s)", current, available) or current
-    local cell = self.cells:get(x, offset)
-    offset = cell:printValue(currency:getNameWithIcon(), value)
+    local cell = self.cells(x, y)
+    y = cell:printValue(currency:getNameWithIcon(), value)
     Tooltips:currencyTooltip(player, currency):attach(cell)
-    return offset
+    return y
 end
 
-function MainTab:printCurrency(player, x, offset)
+function MainTab:printCurrency(player, x, y)
     if ICT:containsAnyValue(ICT.db.options.currency) then
-        local cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Currency"])
+        local cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Currency"])
         Tooltips:currencySectionTooltip():attach(cell)
         if cell:isSectionExpanded(L["Currency"]) then
             for _, currency in ipairs(ICT.Currencies) do
                 if currency:isVisible() then
-                    offset = self:printCurrencyShort(player, currency, x, offset)
+                    y = self:printCurrencyShort(player, currency, x, y)
                 end
             end
         end
     end
-    return self.cells:get(x, offset):hide()
+    return self.cells(x, y):hide()
 end
 
-function MainTab:printQuests(player, x, offset)
+function MainTab:printQuests(player, x, y)
     if ICT.db.options.quests.show then
-        local cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Quests"])
+        local cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Quests"])
        Tooltips: questSectionTooltip():attach(cell)
         if cell:isSectionExpanded(L["Quests"]) then
-            local padding = self:getPadding(offset, "quests")
+            local padding = self:getPadding(y, "quests")
             for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player), player:isQuestVisible()) do
                 local color = Colors:getQuestColor(player, quest)
                 local name = quest.name(player)
-                cell = self.cells:get(x, offset)
-                offset = cell:printLine(name, color)
+                cell = self.cells(x, y)
+                y = cell:printLine(name, color)
                 Tooltips:questTooltip(name, quest):attach(cell)
             end
-            offset = self.cells:hideRows(x, offset, padding)
+            y = self.cells:hideRows(x, y, padding)
         end
-        offset = self.cells:get(x, offset):hide()
+        y = self.cells(x, y):hide()
     end
-    return offset
+    return y
 end
 
-function MainTab:printResetTimers(x, offset)
+function MainTab:printResetTimers(x, y)
     if not ICT.db.options.multiPlayerView then
-        local cell = self.cells:get(x, offset)
-        offset = cell:printSectionTitle(L["Reset"])
+        local cell = self.cells(x, y)
+        y = cell:printSectionTitle(L["Reset"])
         Tooltips:timerSectionTooltip():attach(cell)
 
         if cell:isSectionExpanded(L["Reset"]) then
             for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
-                offset = self.cells:get(x, offset):printTicker(v:getName(), v:getName(), v:expires(), v:duration())
+                y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
-        offset = self.cells:get(x, offset):hide()
+        y = self.cells(x, y):hide()
     end
-    return offset
+    return y
 end
 
 function MainTab:printPlayer(player, x)
-    local offset = 1
-    offset = self.cells:get(x, offset):printPlayerTitle(player)
+    local y = 1
+    y = self.cells(x, y):printPlayerTitle(player)
     if ICT:sumNonNil(ICT.db.options.player) > 0 then
-        offset = self:printCharacterInfo(player, x, offset)
+        y = self:printCharacterInfo(player, x, y)
     end
-    offset = self:printResetTimers(x, offset)
-    offset = self:printAllInstances(player, x, offset)
-    offset = self:printQuests(player, x, offset)
-    offset = self:printCurrency(player, x, offset)
-    return offset
+    y = self:printResetTimers(x, y)
+    y = self:printAllInstances(player, x, y)
+    y = self:printQuests(player, x, y)
+    y = self:printCurrency(player, x, y)
+    return y
 end
 
 function MainTab:prePrint()

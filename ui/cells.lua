@@ -4,19 +4,16 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
 local UI = ICT.UI
 local Cells = {}
+setmetatable(Cells, Cells)
 ICT.Cells = Cells
 local Cell = {}
-Cell.__index = Cell
+setmetatable(Cell, Cell)
 
 function Cells:new(frame)
     local t = { indent = "", cells = {}, frame = frame }
     setmetatable(t, self)
     self.__index = self
     return t
-end
-
-function Cells:_call(x, y)
-    return self:get(x, y)
 end
 
 function Cells:hide()
@@ -34,13 +31,12 @@ function Cells:hideRows(x, startY, endY)
 end
 
 -- Gets the associated cell or create it if it doesn't exist yet.
-function Cells:get(x, y)
+function Cells:__call(x, y)
     local name = string.format("ICTCell(%s, %s)", x, y)
     local cell = self.cells[name]
 
     if not cell then
-        cell = { x = x, y = y, parent = self }
-        setmetatable(cell, Cell)
+        cell = Cell(self, x, y)
         cell.frame = CreateFrame("Button", name, self.frame, "InsecureActionButtonTemplate")
         cell.frame:SetSize(UI.cellWidth, UI.cellHeight)
         cell.frame:SetPoint("TOPLEFT", (x - 1) * UI.cellWidth, -(y - 1) * UI.cellHeight)
@@ -84,6 +80,13 @@ function Cells:get(x, y)
     return cell
 end
 
+function Cell:__call(parent, x, y)
+    local cell = { parent = parent, x = x, y = y }
+    setmetatable(cell, self)
+    self.__index = self
+    return cell
+end
+
 function Cell:hide()
     for _, button in pairs(self.buttons) do
         button:Hide()
@@ -92,16 +95,16 @@ function Cell:hide()
     return self.y + 1
 end
 
-function Cell:printTicker(title, key, expires, duration, colorOverride)
+function Cell:printTicker(title, expires, duration, colorOverride)
     local indent = self.parent.indent
     local update = function(ticker)
         ICT:cancelTicker(ticker)
         local time, color = ICT:countdown(expires, duration, Colors.red, Colors.green)
         local old = self.parent.indent
         self.parent.indent = indent
-        local offset = self:printValue(title, time, nil, colorOverride or color)
+        local y = self:printValue(title, time, nil, colorOverride or color)
         self.parent.indent = old
-        return offset
+        return y
     end
     self.ticker = C_Timer.NewTicker(1, update)
     return update()

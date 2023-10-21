@@ -66,13 +66,13 @@ local infoFilter = function(v)
     return ICT.db.options.professions["showExpansion" .. v.expansionId]
 end
 
-function ProfessionsTab:printProfession(player, profession, x, offset)
+function ProfessionsTab:printProfession(player, profession, x, y)
     local options = ICT.db.options.professions
     local skillLine = profession.skillLine
     local skills = player.skills[skillLine]
-    local cell = self.cells:get(x, offset)
+    local cell = self.cells(x, y)
     local sort = options.sortByDifficulty and infoDifficultySort(player) or infoSort
-    offset = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
+    y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
     if cell:isSectionExpanded(profession.name) then
         if skills and ICT:size(skills) > 0 then
@@ -80,17 +80,17 @@ function ProfessionsTab:printProfession(player, profession, x, offset)
             local expansion, section
             for _, info in ICT:spairsByValue(LibTradeSkillRecipes:GetCategorySpells(skillLine), sort, infoFilter) do
                 if expansion ~= info.expansionId then
-                    offset = expansion and self.cells:get(x, offset):hide() or offset
+                    y = expansion and self.cells(x, y):hide() or y
                     expansion = info.expansionId
                     section = skillLine .. ":" .. expansion
-                    offset = self.cells:get(x, offset):printSectionTitle(ICT.Expansions[expansion], section)
+                    y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
                 end
-                cell = self.cells:get(x, offset)
+                cell = self.cells(x, y)
                 if cell:isSectionExpanded(section) then
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.showUnknown then
-                        offset = cell:printLine(ICT:getColoredSpellLink(info.spellId, color))
+                        y = cell:printLine(ICT:getColoredSpellLink(info.spellId, color))
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)
                     end
@@ -98,15 +98,15 @@ function ProfessionsTab:printProfession(player, profession, x, offset)
             end
             self.cells.indent = ""
         else
-            cell = self.cells:get(x, offset)
-            offset = cell:printLine(L["OpenTradeSkills"], ICT.textColor)
+            cell = self.cells(x, y)
+            y = cell:printLine(L["OpenTradeSkills"], ICT.textColor)
             if player:isCurrentPlayer() then
                 cell:attachClick(function() self:updateSkills(player, skillLine) end)
                 cell.frame:SetHighlightTexture("auctionhouse-nav-button-highlight")
             end
         end
     end
-    return self.cells:get(x, offset):hide()
+    return self.cells(x, y):hide()
 end
 
 function ProfessionsTab:updateSkills(player, skillLine)
@@ -134,17 +134,17 @@ end
 
 function ProfessionsTab:printPlayer(player, x)
     local options = ICT.db.options.professions
-    local offset = 1
-    offset = self.cells:get(x, offset):printPlayerTitle(player)
+    local y = 1
+    y = self.cells(x, y):printPlayerTitle(player)
     player.skills = player.skills or {}
 
     for _, profession in pairs(player.professions or {}) do
         local skillLine = profession.skillLine
         if LibTradeSkillRecipes:GetSkillLines()[skillLine].hasRecipes and options["showProfession" .. skillLine] then
-            offset = self:printProfession(player, profession, x, offset)
+            y = self:printProfession(player, profession, x, y)
         end
     end
-    return offset
+    return y
 end
 
 function ProfessionsTab:prePrint()

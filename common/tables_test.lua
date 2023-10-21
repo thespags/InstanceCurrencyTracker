@@ -190,15 +190,12 @@ assertEquals(true, actual.foo)
 assertEquals(true, actual.bar)
 
 local Obj = {}
-function Obj:new(x)
+function Obj:__call(x)
     local new = {}
     setmetatable(new, self)
     self.__index = self
     new.x = x
     return new
-end
-function Obj:__call(x)
-    return self:new(x)
 end
 function Obj:__lt(other)
     return self.x < other.x

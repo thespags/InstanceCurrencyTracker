@@ -301,31 +301,31 @@ function UI:PrintPlayers()
     for _, tab in pairs(ICT.frame.tabs) do
         -- Only update the viewed Tab.
         if ICT.db.selectedTab == tab.button:GetID() then
-            local offset = 0
             local x = 0
+            local y = 0
             tab.cells:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.multiPlayerView then
                 for _, player in ICT:nspairsByValue(ICT.db.players, ICT.Player.isEnabled) do
                     x = x + 1
-                    offset = math.max(tab:printPlayer(player, x), offset)
+                    y = math.max(tab:printPlayer(player, x), y)
                 end
             else
                 local player = self:getSelectedOrDefault()
                 x = x + 1
-                offset = tab:printPlayer(player, x)
+                y = tab:printPlayer(player, x)
                 ICT.Options:SetPlayerDropDown(player)
             end
             _ = tab.postPrint and tab:postPrint()
-            self:updateFrameSizes(tab.frame, x, offset)
+            self:updateFrameSizes(tab.frame, x, y)
             tab.X = x
-            tab.Y = offset
+            tab.Y = y
         end
         -- Preserve width/height from other tabs.
         maxX = math.max(maxX, tab.X or 0)
         maxY = math.max(maxY, tab.Y or 0)
     end
-        self.maxX = maxX
+    self.maxX = maxX
     self.maxY = maxY
     ICT.resize:Init(ICT.frame, self.cellWidth + 40, self.defaultHeight - 200, self:calculateWidth(maxX) + 50, self:calculateHeight(maxY))
 end

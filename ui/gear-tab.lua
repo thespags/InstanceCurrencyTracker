@@ -35,24 +35,24 @@ function GearTab:calculatePadding()
     end
 end
 
-function GearTab:getPadding(offset, name, i)
-    return offset + (ICT.db.options.gear.showSpecs and self.paddings[i][name] or self.paddings[name])
+function GearTab:getPadding(y, name, i)
+    return y + (ICT.db.options.gear.showSpecs and self.paddings[i][name] or self.paddings[name])
 end
 
-function GearTab:printGlyph(spec, type, typeName, x, offset)
+function GearTab:printGlyph(spec, type, typeName, x, y)
     for index, glyph in ICT:fpairsByValue(spec.glyphs, function(v) return v.type == type and v.enabled end) do
         local name = ICT:getSpellLink(glyph.spellId)
         local nameWithIcon = name and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
-        local cell = self.cells:get(x, offset)
-        offset = cell:printValue(typeName .. " " .. index, nameWithIcon)
+        local cell = self.cells(x, y)
+        y = cell:printValue(typeName .. " " .. index, nameWithIcon)
         cell:attachHyperLink()
     end
-    return offset
+    return y
 end
 
-function GearTab:printGlyphs(player, spec, x, offset)
-    local cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(L["Glyphs"])
+function GearTab:printGlyphs(player, spec, x, y)
+    local cell = self.cells(x, y)
+    y = cell:printSectionTitle(L["Glyphs"])
     if player:isCurrentPlayer() then
         cell:attachClick(Talents:viewGlyphs(spec.id))
         local tooltip = function(tooltip)
@@ -64,25 +64,25 @@ function GearTab:printGlyphs(player, spec, x, offset)
     end
 
     if cell:isSectionExpanded(L["Glyphs"]) then
-        local padding = self:getPadding(offset, "glyphs", spec.id)
-        offset = self:printGlyph(spec, 1, L["Major"], x, offset)
-        offset = self:printGlyph(spec, 2, L["Minor"], x, offset)
-        offset = self.cells:hideRows(x, offset, padding)
+        local padding = self:getPadding(y, "glyphs", spec.id)
+        y = self:printGlyph(spec, 1, L["Major"], x, y)
+        y = self:printGlyph(spec, 2, L["Minor"], x, y)
+        y = self.cells:hideRows(x, y, padding)
     end
-    return offset
+    return y
 end
 
-function GearTab:printSpec(player, x, offset, spec)
+function GearTab:printSpec(player, x, y, spec)
     if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec) or not Talents:isValidSpec(spec) then
-        return offset
+        return y
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
     local key = "Spec" .. (ICT.db.options.gear.showSpecs and spec.id or "")
     local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
     local sectionName = icon .. (spec.name or key)
-    local cell = self.cells:get(x, offset)
+    local cell = self.cells(x, y)
     local isActive = spec.id == player.activeSpec
-    offset = cell:printSectionTitle(sectionName, key, isActive and ICT.lockedColor)
+    y = cell:printSectionTitle(sectionName, key, isActive and ICT.lockedColor)
 
     if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
         local tooltip = function(tooltip)
@@ -94,88 +94,88 @@ function GearTab:printSpec(player, x, offset, spec)
         cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
     end
     if not cell:isSectionExpanded(key) then
-        return self.cells:get(x, offset):hide()
+        return self.cells(x, y):hide()
     end
 
     self.cells.indent = "  "
 
     local tooltip = Tooltips:specsSectionTooltip()
-    cell = self.cells:get(x, offset)
-    offset = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3))
+    cell = self.cells(x, y)
+    y = cell:printValue(L["Talents"], string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3))
     tooltip:attach(cell)
-    offset = UI:printGearScore(self, spec, tooltip, x, offset)
+    y = UI:printGearScore(self, spec, tooltip, x, y)
 
     -- For hunters, show pets.
-    local padding = self:getPadding(offset, "pets", spec.id)
+    local padding = self:getPadding(y, "pets", spec.id)
     for _, pet in ICT:nspairsByValue(player:getPets(), ICT.Pet.isVisible) do
         if spec.pets and spec.pets[pet.name] then
             local specPet = spec.pets[pet.name]
-            cell = self.cells:get(x, offset)
-            offset = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
+            cell = self.cells(x, y)
+            y = cell:printValue(string.format("|T%s:12:12|t%s", pet.icon, pet.name), string.format("%s|T%s:12:12|t", specPet.pointsSpent, specPet.talentIcon))
             if player:isCurrentPlayer() and pet.name == select(2, GetStablePetInfo(0)) then
                 cell:attachClick(Talents:viewSpec(3, true))
             end
         end
     end
-    offset = self.cells:hideRows(x, offset, padding)
-    offset = self.cells:get(x, offset):hide()
+    y = self.cells:hideRows(x, y, padding)
+    y = self.cells(x, y):hide()
 
-    offset = self:printGlyphs(player, spec, x, offset)
+    y = self:printGlyphs(player, spec, x, y)
 
     -- Requires spec activation so short circuit.
     if not spec.items then
-        offset = self.cells:get(x, offset):printLine(L["ActivateSpecLoad"], ICT.textColor)
-        return self.cells:get(x, offset):hide()
+        y = self.cells(x, y):printLine(L["ActivateSpecLoad"], ICT.textColor)
+        return self.cells(x, y):hide()
     end
 
-    offset = self.cells:hideRows(x, offset, padding)
-    offset = self.cells:get(x, offset):hide()
+    y = self.cells:hideRows(x, y, padding)
+    y = self.cells(x, y):hide()
 
-    cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(L["Items"])
+    cell = self.cells(x, y)
+    y = cell:printSectionTitle(L["Items"])
 
     if cell:isSectionExpanded(L["Items"]) then
-        padding = self:getPadding(offset, "items", spec.id)
+        padding = self:getPadding(y, "items", spec.id)
         for k, item in pairs(spec.items or {}) do
             local text = ICT:addGems(k, item, true)
-            cell = self.cells:get(x, offset)
-            offset = cell:printValue(string.format("|T%s:14|t%s", item.icon, item.link), text)
+            cell = self.cells(x, y)
+            y = cell:printValue(string.format("|T%s:14|t%s", item.icon, item.link), text)
             cell:attachHyperLink()
         end
-        offset = self.cells:hideRows(x, offset, padding)
+        y = self.cells:hideRows(x, y, padding)
     end
-    offset = self.cells:get(x, offset):hide()
+    y = self.cells(x, y):hide()
 
-    cell = self.cells:get(x, offset)
-    offset = cell:printSectionTitle(L["Enchants"])
+    cell = self.cells(x, y)
+    y = cell:printSectionTitle(L["Enchants"])
     if cell:isSectionExpanded(L["Enchants"]) then
-        padding = self:getPadding(offset, "enchants", spec.id)
+        padding = self:getPadding(y, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
             local enchant = ICT:getEnchant(item.enchantId, slot) or L["Missing"]
-            cell = self.cells:get(x, offset)
-            offset = cell:printValue(_G[item.invType], enchant)
+            cell = self.cells(x, y)
+            y = cell:printValue(_G[item.invType], enchant)
             cell:attachHyperLink()
         end
-        offset = self.cells:hideRows(x, offset, padding)
+        y = self.cells:hideRows(x, y, padding)
     end
-    offset = self.cells:get(x, offset):hide()
+    y = self.cells(x, y):hide()
     self.cells.indent = ""
-    return offset
+    return y
 end
 
 function GearTab:printPlayer(player, x)
-    local offset = 1
-    offset = self.cells:get(x, offset):printPlayerTitle(player)
+    local y = 1
+    y = self.cells(x, y):printPlayerTitle(player)
     if ICT.db.options.gear.showSpecs then
         for _, spec in pairs(player:getSpecs()) do
-            offset = self:printSpec(player, x, offset, spec)
+            y = self:printSpec(player, x, y, spec)
         end
     else
         local spec = player:getSpec()
-        offset = self:printSpec(player, x, offset, spec)
+        y = self:printSpec(player, x, y, spec)
     end
-    return offset
+    return y
 end
 
 function GearTab:prePrint()
