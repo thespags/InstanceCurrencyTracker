@@ -48,6 +48,7 @@ function Player:new(player)
     player = player or {}
     setmetatable(player, self)
     self.__index = self
+    ICT:putIfAbsent(player, "currency", {})
     ICT:putIfAbsent(player.currency, "maxWeekly", {})
     return player
 end
