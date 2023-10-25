@@ -1,7 +1,6 @@
 local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
-local Colors = ICT.Colors
 
 local UI = {
     -- Individual cell size for each position in the frame.
