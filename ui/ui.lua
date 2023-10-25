@@ -101,7 +101,7 @@ function UI:resetFrameButton()
     button:SetScript("OnClick", function()
         self:drawFrame(self.defaultX, self.defaultY, self:calculateWidth(self.maxX) + 50, self:calculateHeight(self.maxY))
     end)
-    ICT.Tooltip:new("ICTResetFrameTooltip", function(tooltip) tooltip:printTitle("Reset size and position") end):attachFrame(button)
+    ICT.Tooltips:new("Reset size and position"):attachFrame(button)
 end
 
 function UI:calculateWidth(x)
@@ -205,7 +205,7 @@ function UI:resetOptionsButton()
         tooltip:printTitle("Reset Options")
         tooltip:printPlain("Opens a dialog to confirm to reset options to their default value.")
     end
-    ICT.Tooltip:new("ICTResetOptionsTooltip", f)
+    ICT.Tooltip:new(f)
     :attachFrame(button)
 end
 

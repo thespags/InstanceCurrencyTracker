@@ -239,7 +239,7 @@ function Cell:attachButton(key, tooltip, click, shiftClick)
         button:SetSize(12, 12)
         button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture(134396)
-        ICT.Tooltip:new(name .. "Tooltip", tooltip):attachFrame(button)
+        ICT.Tooltip:new(tooltip):attachFrame(button)
     end
     button:SetScript("OnClick",
         function()
@@ -263,7 +263,7 @@ function Cell:attachSectionButton(key, tooltip)
         button:SetSize(10, 10)
         button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
         button:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight")
-        _ = tooltip and ICT.Tooltip:new(key .. "Tooltip", tooltip):attachFrame(button)
+        _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
     end
     local expanded = ICT.db.options.collapsible[key]
     local icon = expanded and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"

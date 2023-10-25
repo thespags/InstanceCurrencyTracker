@@ -130,7 +130,7 @@ function MainTab:printCharacterInfo(player, x, y)
                         :printValue(L["Click"], L["Spec Click"])
                         :printValue(L["Shift Click"], L["Spec Shift Click"])
                     end
-                    ICT.Tooltip:new("ICTSpecasdfsd" .. spec.id .. player:getFullName(), f):attach(cell)
+                    ICT.Tooltip:new(f):attach(cell)
                     if player:isCurrentPlayer() then
                         cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
                     end

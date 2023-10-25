@@ -60,7 +60,7 @@ function GearTab:printGlyphs(player, spec, x, y)
             :printValue(L["Click"], L["Section"])
             :printValue(L["Shift Click"], L["Glyphs Shift Click"])
         end
-        Tooltip:new("ICTGlyphs", tooltip):attach(cell)
+        Tooltip:new(tooltip):attach(cell)
     end
 
     if cell:isSectionExpanded(L["Glyphs"]) then
@@ -90,7 +90,7 @@ function GearTab:printSpec(player, x, y, spec)
             :printValue(L["Click"], L["Spec Click"])
             :printValue(L["Shift Click"], L["Spec Shift Click"])
         end
-        Tooltip:new("ICTSetSpec", tooltip):attach(cell)
+        Tooltip:new(tooltip):attach(cell)
         cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
     end
     if not cell:isSectionExpanded(key) then

@@ -18,7 +18,7 @@ function Tooltips:goldTooltip(player, realmGold)
             tooltip:printValue(player:getName(), GetCoinTextureString(player.money or 0), player:getClassColor())
         end
     end
-    return Tooltip:new("ICTGoldTip", f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:bagTooltip(player)
@@ -41,7 +41,7 @@ function Tooltips:bagTooltip(player)
             tooltip:printPlain("\n" .. L["BagTooltipNote"])
         end
     end
-    return Tooltip:new("ICTBagTooltip" .. player:getFullName(), f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:specsSectionTooltip()
@@ -51,7 +51,7 @@ function Tooltips:specsSectionTooltip()
         :printPlain("\nNote: Gearscore and iLvl are the last equipped gear for a specific spec.")
         :printPlain("i.e. change spec before changing gear to have the most accurate data.")
     end
-    return Tooltip:new("ICTSpecsSectionTooltip", f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:specTooltip(player, spec)
@@ -94,7 +94,7 @@ function Tooltips:specTooltip(player, spec)
         :printPlain("an item that can have an extra slot, such as your belt.")
         :printPlain("\nAlso, enchants aren't localized.")
     end
-    return Tooltip:new("ICTGear" .. player:getFullName(), f)
+    return Tooltip:new(f)
 end
 
 -- Tooltip for instance information upon entering the cell.
@@ -132,7 +132,7 @@ function Tooltips:instanceTooltip(player, instance)
         end
     end
     -- This player is the original player which owns the cell.
-    return Tooltip:new("ICTInstanceTooltip" .. instance.id .. instance.size .. player:getFullName(), f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:instanceSectionTooltip()
@@ -147,7 +147,7 @@ function Tooltips:instanceSectionTooltip()
         :printValue(L["Currency"], L["Available / Total"])
         :printValue(L["CurrencySection"])
     end
-    return Tooltip:new("ICTInstanceTooltip", f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:currencySectionTooltip()
@@ -162,7 +162,7 @@ function Tooltips:currencySectionTooltip()
         :printValue("\nQuests", "Total")
         :printPlain("Shows the currency reward for a given quest.")
     end
-    return Tooltip:new("ICTCurrencyFormat", f)
+    return Tooltip:new(f)
 end
 
 local function printInstancesForCurrency(tooltip, title, instances, currency)
@@ -212,7 +212,7 @@ function Tooltips:currencyTooltip(selectedPlayer, currency)
             printQuestsForCurrency(tooltip, selectedPlayer, currency)
         end
     end
-    return Tooltip:new("ICTCurrencyTooltip" .. selectedPlayer:getFullName() .. currency.id, f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:questTooltip(name, quest)
@@ -230,7 +230,7 @@ function Tooltips:questTooltip(name, quest)
             end
         end
     end
-    return Tooltip:new("ICTQuestTooltip" .. name, f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:questSectionTooltip()
@@ -242,7 +242,7 @@ function Tooltips:questSectionTooltip()
         :printValue("\n" .. L["Currency"], L["Total"])
         :printPlain(L["Shows the quest reward."])
     end
-    return Tooltip:new("ICTQuestTooltip", f)
+    return Tooltip:new(f)
 end
 
 function Tooltips:timerSectionTooltip()
@@ -251,5 +251,13 @@ function Tooltips:timerSectionTooltip()
         :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
         :printPlain("\nNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.")
     end
-   return Tooltip:new("ICTResetTimerTooltip", f)
+   return Tooltip:new(f)
+end
+
+function Tooltips:new(title, text)
+    local f = function(tooltip)
+        tooltip:printTitle(title)
+        :printPlain(text)
+    end
+   return Tooltip:new(f)
 end
