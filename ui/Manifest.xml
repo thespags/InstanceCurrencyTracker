@@ -5,7 +5,7 @@
   <Script file="tooltips.lua"/>
   <Script file="talents.lua"/>
   <Script file="common.lua"/>
-  <Script file="main-tab.lua"/>
-  <Script file="gear-tab.lua"/>
-  <Script file="professions-tab.lua"/>
+  <Script file="tab-main.lua"/>
+  <Script file="tab-gear.lua"/>
+  <Script file="tab-professions.lua"/>
 </Ui>

@@ -16,3 +16,66 @@ function UI:printGearScore(tab, spec, tooltip, x, y)
     end
     return y
 end
+
+local function createDialogWindow(name, titleText, bodyText, buttonText)
+    local frame = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+    frame:SetToplevel(true)
+    frame:SetHeight(125)
+    frame:SetWidth(250)
+    frame:Show()
+    frame:SetPoint("CENTER", UIParent, 0, 200)
+    frame:SetFrameStrata("HIGH")
+    table.insert(UISpecialFrames, name)
+
+    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetText(titleText)
+    title:SetPoint("TOP", -10, -6)
+
+    frame.name = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    frame.name:SetText(string.format("|c%s%s|r", "FFFFFFFF", bodyText))
+    frame.name:SetPoint("CENTER", 0, 10)
+
+    frame.button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.button:SetSize(80 ,22)
+    frame.button:SetText(buttonText)
+    frame.button:SetPoint("CENTER", 0, -30)
+    return frame
+end
+
+local delete = createDialogWindow("ICTDeletePlayer", "Confirm Character Deletion", "", "Delete")
+local lastPlayer
+function UI:openDeleteFrame(player)
+    return function()
+        -- Close the dialog if the X is clicked for the same player.
+        if lastPlayer == player then
+            delete:Hide()
+            lastPlayer = nil
+            return
+        end
+        lastPlayer = player;
+        delete.name:SetText(string.format("|c%s%s|r", player:getClassColor(), player.fullName))
+        delete:Show()
+        delete.button:SetScript("OnClick", function ()
+            ICT.WipePlayer(player:getFullName())
+            delete:Hide()
+            UI:PrintPlayers()
+        end)
+    end
+end
+
+local options = createDialogWindow("ICTResetOptionsDialog", "Confirm Reset Options", "Set all options to their default value?", "Confirm")
+local resetOptions = true
+function UI:openResetOptionsFrame()
+    return function()
+        resetOptions = not resetOptions
+        if resetOptions then
+            options:Hide()
+            return
+        end
+        options:Show()
+        options.button:SetScript("OnClick", function()
+            ICT.Options:setDefaultOptions(true)
+            options:Hide()
+        end)
+    end
+end
