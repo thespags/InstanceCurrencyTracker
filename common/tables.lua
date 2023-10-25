@@ -30,19 +30,25 @@ function ICT:nspairs(t, filter)
     return self:spairs(t, function(a, b) return a < b end, filter)
 end
 
+-- Reversed sorted pairs iterator
+function ICT:rspairs(t, filter)
+    return self:spairs(t, function(a, b) return b < a end, filter)
+end
+
 -- Sorted pairs iterator determined by mapping the values.
 function ICT:spairsByValue(t, comparator, filter)
     comparator = comparator or function(a, b) return a < b end
     return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
 end
 
--- Natural sorted pairs iterator.
+-- Natural sorted pairs iterator by value.
 function ICT:nspairsByValue(t, filter)
     return self:spairsByValue(t, function(a, b) return a < b end, filter)
 end
 
-function ICT.reverseSort(a, b)
-    return b < a
+-- Reversed sorted pairs iterator by value.
+function ICT:rspairsByValue(t, filter)
+    return self:spairsByValue(t, function(a, b) return b < a end, filter)
 end
 
 -- Filtered pairs iterator determined by the table key with the given function.

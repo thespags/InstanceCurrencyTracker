@@ -208,26 +208,6 @@ local function enqueueAll(title, subTitle, instances)
     end
 end
 
-local function enqueue(instance)
-    return function()
-        local info = C_LFGList.GetActiveEntryInfo()
-        local queuedIds = info and info.activityIDs or {}
-        instance:enqueue(queuedIds, true, true)
-
-        if #queuedIds == 0 then
-            ICT:oprint(L["No more instances queued, delisting."], "lfg")
-            C_LFGList.RemoveListing()
-            UI:PrintPlayers()
-            return
-        end
-        if #queuedIds > 41 then
-            ICT:print(L["Enqueued too many instances: %s"], #queuedIds)
-        end
-        local f = queuedIds == {} and C_LFGList.RemoveListing or info == nil and C_LFGList.CreateListing or C_LFGList.UpdateListing
-        f(queuedIds)
-    end
-end
-
 -- Prints all the instances with associated tooltips.
 function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     if size == 0 then
@@ -255,11 +235,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
                 y = cell:printLine(instance:getName(), color)
                 Tooltips:instanceTooltip(player, instance):attach(cell)
                 if false and player:isCurrentPlayer() then
-                    if canQueue then
-                        cell:attachClick(enqueue(instance))
-                    else
-                        cell:attachClick(cantQueue)
-                    end
+                    cell:attachClick(UI:enqueue(instance), UI:foo(cell, instance))
                 end
             end
         end
@@ -269,7 +245,7 @@ end
 
 function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
-    for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+    for expansion, name in ICT:rspairs(ICT.Expansions) do
         local sizes = {}
         for k, v in ipairs(subSections) do
             sizes[k] = ICT:size(v.instances(player, expansion), ICT.Instance.isVisible)

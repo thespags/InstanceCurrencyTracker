@@ -14,10 +14,10 @@ actual = ICT:nspairsByValue(nil)
 assertOrderedEquals({}, actual)
 
 -- spairsByValue tests
-actual = ICT:spairsByValue({"a", "b", "c"}, ICT.reverseSort)
+actual = ICT:rspairsByValue({"a", "b", "c"})
 assertOrderedEquals({"c", "b", "a"}, actual)
 
-actual = ICT:spairsByValue({"a", "b", "c"}, ICT.reverseSort, function(v) return v ~= "b" end)
+actual = ICT:rspairsByValue({"a", "b", "c"}, function(v) return v ~= "b" end)
 assertOrderedEquals({"c", "a"}, actual)
 
 actual = ICT:spairsByValue(nil)
@@ -27,10 +27,10 @@ actual = ICT:spairsByValue({"a", "b", "c"})
 assertOrderedEquals({"a", "b", "c"}, actual)
 
 -- spairs tests
-actual = ICT:spairs({a=1, b=2, c=3}, ICT.reverseSort)
+actual = ICT:rspairs({a=1, b=2, c=3})
 assertOrderedEquals({3, 2, 1}, actual)
 
-actual = ICT:spairs({a=1, b=2, c=3}, ICT.reverseSort, function(v) return v ~= "b" end)
+actual = ICT:rspairs({a=1, b=2, c=3}, function(v) return v ~= "b" end)
 assertOrderedEquals({3, 1}, actual)
 
 actual = ICT:spairs(nil)

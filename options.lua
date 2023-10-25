@@ -35,7 +35,7 @@ local professionOptions = {
     { name = L["Sort By Difficulty"], key = "sortByDifficulty", defaultFalse=true, },
     { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true, },
 }
-for i, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+for i, name in ICT:rspairs(ICT.Expansions) do
     tinsert(professionOptions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK, })
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(), 
@@ -229,7 +229,7 @@ local function addObjectOption(o, level)
 end
 
 local function addExpansionOptions(objects, menuList, level)
-    for expansion, name in ICT:spairs(ICT.Expansions, ICT.reverseSort) do
+    for expansion, name in ICT:rspairs(ICT.Expansions) do
         local info = createInfo(name)
         local contains = function(v)
             -- v is visible or it's not from that expansion.
