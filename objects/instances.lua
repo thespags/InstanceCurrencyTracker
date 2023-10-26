@@ -75,8 +75,14 @@ local totcEmblems = ICT:set(ICT.StoneKeepersShard, ICT.DungeonEmblem, ICT.Sidere
 local availableDungeonEmblems = function(instance, currency)
     if currency == ICT.SiderealEssence then
         return isLastBossKilled(instance) and 0 or 1
-    elseif currency == ICT.DefilersScourgeStone or currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
+    elseif currency == ICT.DungeonEmblem or currency == ICT.ChampionsSeal then
         return sameEmblemsPerBoss(1)(instance)
+    elseif currency == ICT.DefilersScourgeStone then
+        local total = sameEmblemsPerBoss(1)(instance)
+        if instance.id == 578 then
+            total = total + (isLastBossKilled(instance) and 0 or 2)
+        end
+        return total
     end
 end
 local maxDungeonEmblems = function(instance, currency)
