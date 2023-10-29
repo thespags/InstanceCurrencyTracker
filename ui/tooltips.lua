@@ -1,4 +1,3 @@
-
 local addOnName, ICT = ...
 
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
@@ -54,9 +53,10 @@ function Tooltips:specsSectionTooltip()
     return Tooltip:new(f)
 end
 
-function Tooltips:specTooltip(player, spec)
+function Tooltips:specTooltip(spec)
     local f = function(tooltip)
-        tooltip:printTitle(spec.name .. " " .. L["Gear"])
+        local name = spec.name and (spec.name .. " ") or ""
+        tooltip:printTitle(name .. L["Gear"])
         tooltip:printLine("Item: iLvL Gems or ? if missing gem")
         tooltip:printLine("Glyph: Slot")
         tooltip:printLine("Item Slot: Enchant")
