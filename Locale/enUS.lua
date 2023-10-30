@@ -100,6 +100,7 @@ L["Gear Info Toolip"] = "Enables and disables information for the gear tab."
 L["Professions Toolip"] = "Enables and disables information for the professions tab."
 L["Characters"] = "Characters"
 L["Reset Timers"] = "Reset Timers"
+L["Instance"] = "Instance"
 L["Instances"] = "Instances"
 L["Difficulty"] = "Difficulty"
 L["Pets"] = "Pets"
@@ -154,8 +155,6 @@ L["Available / Total"] = "Available / Total"
 L["Shows the quest reward."] = "Shows the quest reward."
 
 -- Queuing
-L["Enqueuing %s"] = "Enqueuing %s"
-L["Dequeuing %s"] = "Dequeuing %s"
 L["Enqueued all non lock %s %s."] = "Enqueued all non lock %s %s."
 L["Enqueued too many instances: %s"] = "Enqueued too many instances: %s"
 L["Listing removed."] = "Listing removed."
@@ -174,6 +173,14 @@ L["Spec Shift Click"] = "Opens/Closes/Switches the Spec's Talent frame tab."
 L["ActivateSpecLoad"] = "Please activate the spec to load items."
 L["Section"] = "Expand/Collapse the section."
 L["Glyphs Shift Click"] = "Opens the Glyphs Talent frame tab."
+
+-- LFD
+L["LFD"] = "LFD"
+L["Type"] = "Type"
+L["LFD Click"] = "Queue/Dequeue LFD"
+L["LFD Shift Click"] = "Open LFD selection"
+L["LFD Instance Click"] = "Select specific instance"
+L["LFD Instance Shift Click"] = "Open instance difficulty"
 
 -- Professions Tab
 L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."

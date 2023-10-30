@@ -79,3 +79,39 @@ function UI:openResetOptionsFrame()
         end)
     end
 end
+
+UI.DropdownFrame = CreateFrame("Frame", "ICTCellDropdown", UIParent, "InsetFrameTemplate")
+function UI:cellDropdown(reference, f)
+    return function()
+        local frame = UI.DropdownFrame
+        -- Double click hides the frame.
+        if frame:IsVisible() then
+            frame:Hide()
+            return
+        end
+        frame:Show()
+        frame:SetWidth(UI.cellWidth + 10)
+        frame:ClearAllPoints()
+        frame:SetPoint("TOP", reference.frame, "BOTTOM", 0, 0)
+        frame:SetFrameStrata("DIALOG")
+
+        local inset = CreateFrame("Frame", "ICTCellDropdownInset", frame)
+        inset:SetAllPoints(frame)
+        inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -6)
+        inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -3, 3)
+        frame.cells = frame.cells or ICT.Cells:new(inset)
+        frame.cells:hide()
+
+        local rows = f(frame)
+        frame:SetHeight(UI.cellHeight * rows  + 12)
+        _ = frame.ticker and frame.ticker:Cancel()
+
+        local update = function(self)
+            if not(MouseIsOver(reference.frame) or MouseIsOver(frame)) then
+                frame:Hide()
+                self:Cancel()
+            end
+        end
+        frame.ticker = C_Timer.NewTicker(.5, update)
+    end
+end

@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
+local LFD = ICT.LFD
 local Player = ICT.Player
 local Reset = ICT.Reset
 local Talents = ICT.Talents
@@ -187,27 +188,6 @@ function MainTab:printCharacterInfo(player, x, y)
     return y
 end
 
-local function enqueueAll(title, subTitle, instances)
-    return function()
-        local info = C_LFGList.GetActiveEntryInfo()
-        if info == nil then
-            local queuedIds = {}
-            for _, instance in pairs(instances) do
-                instance:enqueue(queuedIds, false, false)
-            end
-            C_LFGList.CreateListing(queuedIds)
-            if #queuedIds > 41 then
-                ICT:print(L["Enqueued too many instances: {0}"], #queuedIds)
-            else
-                ICT:oprint(L["Enqueued all non lock %s %s."], "lfg", ICT.Expansions[title], subTitle)
-            end
-        else
-            C_LFGList.RemoveListing()
-            ICT:oprint(L["Listing removed."], "lfg")
-        end
-    end
-end
-
 -- Prints all the instances with associated tooltips.
 function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     if size == 0 then
@@ -218,24 +198,18 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     local key = title .. subTitle
     y = cell:printSectionTitle(subTitle, key)
     Tooltips:instanceSectionTooltip():attach(cell)
-    local canQueue = not IsInGroup() or UnitIsGroupLeader("player")
-    local cantQueue = function() ICT:print(L["Cannot queue, not currently the group leader."]) end
-    if false and player:isCurrentPlayer() then
-        local f = canQueue and enqueueAll(title, subTitle, instances) or cantQueue
-        local tooltip = function(tooltip) tooltip:printTitle(L["Enqueue Instances"]):printPlain(L["Enqueue Instances Body"]) end
-        cell:attachButton("ICTEnqueueAll", tooltip, f)
-    end
 
     -- If the section is collapsible then short circuit here.
     if cell:isSectionExpanded(key) then
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
-                local color = player:isCurrentPlayer() and instance:queued() and Colors:getSelectedQueueColor(instance.locked) or Colors:getSelectedColor(instance.locked)
+                local color = Colors:getSelectedColor(instance.locked)
                 cell = self.cells(x, y)
                 y = cell:printLine(instance:getName(), color)
                 Tooltips:instanceTooltip(player, instance):attach(cell)
-                if false and player:isCurrentPlayer() then
-                    cell:attachClick(UI:enqueue(instance), UI:foo(cell, instance))
+                if player:isCurrentPlayer() and not instance.locked then
+                    cell:printLFDInstance(instance)
+                    cell:attachClick(LFD:selectInstance(cell, instance), LFD:specificDropdown(cell, instance))
                 end
             end
         end
@@ -245,6 +219,15 @@ end
 
 function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
+
+    if player:isCurrentPlayer() then
+        local cell = self.cells(x, y)
+        y = cell:printLFDType(LFDQueueFrame.type)
+        cell:attachClick(LFD:queue(cell), LFD:randomDropdown(cell))
+    else
+        y = self.cells(x, y):hide()
+    end
+
     for expansion, name in ICT:rspairs(ICT.Expansions) do
         local sizes = {}
         for k, v in ipairs(subSections) do

@@ -215,18 +215,6 @@ local queueFrame = CreateFrame("Frame")
 queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
-local function setSearching(self, event, value)
-    if event == "LFG_LIST_ACTIVE_ENTRY_UPDATE" then
-        ICT.searching = ICT.searching and value ~= nil
-    elseif event == "LFG_LIST_SEARCH_RESULTS_RECEIVED" then
-        ICT.searching = true
-    end
-end
-local fooFrame = CreateFrame("Frame")
-fooFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
-fooFrame:RegisterEvent("LFG_LIST_SEARCH_RESULTS_RECEIVED")
-fooFrame:SetScript("OnEvent", setSearching)
-
 -- message and add option
 local function messageResults(player, instance)
     -- Only broadcast if we are locked and collected something...

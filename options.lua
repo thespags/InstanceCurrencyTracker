@@ -81,15 +81,6 @@ function Options:setDefaultOptions(override)
         end
     end
 
-    -- Set the highest dungeon difficulty on by default.
-    if not options.difficulty or override then
-        options.difficulty = {}
-        local size = #ICT.DifficultyInfo
-        for k, _ in ipairs(ICT.DifficultyInfo) do
-            options.difficulty[k] = k == size
-        end
-    end
-
     -- Set all WOTLK instances on by default.
     if not options.displayInstances or override then
         options.displayInstances = { [0] = {}, [1] = {}, [2] = {}, }
@@ -346,7 +337,6 @@ function Options:CreateOptionDropdown()
                 addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
                 addObjectsOption(L["Reset Timers"], ICT.Resets, level)
                 addObjectsOption(L["Instances"], Instances.infos(), level)
-                -- addObjectsOption(L["Difficulty"], ICT.DifficultyInfo, level)
                 addMenuOption(L["Quests"], ICT.db.options.quests, level)
                 addObjectsOption(L["Currency"], ICT.Currencies, level)
                 addObjectsOption(L["Cooldowns"], ICT.Cooldowns, level)
@@ -365,10 +355,6 @@ function Options:CreateOptionDropdown()
                     end
                 elseif menuList == L["Instances"] then
                     addExpansionOptions(Instances.infos(), menuList, level)
-                elseif menuList == L["Difficulty"] then
-                    for _, v in ipairs(ICT.DifficultyInfo) do
-                        addObjectOption(v, level)
-                    end
                 elseif menuList == L["Quests"] then
                     addOptions(questOptions, "quests", level)
                 elseif menuList == L["Currency"] then

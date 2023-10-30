@@ -102,7 +102,6 @@ function ProfessionsTab:printProfession(player, profession, x, y)
             y = cell:printLine(L["OpenTradeSkills"], ICT.textColor)
             if player:isCurrentPlayer() then
                 cell:attachClick(function() self:updateSkills(player, skillLine) end)
-                cell.frame:SetHighlightTexture("auctionhouse-nav-button-highlight")
             end
         end
     end

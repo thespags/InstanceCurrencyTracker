@@ -3,7 +3,6 @@
   <Script file="cooldowns.lua"/>
   <Script file="currency.lua"/>
   <Script file="currencies.lua"/>
-  <Script file="difficulty.lua"/>
   <Script file="instance.lua"/>
   <Script file="pet.lua"/>
   <Script file="reset.lua"/>

@@ -149,6 +149,32 @@
         "GLYPH_TALENT_TAB",
         "DEFAULT_TALENT_TAB",
         "TalentFrame_UpdateSpecInfoCache",
-        "GroupFinderFrame"
+        "GroupFinderFrame",
+        "PlayerHasToy",
+        "C_ToyBox",
+        "YOU_MAY_NOT_QUEUE_FOR_THIS",
+        "LFGConstructDeclinedMessage",
+        "LFG_UpdateFramesIfShown",
+        "SetLFGDungeonEnabled",
+        "JoinLFG",
+        "GetLFGRandomDungeonInfo",
+        "GetNumRandomDungeons",
+        "IsLFGDungeonJoinable",
+        "LFDQueueFrameTypeDropDownButton_OnClick",
+        "MouseIsOver",
+        "LE_LFG_CATEGORY_LFD",
+        "SetLFGDungeon",
+        "ClearAllLFGDungeons",
+        "LFDQueueFrame",
+        "SPECIFIC_DUNGEONS",
+        "LFDQueueFrame_SetType",
+        "LFDQueueFrameRandom_UpdateFrame",
+        "LFDQueueFrameSpecificList_Update",
+        "LFGDungeonList_EvaluateListState",
+        "LeaveLFG",
+        "LFDQueueFrame_Join"
+    ],
+    "Lua.diagnostics.disable": [
+        "unused-function"
     ]
 }

@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
+local LFD = ICT.LFD
 local UI = ICT.UI
 local Cells = {}
 setmetatable(Cells, Cells)
@@ -148,7 +149,7 @@ function Cell:attachHyperLink(f)
         GameTooltip:SetOwner(self.frame, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(link)
         GameTooltip:Show()
-        _ = f and self.frame:SetNormalTexture("auctionhouse-nav-button-highlight")
+        _ = f and self.frame:SetNormalTexture("groupfinder-highlightbar-green")
     end)
     self.frame:SetScript("OnHyperlinkLeave", function()
         GameTooltip:Hide()
@@ -158,20 +159,20 @@ end
 
 function Cell:attachClickHover()
     local indent = self.parent.indent
-    local leftColor = self.leftColor
+    -- local leftColor = self.leftColor
     self.frame:HookScript("OnEnter", function()
         local old = self.parent.indent
         self.parent.indent = indent
         self.hover = true
-        self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
+        self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
         self.parent.indent = old
-        self.frame:SetNormalTexture("auctionhouse-nav-button-highlight")
+        self.frame:SetNormalTexture("groupfinder-highlightbar-green")
     end)
     self.frame:HookScript("OnLeave", function()
         local old = self.parent.indent
         self.parent.indent = indent
         self.hover = false
-        self:printValue(self.leftText, self.rightText, leftColor, self.rightColor)
+        self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
         self.parent.indent = old
         self.frame:SetNormalTexture("groupfinder-button-cover")
     end)
@@ -210,6 +211,29 @@ function Cell:printSectionTitleValue(title, value, key, color)
     self:printValue(title, value, color or ICT.sectionColor)
     self:attachSectionButton(key)
     return self.y + 1
+end
+
+function Cell:printLFDInstance(instance)
+    local color = LFD:anySelected(instance) and ICT.queuedAvailableColor or ICT.availableColor
+    return self:printLine(instance:getName(), color)
+end
+
+function Cell:printLFDType(id, name)
+    local _, queued = LFGDungeonList_EvaluateListState(LE_LFG_CATEGORY_LFD)
+    local color = id == LFDQueueFrame.type and (queued and ICT.lockedColor or ICT.queuedLockedColor) or ICT.availableColor
+    name = name or LFD:getName(id)
+    name = name == "" and SPECIFIC_DUNGEONS or name
+    local f = function(tooltip)
+        tooltip:printTitle(L["LFD"])
+        :printPlain(L["Type"])
+        :printValue(L["Click"], L["LFD Click"])
+        :printValue(L["Shift Click"], L["LFD Shift Click"])
+        :printPlain(L["Instance"])
+        :printValue(L["Click"], L["LFD Instance Click"])
+        :printValue(L["Shift Click"], L["LFD Instance Shift Click"])
+    end
+    ICT.Tooltip:new(f):attach(self)
+    return self:printLine(name, color)
 end
 
 function Cell:attachShiftClick(hookOnShiftClick)
@@ -273,6 +297,26 @@ function Cell:attachSectionButton(key, tooltip)
             ICT.db.options.collapsible[key] = not ICT.db.options.collapsible[key]
             UI:PrintPlayers()
         end)
+    button:Show()
+    return button
+end
+
+function Cell:attachCheckButton(key)
+    local button = self.buttons[key]
+    if not button then
+        button = CreateFrame("CheckButton", key, self.frame)
+        self.buttons[key] = button
+        button:SetParent(self.frame)
+        local x = string.len(self.parent.indent)
+        button:SetSize(14, 14)
+        button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
+        button:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+        button:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+        button:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
+        button:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        button:SetDisabledCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check-Disabled")
+        -- _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
+    end
     button:Show()
     return button
 end

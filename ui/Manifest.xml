@@ -1,10 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Script file="ui.lua"/>
+  <Script file="common.lua"/>
+  <Script file="lfd.lua"/>
   <Script file="cells.lua"/>
   <Script file="tooltip.lua"/>
   <Script file="tooltips.lua"/>
   <Script file="talents.lua"/>
-  <Script file="common.lua"/>
   <Script file="tab-main.lua"/>
   <Script file="tab-gear.lua"/>
   <Script file="tab-professions.lua"/>
