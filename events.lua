@@ -84,7 +84,6 @@ local function initEvent(self, event, eventAddOn)
         end
         ICT.db.version = version
 
-        print("sdf")
         initMinimap()
         for k, player in pairs(ICT.db.players) do
             -- Recreate the player with any new functions.
