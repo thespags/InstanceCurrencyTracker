@@ -668,14 +668,14 @@ infos = {
         resets = { [5] = 1, },
         sizes = { 5 },
     },
-    -- [724] = {
-    --     activities = { [10] = { 1108, 1256 }, [25] = { 1109, 1265 }, },
-    --     encounters = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" },
-    --     expansion = 2,
-    --     lastBossIndex = 4,
-    --     resets = { [10] = 7, [25] = 7, },
-    --     sizes = { 10, 25 },
-    -- },
+    [724] = {
+        activities = { [10] = { 1108, 1256 }, [25] = { 1109, 1265 }, },
+        encounters = { "Baltharus the Warborn", "Saviana Ragefire", "General Zarithrian", "Halion" },
+        expansion = 2,
+        lastBossIndex = 4,
+        resets = { [10] = 7, [25] = 7, },
+        sizes = { 10, 25 },
+    },
 }
 
 for k, v in pairs(infos) do

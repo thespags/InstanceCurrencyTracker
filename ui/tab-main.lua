@@ -66,7 +66,7 @@ function MainTab:printCharacterInfo(player, x, y)
     y = self.cells(x, y):printOptionalValue(options.player.showDurability, L["Durability"], player.durability and string.format("%.0f%%", player.durability), nil, durabilityColor)
     y = self.cells:hideRows(x, y, padding)
     local spec = player:getSpec()
-    local tooltip = Tooltips:specTooltip(player, spec)
+    local tooltip = Tooltips:specTooltip(spec)
     y = UI:printGearScore(self, spec, tooltip, x, y)
 
     padding = self:getPadding(y, "rested")
@@ -351,13 +351,19 @@ function MainTab:prePrint()
     self:calculateGold()
 end
 
+local tickerSpacing = function()
+    -- Adjust spacing to fit enough apart but within the minimum size.
+    -- This could probably be derived from the cell width (i.e. minimum), but it works
+    return 55 + (UI:getFontSize() - 10) * 5
+end
+
 function MainTab:postPrint()
     local selected = ICT.db.selectedTab == self.button:GetID()
     if selected and ICT.db.options.multiPlayerView then
         local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
         local tooltip = Tooltips:timerSectionTooltip()
-        -- local start = 32 + -60 * count / 2
-        local start = 28 + -55 * count / 2
+
+        local start = -tickerSpacing() * (count - 1) / 2
         local frame = nil
         for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
             start, frame = self:printMultiViewResetTicker(start, v:getName(), v:expires(), v:duration())
@@ -372,13 +378,14 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
         frame = CreateFrame("Button", "ICTReset" .. title, ICT.frame)
         frame:SetAlpha(1)
         frame:SetIgnoreParentAlpha(true)
-        frame:SetSize(UI.cellWidth, UI.cellHeight)
+        frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
         local textField = frame:CreateFontString()
         textField:SetPoint("CENTER")
-        textField:SetFont(UI.font, 10)
+        textField:SetFont(UI.font, UI:getFontSize())
         textField:SetJustifyH("LEFT")
         frame.textField = textField
     end
+    -- TODO check here for size changes
     frame:SetPoint("TOP", x, -36)
     frame:Show()
     local update = function(self)
@@ -388,7 +395,7 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
     end
     self.tickers[title] = { ticker = C_Timer.NewTicker(1, update), frame = frame }
     update()
-    return x + 55, frame
+    return x + tickerSpacing(), frame
 end
 
 function MainTab:show()

@@ -16,4 +16,5 @@ player.lua
 items.lua
 ui\Manifest.xml
 options.lua
+commands.lua
 events.lua

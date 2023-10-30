@@ -9,10 +9,14 @@ local frame = CreateFrame("Frame", "ICTTooltip", UIParent, "TooltipBorderedFrame
 frame:SetBackdropColor(0, 0, 0, 1);
 frame:SetFrameStrata("DIALOG")
 frame:Hide()
-frame.textField = frame:CreateFontString()
-frame.textField:SetPoint("CENTER")
-frame.textField:SetFont(UI.font, 10)
-frame.textField:SetJustifyH("LEFT")
+
+local createTextField = function()
+    local textField = frame:CreateFontString()
+    textField:SetPoint("CENTER")
+    textField:SetFont(UI.font, UI:getFontSize())
+    textField:SetJustifyH("LEFT")
+    return textField
+end
 
 function Tooltip:new(f)
     local o = { f = f }
@@ -28,6 +32,7 @@ local function tooltipEnter(reference, tooltip)
             tooltip.f(tooltip)
             tooltip.cachedText = table.concat(tooltip.text)
         end
+        frame.textField = frame.textField or createTextField()
         frame.textField:SetText(tooltip.cachedText)
         frame:SetWidth(frame.textField:GetStringWidth() + 18)
         frame:SetHeight(frame.textField:GetStringHeight() + 12)

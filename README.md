@@ -93,7 +93,7 @@ _Controls the characters visible based on level._
 **White** Available Instances and Dailies  
 **Red** Dailies where you don't meet the prerequisites  
 
-## Wiping Data
+## Slash Commands
 \# current player  
 `/ict wipe`  
 \# specific player  
@@ -102,3 +102,5 @@ _Controls the characters visible based on level._
 `/ict wipe realm {REALM_NAME}`  
 \# all players  
 `/ict wipe all`
+\# change font (requires a reload)
+`/ict font {small | medium | large}`

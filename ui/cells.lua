@@ -37,8 +37,8 @@ function Cells:__call(x, y)
     if not cell then
         cell = Cell(self, x, y)
         cell.frame = CreateFrame("Button", name, self.frame, "InsecureActionButtonTemplate")
-        cell.frame:SetSize(UI.cellWidth, UI.cellHeight)
-        cell.frame:SetPoint("TOPLEFT", (x - 1) * UI.cellWidth, -(y - 1) * UI.cellHeight)
+        cell.frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
+        cell.frame:SetPoint("TOPLEFT", (x - 1) * UI:getCellWidth(), -(y - 1) * UI:getCellHeight())
         cell.buttons = {}
         self.cells[name] = cell
 
@@ -46,12 +46,12 @@ function Cells:__call(x, y)
         cell.left = cell.frame:CreateFontString()
         cell.left:SetPoint("LEFT")
         cell.left:SetJustifyH("LEFT")
-        cell.left:SetFont(UI.font, 10)
+        cell.left:SetFont(UI.font, UI:getFontSize())
 
         cell.right = cell.frame:CreateFontString()
         cell.right:SetPoint("RIGHT", 4, 0)
         cell.right:SetJustifyH("RIGHT")
-        cell.right:SetFont(UI.font, 10)
+        cell.right:SetFont(UI.font, UI:getFontSize())
 
         cell.frame:RegisterForClicks("AnyUp")
         cell.frame:HookScript("OnClick",

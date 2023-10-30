@@ -3,21 +3,14 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 
 local UI = {
-    -- Individual cell size for each position in the frame.
-    cellWidth = 200,
-    cellHeight = 10,
-    -- Default frame size.
-    defaultWidth = 260,
-    defaultHeight = 600,
     -- Default frame location.
     defaultX = 400,
     defaultY = 800,
     maxX = 0,
     maxY = 0,
-    -- Store tickers so we can turn them off on frame reloads.
-    tickers = {},
     --font = "Fonts\\FRIZQT__.TTF"
     font = "Fonts\\ARIALN.ttf",
+    fontSize = 10,
 }
 ICT.UI = UI
 
@@ -30,6 +23,34 @@ local function enableMoving(frame)
         ICT.db.Y = frame:GetTop()
         frame:StopMovingOrSizing(self)
     end)
+end
+
+function UI:getFontSize()
+    return ICT.db.fontSize or UI.fontSize
+end
+
+function UI:getCellWidth()
+    return self:getFontSize() * 20
+end
+
+function UI:getCellHeight()
+    return self:getFontSize()
+end
+
+function UI:getMinWidth()
+    return UI:getCellWidth() + 5
+end
+
+function UI:getMinHeight()
+    return 600
+end
+
+function UI:calculateWidth(x)
+    return math.max(self:getMinWidth(), x * self:getCellWidth())
+end
+
+function UI:calculateHeight(y)
+    return math.max(self:getMinHeight(), y * self:getCellHeight())
 end
 
 function UI:CreateFrame()
@@ -65,10 +86,10 @@ function UI:CreateFrame()
 end
 
 function UI:drawFrame(x, y, width, height)
-    ICT.db.X = x or self.defaultX
-	ICT.db.Y = y or self.defaultY
-    ICT.db.width = width or self.defaultWidth
-    ICT.db.height = height or self.defaultHeight
+    ICT.db.X = x
+	ICT.db.Y = y
+    ICT.db.width = width
+    ICT.db.height = height
     ICT.frame:ClearAllPoints()
     ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", ICT.db.X, ICT.db.Y)
     ICT.frame:SetSize(ICT.db.width, ICT.db.height)
@@ -101,14 +122,6 @@ function UI:resetFrameButton()
         self:drawFrame(self.defaultX, self.defaultY, self:calculateWidth(self.maxX) + 50, self:calculateHeight(self.maxY))
     end)
     ICT.Tooltips:new("Reset size and position"):attachFrame(button)
-end
-
-function UI:calculateWidth(x)
-    return math.max(self.defaultWidth, x * self.cellWidth)
-end
-
-function UI:calculateHeight(y)
-    return math.max(self.defaultHeight, y * self.cellHeight)
 end
 
 function UI:updateFrameSizes(fame, x, y)
@@ -192,7 +205,7 @@ function UI:selectTab(tab)
         for i=1,parent.numTabs do
             parent.tabs[i]:hide()
         end
-            ICT.db.selectedTab = tab.button:GetID()
+        ICT.db.selectedTab = tab.button:GetID()
         self:PrintPlayers()
         tab:show()
         if tab.OnSelect then
@@ -263,7 +276,7 @@ function UI:PrintPlayers()
     end
     self.maxX = maxX
     self.maxY = maxY
-    ICT.resize:Init(ICT.frame, self.cellWidth + 40, self.defaultHeight - 200, self:calculateWidth(maxX) + 50, self:calculateHeight(maxY))
+    ICT.resize:Init(ICT.frame, self:getMinWidth() + 40, self:getMinHeight(), self:calculateWidth(maxX) + 50, self:calculateHeight(maxY))
 end
 
 -- Taken from NIT
