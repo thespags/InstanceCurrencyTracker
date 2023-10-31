@@ -90,7 +90,7 @@ function UI:cellDropdown(reference, f)
             return
         end
         frame:Show()
-        frame:SetWidth(UI.cellWidth + 10)
+        frame:SetWidth(UI:getCellWidth() + 10)
         frame:ClearAllPoints()
         frame:SetPoint("TOP", reference.frame, "BOTTOM", 0, 0)
         frame:SetFrameStrata("DIALOG")
@@ -103,7 +103,7 @@ function UI:cellDropdown(reference, f)
         frame.cells:hide()
 
         local rows = f(frame)
-        frame:SetHeight(UI.cellHeight * rows  + 12)
+        frame:SetHeight(UI:getCellHeight() * rows  + 12)
         _ = frame.ticker and frame.ticker:Cancel()
 
         local update = function(self)
