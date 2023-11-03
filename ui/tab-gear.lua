@@ -42,7 +42,7 @@ end
 function GearTab:printGlyph(spec, type, typeName, x, y)
     for index, glyph in ICT:fpairsByValue(spec.glyphs, function(v) return v.type == type and v.enabled end) do
         local name = ICT:getSpellLink(glyph.spellId)
-        local nameWithIcon = name and string.format("%s|T%s:14|t", name, glyph.icon) or L["Missing"]
+        local nameWithIcon = name and string.format("%s|T%s:%s|t", name, glyph.icon, UI.iconSize) or L["Missing"]
         local cell = self.cells(x, y)
         y = cell:printValue(typeName .. " " .. index, nameWithIcon)
         cell:attachHyperLink()
@@ -78,7 +78,7 @@ function GearTab:printSpec(player, x, y, spec)
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
     local key = "Spec" .. (ICT.db.options.gear.showSpecs and spec.id or "")
-    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
+    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, UI.iconSize, UI.iconSize) or ""
     local sectionName = icon .. (spec.name or key)
     local cell = self.cells(x, y)
     local isActive = spec.id == player.activeSpec

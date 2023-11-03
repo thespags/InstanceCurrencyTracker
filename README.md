@@ -102,5 +102,5 @@ _Controls the characters visible based on level._
 `/ict wipe realm {REALM_NAME}`  
 \# all players  
 `/ict wipe all`
-\# change font (requires a reload)
-`/ict font {small | medium | large}`
+\# change font (recommended values 10-24)ß
+`/ict font {number}

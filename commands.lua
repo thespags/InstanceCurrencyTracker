@@ -36,17 +36,11 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
         -- Refresh frame
         ICT:UpdateDisplay()
     elseif command == "font" then
-        if rest == "small" then
-            ICT.db.fontSize = 10
-            ICT:print("Font change requires a reload")
-        elseif rest == "medium" then
-            ICT.db.fontSize = 12
-            ICT:print("Font change requires a reload")
-        elseif rest == "large" then
-            ICT.db.fontSize = 14
-            ICT:print("Font change requires a reload")
+        local fontSize = tonumber(rest)
+        if fontSize and fontSize > 0 then
+            ICT.db.fontSize = tonumber(rest)
         else
-            ICT:print("Invalid size (small/medium/large)")
+            ICT:print("Invalid size, must be a positive number.")
         end
         ICT:UpdateDisplay()
     elseif rest == "" then

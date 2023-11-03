@@ -13,7 +13,6 @@ frame:Hide()
 local createTextField = function()
     local textField = frame:CreateFontString()
     textField:SetPoint("CENTER")
-    textField:SetFont(UI.font, UI:getFontSize())
     textField:SetJustifyH("LEFT")
     return textField
 end
@@ -33,6 +32,7 @@ local function tooltipEnter(reference, tooltip)
             tooltip.cachedText = table.concat(tooltip.text)
         end
         frame.textField = frame.textField or createTextField()
+        frame.textField:SetFont(UI.font, UI:getFontSize())
         frame.textField:SetText(tooltip.cachedText)
         frame:SetWidth(frame.textField:GetStringWidth() + 18)
         frame:SetHeight(frame.textField:GetStringHeight() + 12)

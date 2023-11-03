@@ -127,7 +127,7 @@ function Tooltips:instanceTooltip(player, instance)
             if currency:isVisible() and max ~= 0 then
                 tooltip:printSection(L["Currency"])
                 local available = instance:availableCurrency(currency)
-                tooltip:printValue(currency:getNameWithIconTooltip(), string.format("%s/%s", available, max))
+                tooltip:printValue(currency:getNameWithIcon(), string.format("%s/%s", available, max))
             end
         end
     end
@@ -197,7 +197,7 @@ end
 -- Tooltip for currency information upon entering the cell.
 function Tooltips:currencyTooltip(selectedPlayer, currency)
     local f = function(tooltip)
-        tooltip:printTitle(currency:getNameWithIconTooltip())
+        tooltip:printTitle(currency:getNameWithIcon())
 
         for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do
             local available = player:availableCurrency(currency)
@@ -220,7 +220,7 @@ function Tooltips:questTooltip(name, quest)
         tooltip:printTitle(name)
 
         for currency, amount in ICT:spairs(quest.currencies) do
-            tooltip:printValue(currency:getNameWithIconTooltip(), amount)
+            tooltip:printValue(currency:getNameWithIcon(), amount)
         end
 
         for _, player in ICT:nspairsByValue(ICT.db.players, Player.isEnabled) do

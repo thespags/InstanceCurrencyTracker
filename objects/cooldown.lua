@@ -68,7 +68,7 @@ function Cooldown:isToy()
 end
 
 function Cooldown:getNameWithIcon()
-    self.nameWithIcon = self.nameWithIcon or string.format("|T%s:14|t%s", self.info.icon, self.info.name)
+    self.nameWithIcon = self.nameWithIcon or string.format("|T%s:%s|t%s", self.info.icon, ICT.UI.iconSize, self.info.name)
     return self.nameWithIcon
 end
 

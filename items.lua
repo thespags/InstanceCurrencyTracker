@@ -85,15 +85,15 @@ function ICT:addGems(k, item, missingOnly)
     local gemTotal = 0
     local text = {}
     for _, gem in pairs(item.gems) do
-        _ = not missingOnly and tinsert(text, string.format("|T%s:14|t", gem))
+        _ = not missingOnly and tinsert(text, string.format("|T%s:%s|t", gem, ICT.UI.iconSize))
         gemTotal = gemTotal + 1
     end
     -- Add '?' if you are missing ids.
     for _=gemTotal + 1,item.socketTotals do
-        tinsert(text, "|T134400:14|t")
+        tinsert(text, string.format("|T134400:%s|t", ICT.UI.iconSize))
     end
     if gemTotal < item.socketTotals and item.extraSocket then
-        tinsert(text, string.format("|T%s:14|t", ICT.CheckSlotSocket[k].icon))
+        tinsert(text, string.format("|T%s:%s|t", ICT.CheckSlotSocket[k].icon, ICT.UI.iconSize))
     end
     return table.concat(text)
 end

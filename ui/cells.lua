@@ -38,8 +38,6 @@ function Cells:__call(x, y)
     if not cell then
         cell = Cell(self, x, y)
         cell.frame = CreateFrame("Button", name, self.frame, "InsecureActionButtonTemplate")
-        cell.frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
-        cell.frame:SetPoint("TOPLEFT", (x - 1) * UI:getCellWidth(), -(y - 1) * UI:getCellHeight())
         cell.buttons = {}
         self.cells[name] = cell
 
@@ -47,12 +45,10 @@ function Cells:__call(x, y)
         cell.left = cell.frame:CreateFontString()
         cell.left:SetPoint("LEFT")
         cell.left:SetJustifyH("LEFT")
-        cell.left:SetFont(UI.font, UI:getFontSize())
 
         cell.right = cell.frame:CreateFontString()
         cell.right:SetPoint("RIGHT", 4, 0)
         cell.right:SetJustifyH("RIGHT")
-        cell.right:SetFont(UI.font, UI:getFontSize())
 
         cell.frame:RegisterForClicks("AnyUp")
         cell.frame:HookScript("OnClick",
@@ -65,6 +61,11 @@ function Cells:__call(x, y)
             end
         )
     end
+    cell.frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
+    cell.frame:SetPoint("TOPLEFT", (x - 1) * UI:getCellWidth(), -(y - 1) * UI:getCellHeight())
+    cell.left:SetFont(UI.font, UI:getFontSize())
+    cell.right:SetFont(UI.font, UI:getFontSize())
+
     _ = cell.ticker and cell.ticker:Cancel()
     -- Remove any cell action so we can reuse the cell.
     for _, button in pairs(cell.buttons) do
@@ -258,13 +259,13 @@ function Cell:attachButton(key, tooltip, click, shiftClick)
     local button = self.buttons[name]
     if not button then
         button = CreateFrame("Button", name, self.frame, "UIPanelButtonTemplate")
-        self.buttons[name] = button
+        self.buttons[name] = button 
         button:SetParent(self.frame)
-        button:SetSize(12, 12)
         button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture(134396)
         ICT.Tooltip:new(tooltip):attachFrame(button)
     end
+    button:SetSize(UI:getFontSize(), UI:getFontSize())
     button:SetScript("OnClick",
         function()
             if shiftClick and IsShiftKeyDown() then
@@ -284,11 +285,11 @@ function Cell:attachSectionButton(key, tooltip)
         self.buttons[key] = button
         button:SetParent(self.frame)
         local x = string.len(self.parent.indent)
-        button:SetSize(10, 10)
         button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
         button:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight")
         _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
     end
+    button:SetSize(UI:getFontSize(), UI:getFontSize())
     local expanded = ICT.db.options.collapsible[key]
     local icon = expanded and "Interface\\Buttons\\UI-PlusButton-UP" or "Interface\\Buttons\\UI-MinusButton-UP"
     button:SetNormalTexture(icon)
@@ -308,7 +309,7 @@ function Cell:attachCheckButton(key)
         self.buttons[key] = button
         button:SetParent(self.frame)
         local x = string.len(self.parent.indent)
-        button:SetSize(14, 14)
+        button:SetSize(UI.getFontSize(), UI.getFontSize())
         button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
         button:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
         button:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")

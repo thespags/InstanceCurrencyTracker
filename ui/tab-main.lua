@@ -123,7 +123,7 @@ function MainTab:printCharacterInfo(player, x, y)
                 if Talents:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
                     cell = self.cells(x, y)
-                    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, 14, 14) or ""
+                    local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, UI.iconSize, UI.iconSize) or ""
                     local name = icon .. (spec.name or "")
                     y = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
                     local f = function(tooltip)
@@ -151,7 +151,7 @@ function MainTab:printCharacterInfo(player, x, y)
             padding = self:getPadding(y, "professions")
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
-                local nameWithIcon = v.icon and string.format("|T%s:14|t%s", v.icon, v.name) or v.name
+                local nameWithIcon = v.icon and string.format("|T%s:%s|t%s", v.icon, UI.iconSize, v.name) or v.name
                 cell = self.cells(x, y)
                 y = cell:printValue(nameWithIcon, string.format("%s/%s", v.rank, v.max))
                 if v.spellId and player:isCurrentPlayer() then
@@ -361,14 +361,12 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
         frame = CreateFrame("Button", "ICTReset" .. title, ICT.frame)
         frame:SetAlpha(1)
         frame:SetIgnoreParentAlpha(true)
-        frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
-        local textField = frame:CreateFontString()
-        textField:SetPoint("CENTER")
-        textField:SetFont(UI.font, UI:getFontSize())
-        textField:SetJustifyH("LEFT")
-        frame.textField = textField
+        frame.textField = frame:CreateFontString()
+        frame.textField:SetPoint("CENTER")
+        frame.textField:SetJustifyH("LEFT")
     end
-    -- TODO check here for size changes
+    frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
+    frame.textField:SetFont(UI.font, math.min(16, UI:getFontSize()))
     frame:SetPoint("TOP", x, -36)
     frame:Show()
     local update = function(self)

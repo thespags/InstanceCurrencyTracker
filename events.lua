@@ -15,7 +15,6 @@ local function getOrCreateDb()
     ICT:putIfAbsent(db, "players", {})
     ICT:putIfAbsent(db, "options", {})
     ICT:putIfAbsent(db.options, "collapsible", {})
-    -- ICT:putIfAbsent(db.options.collapsible, "Info", true)
     db.reset = db.reset or { [1] = C_DateAndTime.GetSecondsUntilDailyReset() + GetServerTime(), [7] = C_DateAndTime.GetSecondsUntilWeeklyReset() + GetServerTime() }
     return db
 end
@@ -99,7 +98,7 @@ local function initEvent(self, event, eventAddOn)
         ICT.UI:CreateFrame()
         ICT.selectedPlayer = Player.GetCurrentPlayer()
         ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
-        ICT:print(L["Blizzard often changes emblem amounts if you notice a boss off please report to discord: %s"], version)
+        ICT:print(L["Blizzard often changes emblem amounts if you notice a boss off please report to discord: %s"], "https://discord.gg/yY6Q6EgNRu")
         if GroupFinderFrame then
             GroupFinderFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
             GroupFinderFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)

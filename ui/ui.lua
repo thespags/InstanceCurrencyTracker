@@ -11,6 +11,7 @@ local UI = {
     --font = "Fonts\\FRIZQT__.TTF"
     font = "Fonts\\ARIALN.ttf",
     fontSize = 10,
+    iconSize = 12,
 }
 ICT.UI = UI
 

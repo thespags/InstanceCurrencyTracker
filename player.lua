@@ -514,7 +514,7 @@ function Player:getFullName()
 end
 
 function Player:getNameWithIcon()
-   return string.format("|T%s:14|t%s", ICT.ClassIcons[self.class], self:getName())
+   return string.format("|T%s:%s|t%s", ICT.ClassIcons[self.class], ICT.UI.iconSize, self:getName())
 end
 
 function Player:getClassColor()

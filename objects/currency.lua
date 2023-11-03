@@ -22,14 +22,8 @@ end
 
 -- Creates a string with the icon and name of the provided currency.
 function Currency:getNameWithIcon()
-    self.nameWithIcon = self.nameWithIcon or getNameWithIconTooltipSize(self.id, 14)
+    self.nameWithIcon = self.nameWithIcon or getNameWithIconTooltipSize(self.id, ICT.UI.iconSize)
     return self.nameWithIcon
-end
-
--- Creates a string with the icon and name of the provided currency.
-function Currency:getNameWithIconTooltip()
-    self.nameWithIconTooltip = self.nameWithIconTooltip or getNameWithIconTooltipSize(self.id, 14)
-    return self.nameWithIconTooltip
 end
 
 -- Returns the amount of currency the player has for the currency provided.
