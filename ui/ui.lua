@@ -87,10 +87,10 @@ function UI:CreateFrame()
 end
 
 function UI:drawFrame(x, y, width, height)
-    ICT.db.X = x
-	ICT.db.Y = y
-    ICT.db.width = width or UI:getMinWidth()
-    ICT.db.height = height or UI:getMinHeight()
+    ICT.db.X = x or self.defaultX
+    ICT.db.Y = y or self.defaultY
+    ICT.db.width = width or self:getMinWidth()
+    ICT.db.height = height or self:getMinHeight()
     ICT.frame:ClearAllPoints()
     ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", ICT.db.X, ICT.db.Y)
     ICT.frame:SetSize(ICT.db.width, ICT.db.height)
