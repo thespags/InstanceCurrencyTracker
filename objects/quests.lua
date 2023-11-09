@@ -63,7 +63,7 @@ ICT.QuestInfo = {
     ["ICC Weekly"] = {
         name = ICT:returnX("ICC Weekly"),
         ids = { 24876 },
-        currencies = { [ICT.Frost] = 10 },
+        currencies = { [ICT.Frost] = 5 },
         prereq = level80,
         weekly = true
     },
