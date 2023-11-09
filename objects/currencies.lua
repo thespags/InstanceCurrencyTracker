@@ -13,8 +13,8 @@ ICT.Valor = Currency:new(102)
 ICT.Heroism = Currency:new(101)
 ICT.Epicurean = Currency:new(81)
 ICT.JewelcraftersToken = Currency:new(61)
-ICT.StoneKeepersShards = Currency:new(161)
-ICT.WintergraspMark = Currency:new(126)
+ICT.StoneKeepersShard = Currency:new(161)
+ICT.HonorPoints = Currency:new(1901)
 -- Phase 3 dungeons grant conquest.
 ICT.DungeonEmblem = ICT.Triumph
 
@@ -30,7 +30,7 @@ ICT.Currencies = {
     ICT.Epicurean,
     ICT.JewelcraftersToken,
     ICT.StoneKeepersShard,
-    ICT.WintergraspMark,
+    ICT.HonorPoints,
 }
 
 for k, v in ipairs(ICT.Currencies) do
