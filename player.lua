@@ -311,7 +311,7 @@ function Player:updateGear()
     local active = GetActiveTalentGroup()
     self.activeSpec = active
     self.specs = self.specs or { {}, {} }
-    self.specs[self.activeSpec] = self.specs[self.activeSpec] or {}
+    self.specs[active] = self.specs[active] or {}
 
     local items = {}
     for i=1,19 do

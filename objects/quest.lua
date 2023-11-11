@@ -7,7 +7,8 @@ ICT.Quest = Quest
 function Quest:new(quest)
     setmetatable(quest, self)
     self.__index = self
-    quest.order = ICT:maxKey(quest.currencies) or 0
+    -- This a currency, not a number.
+    quest.order = ICT:maxKey(quest.currencies)
     return quest
 end
 
@@ -53,8 +54,10 @@ function ICT.QuestSort(player)
                 return a.name(player) < b.name(player)
             end
             return b.weekly
-        else
+        elseif a.order and b.order then
             return a.order < b.order
+        else
+            return a.order ~= nil
         end
     end
 end
