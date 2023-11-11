@@ -270,7 +270,7 @@ function Player:updateSkills()
 end
 
 function Player:getSpec(id)
-    id = id or self.activeSpec
+    id = id or self.activeSpec or 1
     self:getSpecs()[id] = self:getSpecs()[id] or {}
     return self:getSpecs()[id]
 end
