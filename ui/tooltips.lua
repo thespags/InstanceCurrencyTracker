@@ -257,7 +257,7 @@ end
 function Tooltips:new(title, text)
     local f = function(tooltip)
         tooltip:printTitle(title)
-        :printPlain(text)
+        :printPlain(text or "")
     end
    return Tooltip:new(f)
 end
