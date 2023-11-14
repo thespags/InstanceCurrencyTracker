@@ -4,8 +4,9 @@ ICT.LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Player = ICT.Player
+local Players = ICT.Players
 local Options = ICT.Options
-local version = GetAddOnMetadata("InstanceCurrencyTracker", "Version")
+local version = GetAddOnMetadata(addOnName, "Version")
 local maxPlayers, instanceId
 local UI = ICT.UI
 
@@ -32,6 +33,8 @@ function ICT.flipFrame()
 end
 
 function ICT.UpdateDisplay()
+    -- Update the active players timestamp of "last updated".
+    Players:get().timestamp = time()
     -- Defer updating the display if it's not currently viewed.
     if ICT.frame and ICT.frame:IsVisible() then
         UI:PrintPlayers()
@@ -64,7 +67,8 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
         ICT.Options:setDefaultOptions()
-        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.29") then
+        local semVer = ICT.semver(ICT.db.version or "0.0.0")
+        if semVer <= ICT.semver("v1.1.29") then
             ICT:print("Updating currencies and instances...")
             ICT.db.options.currency[ICT.Frost.id] = true
             ICT.db.options.currency[ICT.DefilersScourgeStone.id] = true
@@ -73,36 +77,31 @@ local function initEvent(self, event, eventAddOn)
             ICT.db.options.displayInstances[2][668] = true
             ICT.db.options.displayInstances[2][631] = true
         end
-        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.1.3") then
+        if semVer <= ICT.semver("v1.1.3") then
             ICT:print("Old version detected, reseting options to default...")
             ICT.Options:setDefaultOptions(true)
         end
-        if not(ICT.db.version) or ICT.semver(ICT.db.version) <= ICT.semver("v1.0.21") then
+        if semVer <= ICT.semver("v1.0.21") then
             ICT:print("Old version detected, wiping players. Please relog into each character.")
             ICT:WipeAllPlayers()
         end
         ICT.db.version = version
 
         initMinimap()
-        for k, player in pairs(ICT.db.players) do
-            -- Recreate the player with any new functions.
-            ICT.db.players[k] = Player:new(player)
-            -- Player may have already been created but we added new instances or new functions.
-            player:createInstances()
-            player:recreateCooldowns()
-            player:recreatePets()
-        end
-        ICT.CreateCurrentPlayer()
+        Players:loadAll()
+        -- If necessary, create the current player. Handled by the function.
+        Players:create()
         ICT.init = true
-        ICT.GetPlayer():onLoad()
+        Players:get():onLoad()
         ICT.UI:CreateFrame()
-        ICT.selectedPlayer = Player.GetCurrentPlayer()
+        ICT.selectedPlayer = Players:getCurrentName()
         ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
         ICT:print(L["Blizzard often changes emblem amounts if you notice a boss off please report to discord: %s"], "https://discord.gg/yY6Q6EgNRu")
         if GroupFinderFrame then
             GroupFinderFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
             GroupFinderFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)
         end
+        ICT.Comms:Init()
     end
 end
 local initFrame = CreateFrame("Frame")
@@ -243,7 +242,7 @@ local function messageResults(player, instance)
 end
 local broadcastEvent = function()
     if maxPlayers and instanceId then
-        local player = ICT.GetPlayer()
+        local player = Players:get()
         local instance = player:getInstance(instanceId, maxPlayers)
         messageResults(player, instance)
     end

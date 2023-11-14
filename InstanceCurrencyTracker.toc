@@ -12,9 +12,10 @@ Manifest.xml
 Locale\Locales.xml
 common\Manifest.xml
 objects\Manifest.xml
-player.lua
 items.lua
 ui\Manifest.xml
+advanced_options.lua
 options.lua
 commands.lua
+comms.lua
 events.lua

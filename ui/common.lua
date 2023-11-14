@@ -17,12 +17,11 @@ function UI:printGearScore(tab, spec, tooltip, x, y)
     return y
 end
 
-local function createDialogWindow(name, titleText, bodyText, buttonText)
+function UI:createDialogWindow(name, titleText, bodyText, buttonText)
     local frame = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
     frame:SetToplevel(true)
     frame:SetHeight(125)
     frame:SetWidth(250)
-    frame:Show()
     frame:SetPoint("CENTER", UIParent, 0, 200)
     frame:SetFrameStrata("HIGH")
     table.insert(UISpecialFrames, name)
@@ -42,7 +41,7 @@ local function createDialogWindow(name, titleText, bodyText, buttonText)
     return frame
 end
 
-local delete = createDialogWindow("ICTDeletePlayer", "Confirm Character Deletion", "", "Delete")
+local delete = UI:createDialogWindow("ICTDeletePlayer", "Confirm Character Deletion", "", "Delete")
 local lastPlayer
 function UI:openDeleteFrame(player)
     return function()
@@ -59,23 +58,6 @@ function UI:openDeleteFrame(player)
             ICT.WipePlayer(player:getFullName())
             delete:Hide()
             UI:PrintPlayers()
-        end)
-    end
-end
-
-local options = createDialogWindow("ICTResetOptionsDialog", "Confirm Reset Options", "Set all options to their default value?", "Confirm")
-local resetOptions = true
-function UI:openResetOptionsFrame()
-    return function()
-        resetOptions = not resetOptions
-        if resetOptions then
-            options:Hide()
-            return
-        end
-        options:Show()
-        options.button:SetScript("OnClick", function()
-            ICT.Options:setDefaultOptions(true)
-            options:Hide()
         end)
     end
 end
@@ -112,6 +94,6 @@ function UI:cellDropdown(reference, f)
                 self:Cancel()
             end
         end
-        frame.ticker = C_Timer.NewTicker(.5, update)
+        frame.ticker = C_Timer.Newtimer(.5, update)
     end
 end

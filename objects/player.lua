@@ -8,41 +8,6 @@ local Instance = ICT.Instance
 ICT.Player = {}
 local Player = ICT.Player
 
--- Adds "static" fields, 
--- Note: we may wnat to move this information to "onLoad",
--- as anything added won't get picked up by existing players.
-function ICT.CreateCurrentPlayer()
-    local fullName = Player.GetCurrentPlayer()
-    if ICT.db.players[fullName] then
-        return
-    end
-    ICT:print(L["Creating player: %s"], fullName)
-    local player = Player:new()
-    player.fullName = fullName
-    player.name = UnitName("Player")
-    player.realm = GetRealmName()
-    player.class = select(2, UnitClass("Player"))
-    player.faction = select(1, UnitFactionGroup("Player"))
-    player.quests = {
-        prereq = {},
-        completed = {}
-    }
-    player.currency = {
-        wallet = {},
-        weekly = {},
-        daily = {},
-        maxDaily = {},
-        maxWeekly = {},
-    }
-    ICT.db.players[fullName] = player
-    player:createInstances()
-    -- Set transient information after copying main tables.
-    player:dailyReset()
-    player:weeklyReset()
-    player:onLoad()
-    return player
-end
-
 -- Adds all the functions to the player.
 function Player:new(player)
     player = player or {}
@@ -53,16 +18,8 @@ function Player:new(player)
     return player
 end
 
--- Returns the provided player or current player if none provided.
-function ICT.GetPlayer(playerName)
-    if not playerName then
-        ICT.currentPlayer = ICT.currentPlayer or ICT.db.players[Player.GetCurrentPlayer()]
-        return ICT.currentPlayer
-    end
-    return ICT.db.players[playerName]
-end
-
 -- Called when the addon is loaded to update any fields.
+-- Only for the active player.
 function Player:onLoad()
     self:updateProfessions()
     -- Talents calls self:updateGear() for us.
@@ -573,7 +530,7 @@ function Player:isMaxLevel()
 end
 
 function Player:isCurrentPlayer()
-    return self == ICT.GetPlayer()
+    return self == ICT.Players:get()
 end
 
 function Player:isVisible()
@@ -602,8 +559,4 @@ end
 
 function Player:__tostring()
     return self.fullName
-end
-
-function Player.GetCurrentPlayer()
-    return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
 end

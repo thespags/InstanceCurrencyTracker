@@ -82,7 +82,7 @@ function UI:CreateFrame()
 
     ICT.Options:CreatePlayerDropdown()
     ICT.Options:CreateOptionDropdown()
-    self:resetOptionsButton()
+    ICT.AdvOptions:createButton()
     self:createPlayerSlider()
 end
 
@@ -138,25 +138,9 @@ end
 
 function UI:getSelectedOrDefault()
     if not ICT.db.players[ICT.selectedPlayer] then
-        ICT.selectedPlayer = ICT.Player.GetCurrentPlayer()
+        ICT.selectedPlayer = ICT.Players:getCurrentName()
     end
     return ICT.db.players[ICT.selectedPlayer]
-end
-
-function UI:resetOptionsButton()
-    local button = CreateFrame("Button", "ICTResetOptions", ICT.frame, "UIPanelButtonTemplate")
-    button:SetSize(24, 24)
-    button:SetAlpha(1)
-    button:SetIgnoreParentAlpha(true)
-    button:SetNormalTexture("Interface/common/help-i")
-    button:SetPoint("TOPRIGHT", ICT.frame.options, "TOPLEFT", 18, -2)
-    button:SetScript("OnClick", UI:openResetOptionsFrame())
-    local f = function(tooltip) 
-        tooltip:printTitle("Reset Options")
-        tooltip:printPlain("Opens a dialog to confirm to reset options to their default value.")
-    end
-    ICT.Tooltip:new(f)
-    :attachFrame(button)
 end
 
 function UI:createDoubleScrollFrame(parent, name)
@@ -195,6 +179,26 @@ function UI:createDoubleScrollFrame(parent, name)
     vView:SetPanExtent(50)
 
     ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
+    ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
+    return inset
+end
+
+function UI:createScrollFrame(inset)
+    local name = inset:GetName()
+    local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
+    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
+    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
+
+    local vScrollBox = CreateFrame("Frame", name .. "VScrollbox", inset, "WowScrollBox")
+    inset.vScrollBox = vScrollBox
+    vScrollBox:SetAllPoints(inset)
+
+    inset.content = CreateFrame("Frame", name .. "Content", vScrollBox, "ResizeLayoutFrame")
+    inset.content.scrollable = true
+
+    local vView = CreateScrollBoxLinearView()
+    vView:SetPanExtent(50)
+
     ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
     return inset
 end

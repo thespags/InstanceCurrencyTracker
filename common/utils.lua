@@ -91,8 +91,9 @@ function ICT:printValues(t)
     end
 end
 
-function ICT:dprint(text)
+function ICT:dprint(text, ...)
     if false then
+        text = string.format(text, ...)
         print(text)
     end
 end
@@ -126,7 +127,7 @@ function ICT:throttleFunction(source, time, f, callback)
         -- We set init in the addon initialization event.
         ICT:dprint(source)
         if ICT.db and ICT.init then
-            local player = ICT.GetPlayer()
+            local player = ICT.Players:get()
             if time > 0 and not throttles[f] then
                 throttles[f] = true
                 C_Timer.After(time, function()

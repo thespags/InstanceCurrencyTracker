@@ -9,8 +9,8 @@ setmetatable(Cells, Cells)
 ICT.Cells = Cells
 local Cell = {}
 
-function Cells:new(frame)
-    local t = { indent = "", cells = {}, frame = frame }
+function Cells:new(frame, font, width, height)
+    local t = { indent = "", cells = {}, frame = frame, font = font, width = width, height = height}
     setmetatable(t, self)
     self.__index = self
     return t
@@ -61,10 +61,15 @@ function Cells:__call(x, y)
             end
         )
     end
-    cell.frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
-    cell.frame:SetPoint("TOPLEFT", (x - 1) * UI:getCellWidth(), -(y - 1) * UI:getCellHeight())
-    cell.left:SetFont(UI.font, UI:getFontSize())
-    cell.right:SetFont(UI.font, UI:getFontSize())
+    -- I'm setting the table to the metatable, there's probably a better practice.
+    -- Instead, I have to use rawget to avoid a loop.
+    local width = rawget(self, "width") or UI:getCellWidth()
+    local height = rawget(self, "height") or UI:getCellHeight()
+    local font = rawget(self, "font") or UI:getFontSize()
+    cell.frame:SetSize(width, height)
+    cell.frame:SetPoint("TOPLEFT", (x - 1) * width, -(y - 1) * height)
+    cell.left:SetFont(UI.font, font)
+    cell.right:SetFont(UI.font, font)
 
     _ = cell.ticker and cell.ticker:Cancel()
     -- Remove any cell action so we can reuse the cell.

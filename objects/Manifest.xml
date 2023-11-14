@@ -10,4 +10,6 @@
   <Script file="instances.lua"/> 
   <Script file="quest.lua"/>
   <Script file="quests.lua"/>
+  <Script file="player.lua"/>
+  <Script file="players.lua"/>
 </Ui>

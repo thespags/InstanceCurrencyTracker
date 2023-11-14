@@ -1,13 +1,8 @@
 local addOnName, ICT = ...
 
 ICT.LDBIcon = LibStub("LibDBIcon-1.0")
-local LDBroker = LibStub("LibDataBroker-1.1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
-local Player = ICT.Player
-local Options = ICT.Options
-local version = GetAddOnMetadata("InstanceCurrencyTracker", "Version")
-local maxPlayers, instanceId
-local UI = ICT.UI
+local Players = ICT.Players
 
 SLASH_InstanceCurrencyTracker1 = "/ict";
 SlashCmdList.InstanceCurrencyTracker = function(msg)
@@ -16,7 +11,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     -- the rest (minus leading whitespace) is captured into rest.
     if command == "wipe" then
         if rest == "" then
-            ICT.WipePlayer(Player.GetCurrentPlayer())
+            ICT.WipePlayer(Players:getCurrentName())
         elseif rest == "all" then
             ICT.WipeAllPlayers()
         else
@@ -43,6 +38,9 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
             ICT:print("Invalid size, must be a positive number.")
         end
         ICT:UpdateDisplay()
+    elseif command == "message" then
+        local name = rest
+        ICT.Comms:transmitPlayerMetadata(name)
     elseif rest == "" then
         ICT.flipFrame()
     end
@@ -55,7 +53,7 @@ function ICT.WipePlayer(playerName)
     else
         ICT:print(L["Unknown character: %s"], playerName)
     end
-    ICT.CreateCurrentPlayer()
+    Players:create()
 end
 
 function ICT.WipeRealm(realmName)
@@ -65,12 +63,12 @@ function ICT.WipeRealm(realmName)
         ICT.db.players[name] = nil
     end
     ICT:print(L["Wiped %s characters on realm: %s"], count, realmName)
-    ICT.CreateCurrentPlayer()
+    Players:create()
 end
 
 function ICT.WipeAllPlayers()
     local count = ICT:sum(ICT.db.players, ICT:returnX(1))
     ICT.db.players = {}
     ICT:print(L["Wiped %s characters"], count)
-    ICT.CreateCurrentPlayer()
+    Players:create()
 end

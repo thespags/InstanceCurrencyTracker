@@ -172,7 +172,11 @@
         "LFDQueueFrameSpecificList_Update",
         "LFGDungeonList_EvaluateListState",
         "LeaveLFG",
-        "LFDQueueFrame_Join"
+        "LFDQueueFrame_Join",
+        "C_FriendList",
+        "time",
+        "C_BattleNet",
+        "BNGetNumFriends"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

@@ -73,6 +73,10 @@ local frameOptions = {
 function Options:setDefaultOptions(override)
     local options = ICT.db.options
 
+    if options.multiPlayerView == nil or override then
+        options.multiPlayerView = true
+    end
+
     -- Display heroism and lower by default. (i.e. recent currency as new ones are added to the front of the table).
     if not options.currency or override then
         options.currency = {}
@@ -103,11 +107,11 @@ function Options:setDefaultOptions(override)
         options.reset = { [1] = true, [3] = false, [5] = false, [7] = true}
     end
 
-    if not ICT.db.options.pets or override then
-        ICT.db.options.pets = {}
+    if not options.pets or override then
+        options.pets = {}
     end
     for fullName, _ in pairs(ICT.db.players) do
-        ICT.db.options.pets[fullName] = ICT.db.options.pets[fullName] or {}
+        options.pets[fullName] = options.pets[fullName] or {}
     end
 
     local function setDefaults(t, key)
@@ -124,9 +128,14 @@ function Options:setDefaultOptions(override)
     setDefaults(messageOptions, "messages")
     setDefaults(frameOptions, "frame")
     setDefaults(questOptions, "quests")
+
     -- Added new player value, set to on.
-    if ICT.db.options.player.showCooldowns == nil then
-        ICT.db.options.player.showCooldowns = true
+    ICT:putIfAbsent(options.player, "showCooldowns", true)
+    if not options.comms or override then
+        options.comms = {}
+    end
+    if not options.comms.players or override then
+        options.comms.players = {}
     end
 end
 
@@ -309,10 +318,9 @@ function Options:CreateOptionDropdown()
 
     -- Width set to slightly smaller than parent frame.
     DDM:UIDropDownMenu_SetWidth(dropdown, 80)
-    DDM:UIDropDownMenu_SetText(dropdown, "Options")
+    DDM:UIDropDownMenu_SetText(dropdown, L["Options"])
     local options = ICT.db.options
 
-    ICT:putIfAbsent(options, "multiPlayerView", false)
     DDM:UIDropDownMenu_Initialize(
         dropdown,
         function(self, level, menuList)

@@ -90,6 +90,7 @@ L["Completed"] = "Completed"
 L["Missing Prerequesite"] = "Missing Prerequesite"
 
 -- Options
+L["Options"] = "Options"
 L["Multi Character View"] = "Multi Character View"
 L["Multi Character View Tootip"] = "Displays all selected characters in the frame or a single character selected with the drop down list."
 L["Messages"] = "Messages"
@@ -144,6 +145,11 @@ L["Show Realm Name"] = "Show Realm Name"
 L["ShowRealmNameTooltip"] = "Shows [{realm name}] {player name} versus {player name}."
 L["Show Level Slider"] = "Show Level Slider"
 L["ShowLevelSliderTooltip"] = "Displays the slider bar to control minimum character level."
+
+-- Advanced Options
+L["Link Accounts"] = "Link Accounts"
+L["Multi Account Communication"] = "Multi Account Communication"
+L["Multi Account Communication Tooltip"] = "Enable Accounts in your \"Friends list\"\nto receive Messages.\nMust be done on both accounts to sync."
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"
