@@ -48,7 +48,7 @@ This is a beta feature and needs more testing, so please help me by reaching on 
 + Currency
     + Total Instance Currency
     + Quest rewards Currency
-    + Available and Total Currency per character
+    + Total Currency per character
 + Quests
     + Quest rewards
     + Quest completed per character

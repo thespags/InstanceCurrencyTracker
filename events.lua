@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 ICT.LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local log = ICT.log
 local Player = ICT.Player
 local Players = ICT.Players
 local Options = ICT.Options
@@ -39,7 +40,7 @@ function ICT.UpdateDisplay()
     if ICT.frame and ICT.frame:IsVisible() then
         UI:PrintPlayers()
     else
-        ICT.dprint("not updating frame")
+        log.debug("not updating frame")
     end
 end
 
@@ -216,7 +217,7 @@ queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() 
 local function messageResults(player, instance)
     -- Only broadcast if we are locked and collected something...
     if instance and instance.locked then
-        ICT.dprint("broadcast: announcing")
+        log.debug("broadcast: announcing")
         -- Double check amounts before messaging.
         -- It seems WOW may process oddly.
         player:update()
@@ -235,9 +236,9 @@ local function messageResults(player, instance)
             end
         end
     elseif instance then
-        ICT.dprint("broadcast: no lock")
+        log.debug("broadcast: no lock")
     else
-        ICT.dprint("broadcast: no instance")
+        log.debug("broadcast: no instance")
     end
 end
 local broadcastEvent = function()

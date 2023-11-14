@@ -1,6 +1,7 @@
 local addOn, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local log = ICT.log
 ICT.MaxLevel = 80
 ICT.ClassIcons = {
     ["WARRIOR"] = 626008,
@@ -91,13 +92,6 @@ function ICT:printValues(t)
     end
 end
 
-function ICT:dprint(text, ...)
-    if false then
-        text = string.format(text, ...)
-        print(text)
-    end
-end
-
 --- Prints the string with our prefix and color.
 ---@param text string
 ---@param ... string
@@ -125,7 +119,7 @@ function ICT:throttleFunction(source, time, f, callback)
     return function()
         -- Skip calling if the database/addon isn't initialized.
         -- We set init in the addon initialization event.
-        ICT:dprint(source)
+        log.debug(source)
         if ICT.db and ICT.init then
             local player = ICT.Players:get()
             if time > 0 and not throttles[f] then

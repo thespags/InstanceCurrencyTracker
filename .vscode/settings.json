@@ -176,7 +176,10 @@
         "C_FriendList",
         "time",
         "C_BattleNet",
-        "BNGetNumFriends"
+        "BNGetNumFriends",
+        "GetRealmID",
+        "debugstack",
+        "date"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

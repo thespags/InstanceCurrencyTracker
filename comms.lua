@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 local LibSerialize = LibStub("LibSerialize")
 local LibDeflate = LibStub("LibDeflate")
 local AceComm = LibStub("AceComm-3.0")
+local log = ICT.log
 local Comms = {
     prefix = "ICT"
 }
@@ -16,7 +17,7 @@ function Comms:Init()
 end
 
 function Comms:transmitPlayer(target, player)
-    ICT:dprint("Sending: %s to %s", player:getFullName(), target)
+    log.info("Sending: %s to %s", player:getFullName(), target)
     local data = { callback = "receivePlayer", version = self.version, player = player }
     self:transmit(target, data)
 end
@@ -32,7 +33,7 @@ function Comms:transmitPlayers(target, data)
     for k, player in pairs(ICT.db.players) do
         -- If the player is unknown or out of date, send it.
         if data.timestamps[k] and data.timestamps[k] >= player.timestamp then
-            ICT:dprint("Player up to date: %s for %s", player:getFullName(), target)
+            log.info("Player up to date: %s for %s", player:getFullName(), target)
         else
             self:transmitPlayer(target, player)
         end
@@ -58,7 +59,7 @@ function Comms:receivePlayer(sender, data)
     local player = ICT.Players:load(data.player)
     local prev = ICT.db.players[player:getFullName()]
     if prev and prev.timestamp >= player.timestamp then
-        ICT:dprint("Ignoring up to date player: %s from %s", player:getFullName(), sender)
+        log.info("Ignoring up to date player: %s from %s", player:getFullName(), sender)
     else
         ICT:print("Received: %s from %s", player:getName(), sender)
         ICT.db.players[player:getFullName()] = player
@@ -67,7 +68,7 @@ function Comms:receivePlayer(sender, data)
 end
 
 function Comms:pingPlayers()
-    ICT:dprint("Pinging other accounts.")
+    log.info("Pinging other accounts.")
     local allowed = ICT.db.options.comms.players or {}
     local seen = {}
 
