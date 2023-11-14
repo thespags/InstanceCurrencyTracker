@@ -179,11 +179,24 @@ assertEquals(-2, actual)
 
 -- putIfAbsent tests
 local foo = {}
-ICT:putIfAbsent(foo, "key", "bar")
+ICT.putIfAbsent(foo, "key", "bar")
 assertEquals("bar", foo.key)
 
-ICT:putIfAbsent(foo, "key", "notbar")
+ICT.putIfAbsent(foo, "key", "notbar")
 assertEquals("bar", foo.key)
+
+ICT.put(foo, "key", "notbar")
+assertEquals("notbar", foo.key)
+
+ICT.putIfAbsent(foo, "other", false)
+assertEquals(false, foo.other)
+
+-- true doesn't override false, only nil
+ICT.putIfAbsent(foo, "other", true)
+assertEquals(false, foo.other)
+
+ICT.put(foo, "other", true)
+assertEquals(true, foo.other)
 
 actual = ICT:set("foo", "bar")
 assertEquals(true, actual.foo)

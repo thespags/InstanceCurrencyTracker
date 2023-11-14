@@ -162,8 +162,15 @@ function ICT:maxKey(t, op, filter)
     return key
 end
 
-function ICT:putIfAbsent(t, key, value)
-    t[key] = t[key] == nil and value or t[key]
+function ICT.putIfAbsent(t, key, value)
+    -- value may be false so don't inline
+    if t[key] == nil then
+        t[key] = value
+    end
+end
+
+function ICT.put(t, key, value)
+    t[key] = value
 end
 
 function ICT:toTable(pairs)

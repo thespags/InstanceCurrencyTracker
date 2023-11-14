@@ -72,54 +72,49 @@ local frameOptions = {
 
 function Options:setDefaultOptions(override)
     local options = ICT.db.options
-
-    if options.multiPlayerView == nil or override then
-        options.multiPlayerView = true
-    end
+    -- If override then always put, otherwise only put if the value is "nil" i.e. absent.
+    -- We traverse each table because we may add new entries that should be defaulted on
+    -- even though the table was created.
+    local put = override and ICT.put or ICT.putIfAbsent
+    put(options, "multiPlayerView", true)
 
     -- Display heroism and lower by default. (i.e. recent currency as new ones are added to the front of the table).
     if not options.currency or override then
         options.currency = {}
+    end
 
-        for _, v in ipairs(ICT.Currencies) do
-            options.currency[v.id] = v <= ICT.Heroism
-        end
+    put(options, "currency", {})
+    for _, v in ipairs(ICT.Currencies) do
+        put(options.currency, v.id, v <= ICT.Heroism)
     end
 
     -- Set all WOTLK instances on by default.
-    if not options.displayInstances or override then
-        options.displayInstances = { [0] = {}, [1] = {}, [2] = {}, }
-        for _, v in pairs(Instances.infos()) do
-            options.displayInstances[v.expansion][v.id] = v:fromExpansion(ICT.WOTLK)
-        end
+    put(options, "displayInstances", {})
+    for k, _ in pairs(ICT.Expansions) do
+        put(options["displayInstances"][k], {})
+    end
+    for _, v in pairs(Instances.infos()) do
+        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.WOTLK))
     end
 
     -- Set all WOTLK cooldowns on by default
-    if not options.displayCooldowns or override then
-        options.displayCooldowns = {}
-        for k, v in pairs(ICT.Cooldowns) do
-            options.displayCooldowns[k] = v:fromExpansion(ICT.WOTLK)
-        end
+    put(options, "displayCooldowns", {})
+    for k, v in pairs(ICT.Cooldowns) do
+        put(options.displayCooldowns, k, v:fromExpansion(ICT.WOTLK))
     end
 
     -- Set daily and weekly resets on by default.
-    if not options.reset or override then
-        options.reset = { [1] = true, [3] = false, [5] = false, [7] = true}
-    end
+    put(options, "rest", { [1] = true, [3] = false, [5] = false, [7] = true })
 
-    if not options.pets or override then
-        options.pets = {}
-    end
+    put(options, "pets", {})
     for fullName, _ in pairs(ICT.db.players) do
-        options.pets[fullName] = options.pets[fullName] or {}
+        put(options.pets, fullName, {})
     end
 
     local function setDefaults(t, key)
-        if not options[key] or override then
-            options[key] = {}
-            for _, v in pairs(t) do
-                options[key][v.key] = not v.defaultFalse
-            end
+        put(options, key, {})
+        for _, v in pairs(t) do
+            put(options[key], v.key, not v.defaultFalse)
         end
     end
     setDefaults(playerOptions, "player")
@@ -129,14 +124,8 @@ function Options:setDefaultOptions(override)
     setDefaults(frameOptions, "frame")
     setDefaults(questOptions, "quests")
 
-    -- Added new player value, set to on.
-    ICT:putIfAbsent(options.player, "showCooldowns", true)
-    if not options.comms or override then
-        options.comms = {}
-    end
-    if not options.comms.players or override then
-        options.comms.players = {}
-    end
+    put(options, "comms", {})
+    put(options.comms, "players", {})
 end
 
 function Options:FlipMinimapIcon()
