@@ -9,19 +9,18 @@ local specNames
 function Talents:updateSpec(spec, id)
     spec = spec or {}
     spec.id = id
-    local max = 0
-    local totalPoints = 0
+
+    local t = {}
+    TalentFrame_UpdateSpecInfoCache(t, false, false, id)
+
     for i = 1,GetNumTalentTabs() do
-        local name, icon, pointsSpent, _ = GetTalentTabInfo(i, false, false, id)
-        pointsSpent = pointsSpent or 0
-        spec["tab" .. i] = pointsSpent
-        totalPoints = totalPoints + pointsSpent
-        if pointsSpent > max then
-            spec.name = name
-            spec.icon = icon
-        end
+        spec["tab" .. i] = t[i].pointsSpent
     end
-    spec.totalPoints = totalPoints
+    if t.primaryTabIndex > 0 then
+        spec.name = t[t.primaryTabIndex].name
+        spec.icon = t[t.primaryTabIndex].icon
+    end
+    spec.totalPoints = t.totalPointsSpent
     spec.glyphs = {}
     for j=1,6 do
         local enabled, type, spellId, icon = GetGlyphSocketInfo(j, id)
