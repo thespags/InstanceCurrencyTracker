@@ -91,7 +91,7 @@ function Options:setDefaultOptions(override)
     -- Set all WOTLK instances on by default.
     put(options, "displayInstances", {})
     for k, _ in pairs(ICT.Expansions) do
-        put(options["displayInstances"][k], {})
+        put(options["displayInstances"], k, {})
     end
     for _, v in pairs(Instances.infos()) do
         put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.WOTLK))
