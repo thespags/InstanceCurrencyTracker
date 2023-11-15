@@ -18,12 +18,12 @@ This can be disabled in the options menu, and replaced with a minimap icon.
 Otherwise `/ict` will bring up the window.  
 
 ## Multiple Accounts (Beta)
-You can link your account to share character data. Both accounts must be bnet friends with each other.
-Click the cogwheel in the lower, then on both accoutns select the other to link. This will enable
-cross character communication while both accounts are on the same realm to share data. Blizzard
-doesn't allow addon's to communicate across realms.
+You can link your account to share character data. Accounts must be BNet friends with each other.
+Click the cogwheel in the lower, then on both accounts select the other to link. This will enable
+cross character communication while both accounts are on the same realm and faction to share data. Blizzard
+doesn't allow addon's to communicate across realms or faction.
 
-This is a beta feature and needs more testing, so please help me by reaching on my discord.
+This is a beta feature and needs more testing, so please help me by reaching out on my discord.
 
 ## Information Collected
 + Character

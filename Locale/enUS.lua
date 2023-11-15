@@ -147,9 +147,10 @@ L["Show Level Slider"] = "Show Level Slider"
 L["ShowLevelSliderTooltip"] = "Displays the slider bar to control minimum character level."
 
 -- Advanced Options
-L["Link Accounts"] = "Link Accounts"
-L["Multi Account Communication"] = "Multi Account Communication"
-L["Multi Account Communication Tooltip"] = "Enable Accounts in your \"Friends list\"\nto receive Messages.\nMust be done on both accounts to sync."
+L["Link Accounts"] = "Linked BNet Accounts"
+L["Link Accounts Tooltip Header"] = "Account Linking"
+L["Link Accounts Tooltip Body"] = "Enable Accounts in your \"BNet list\" to receive their character data.\
+This will sync characters when both accounts on logged into to the same realm and faction."
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"

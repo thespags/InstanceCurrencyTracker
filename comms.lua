@@ -77,7 +77,7 @@ function Comms:pingPlayers()
         local friend = C_BattleNet.GetFriendAccountInfo(i)
         if ICT.db.options.comms.players[friend.battleTag] then
             local info = friend.gameAccountInfo
-            if info.characterName and info.realmId == GetRealmID() then
+            if info.characterName and info.realmID == GetRealmID() and info.factionName == UnitFactionGroup("Player") then
                 self:transmitPlayerMetadata(info.characterName)
             end
             seen[friend.battleTag] = true

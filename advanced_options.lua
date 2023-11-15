@@ -25,7 +25,7 @@ local function createCommsList(parent)
     setBackdrop(frame)
     local scroll = UI:createScrollFrame(frame)
     local cells = ICT.Cells:new(scroll.content, 12, 100, 10)
-    local tooltip = Tooltips:new(L["Multi Account Communication"], L["Multi Account Communication Tooltip"])
+    local tooltip = Tooltips:new(L["Link Accounts Tooltip Header"], L["Link Accounts Tooltip Body"])
     tooltip:attachFrame(frame)
 
     -- Title
