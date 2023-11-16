@@ -2,7 +2,6 @@
 local addOn, ICT = ...
 
 local Colors = ICT.Colors
-
 ICT.OneDay = 86400
 
 function ICT:convertFrom32bitNegative(int32)

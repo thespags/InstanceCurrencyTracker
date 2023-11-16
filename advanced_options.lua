@@ -10,7 +10,7 @@ ICT.AdvOptions = AdvOptions
 local function createSectionTitle(frame, x, y, text)
     local title = frame:CreateFontString()
     title:SetFont(UI.font, 12)
-    title:SetText(string.format("|c%s%s|r", ICT.sectionColor, text))
+    title:SetText(string.format("|c%s%s|r", Colors.section, text))
     title:SetPoint("CENTER", frame, "TOP", x, y)
 end
 

@@ -1,6 +1,7 @@
 
 local addOnName, ICT = ...
 
+local Colors = ICT.Colors
 local UI = ICT.UI
 local Tooltip = {}
 ICT.Tooltip = Tooltip
@@ -60,20 +61,20 @@ function Tooltip:attach(cell)
 end
 
 function Tooltip:printLine(value, valueColor)
-    valueColor = valueColor or ICT.textColor
+    valueColor = valueColor or Colors.text
     tinsert(self.text, string.format("\n|c%s%s|r", valueColor, value))
     return self
 end
 
 function Tooltip:printPlain(value)
-    tinsert(self.text, string.format("\n|c%s%s|r", ICT.availableColor, value))
+    tinsert(self.text, string.format("\n|c%s%s|r", Colors.available, value))
     return self
 end
 
 function Tooltip:printValue(label, value, labelColor, valueColor)
     if value then
-        labelColor = labelColor or ICT.subtitleColor
-        valueColor = valueColor or ICT.textColor
+        labelColor = labelColor or Colors.subtitle
+        valueColor = valueColor or Colors.text
         local separator = string.len(value) > 0 and ":" or ""
         tinsert(self.text, string.format("\n|c%s%s%s|r |c%s%s|r", labelColor, label, separator, valueColor, value))
     end
@@ -81,14 +82,14 @@ function Tooltip:printValue(label, value, labelColor, valueColor)
 end
 
 function Tooltip:printTitle(title)
-    tinsert(self.text, string.format("|c%s%s|r", ICT.tooltipTitleColor, title))
+    tinsert(self.text, string.format("|c%s%s|r", Colors.tooltipTitle, title))
     return self
 end
 
 function Tooltip:printSection(title)
     if self.shouldPrintTitle then
         self.shouldPrintTitle = false
-        tinsert(self.text, string.format("\n\n|c%s%s|r", ICT.sectionColor, title))
+        tinsert(self.text, string.format("\n\n|c%s%s|r", Colors.section, title))
     end
     return self
 end

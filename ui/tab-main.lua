@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
 local LFD = ICT.LFD
 local Player = ICT.Player
@@ -373,7 +373,7 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
     local update = function(self)
         ICT:cancelTicker(self)
         local time, _ = ICT:countdown(expires, duration)
-        frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", ICT.subtitleColor, title, ICT.textColor, time))
+        frame.textField:SetText(string.format("|c%s   %s|r\n|c%s%s|r", Colors.subtitle, title, Colors.text, time))
     end
     self.tickers[title] = { ticker = C_Timer.NewTicker(1, update), frame = frame }
     update()

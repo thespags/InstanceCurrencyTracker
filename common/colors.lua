@@ -3,27 +3,27 @@ local addOn, ICT = ...
 local Colors = {}
 Colors.green = "FF00FF00"
 Colors.red = "FFFF0000"
-ICT.tooltipTitleColor = Colors.green
-ICT.availableColor = "FFFFFFFF"
-ICT.queuedAvailableColor = "FF90C0FF"
-ICT.sectionColor = "FFFFFF00"
-ICT.subtitleColor = "FFFFCC00"
-ICT.textColor = "FF9CD6DE"
-ICT.lockedColor = "FFFF00FF"
-ICT.queuedLockedColor = "FFFFC0FF"
-ICT.unavailableColor = Colors.red
+Colors.tooltipTitle = Colors.green
+Colors.available = "FFFFFFFF"
+Colors.queuedAvailable = "FF90C0FF"
+Colors.section = "FFFFFF00"
+Colors.subtitle = "FFFFCC00"
+Colors.text = "FF9CD6DE"
+Colors.locked = "FFFF00FF"
+Colors.queuedLocked = "FFFFC0FF"
+Colors.unavailable = Colors.red
 ICT.Colors = Colors
 
 function Colors:getQuestColor(player, quest)
-    return (not player:isQuestAvailable(quest) and ICT.unavailableColor) or (player:isQuestCompleted(quest) and ICT.lockedColor or ICT.availableColor)
+    return (not player:isQuestAvailable(quest) and Colors.unavailable) or (player:isQuestCompleted(quest) and Colors.locked or Colors.available)
 end
 
 function Colors:getSelectedColor(selected)
-    return selected and ICT.lockedColor or ICT.availableColor
+    return selected and Colors.locked or Colors.available
 end
 
 function Colors:getSelectedQueueColor(selected)
-    return selected and ICT.queuedLockedColor or ICT.queuedAvailableColor
+    return selected and Colors.queuedLocked or Colors.queuedAvailable
 end
 
 function Colors:hex2rgbInteger(hex)

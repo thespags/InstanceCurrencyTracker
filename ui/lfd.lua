@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
 local LibInstances = LibStub("LibInstances")
+local Colors = ICT.Colors
 local UI = ICT.UI
 local LFD = {}
 ICT.LFD = LFD
@@ -96,7 +97,7 @@ function LFD:specificDropdown(parent, instance)
                 ICT.Tooltips:new(YOU_MAY_NOT_QUEUE_FOR_THIS, text):attach(cell)
                 prefix = " " .. CreateSimpleTextureMarkup("Interface\\LFGFrame\\UI-LFG-ICON-LOCK", 12, 12) .. " "
             end
-            cell:printLine(prefix .. name, ICT.textColor)
+            cell:printLine(prefix .. name, Colors.text)
         end
         return i
     end

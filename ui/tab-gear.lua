@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local Colors = ICT.Colors
 local Player = ICT.Player
 local Talents = ICT.Talents
 local Tooltip = ICT.Tooltip
@@ -82,7 +83,7 @@ function GearTab:printSpec(player, x, y, spec)
     local sectionName = icon .. (spec.name or key)
     local cell = self.cells(x, y)
     local isActive = spec.id == player.activeSpec
-    y = cell:printSectionTitle(sectionName, key, isActive and ICT.lockedColor)
+    y = cell:printSectionTitle(sectionName, key, isActive and Colors.locked)
 
     if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
         local tooltip = function(tooltip)
@@ -124,7 +125,7 @@ function GearTab:printSpec(player, x, y, spec)
 
     -- Requires spec activation so short circuit.
     if not spec.items then
-        y = self.cells(x, y):printLine(L["ActivateSpecLoad"], ICT.textColor)
+        y = self.cells(x, y):printLine(L["ActivateSpecLoad"], Colors.text)
         return self.cells(x, y):hide()
     end
 

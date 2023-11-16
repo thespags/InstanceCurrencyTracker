@@ -1,7 +1,8 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local Colors = ICT.Colors
 local ProfessionsTab = {}
 ICT.ProfessionsTab = ProfessionsTab
 
@@ -99,7 +100,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
             self.cells.indent = ""
         else
             cell = self.cells(x, y)
-            y = cell:printLine(L["OpenTradeSkills"], ICT.textColor)
+            y = cell:printLine(L["OpenTradeSkills"], Colors.text)
             if player:isCurrentPlayer() then
                 cell:attachClick(function() self:updateSkills(player, skillLine) end)
             end

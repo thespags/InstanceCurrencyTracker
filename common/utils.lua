@@ -97,7 +97,7 @@ end
 ---@param ... string
 function ICT:print(text, ...)
     text = string.format(text, ...)
-    print(string.format("|c%s[ICT] %s|r", ICT.textColor, text))
+    print(string.format("|c%s[ICT] %s|r", ICT.Colors.text, text))
 end
 
 --- Prints the string if the option is set to print.

@@ -125,14 +125,14 @@ end
 function Cell:printValue(leftText, rightText, leftColor, rightColor)
     self.frame:Show()
     self.leftText = leftText or ""
-    self.leftColor = leftColor or ICT.subtitleColor
+    self.leftColor = leftColor or Colors.subtitle
     -- Handle if we were rewriting the cell while hovering over it.
     local remap = self.hover and Colors:flipHex(self.leftColor) or self.leftColor
     leftText = string.format("%s|c%s%s|r", self.parent.indent, remap, self.leftText)
     self.left:SetText(leftText)
     self.left:Show()
     self.rightText = rightText or ""
-    self.rightColor = rightColor or ICT.textColor
+    self.rightColor = rightColor or Colors.text
     rightText = string.format("|c%s%s|r  ", self.rightColor, self.rightText)
     self.right:SetText(rightText)
     self.right:Show()
@@ -214,19 +214,19 @@ end
 function Cell:printSectionTitleValue(title, value, key, color)
     key = self.parent.frame:GetName() .. (key or title)
     title = string.format("    %s", title)
-    self:printValue(title, value, color or ICT.sectionColor)
+    self:printValue(title, value, color or Colors.section)
     self:attachSectionButton(key)
     return self.y + 1
 end
 
 function Cell:printLFDInstance(instance)
-    local color = LFD:anySelected(instance) and ICT.queuedAvailableColor or ICT.availableColor
+    local color = LFD:anySelected(instance) and Colors.queuedAvailable or Colors.available
     return self:printLine(instance:getName(), color)
 end
 
 function Cell:printLFDType(id, name)
     local _, queued = LFGDungeonList_EvaluateListState(LE_LFG_CATEGORY_LFD)
-    local color = id == LFDQueueFrame.type and (queued and ICT.lockedColor or ICT.queuedLockedColor) or ICT.availableColor
+    local color = id == LFDQueueFrame.type and (queued and Colors.locked or Colors.queuedLocked) or Colors.available
     name = name or LFD:getName(id)
     name = name == "" and SPECIFIC_DUNGEONS or name
     local f = function(tooltip)
