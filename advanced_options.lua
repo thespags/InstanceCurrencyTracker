@@ -7,22 +7,13 @@ local UI = ICT.UI
 local AdvOptions = {}
 ICT.AdvOptions = AdvOptions
 
-local function setBackdrop(frame)
-    frame:SetBackdrop({
-        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeSize = .5
-    })
-    frame:SetBackdropColor(0, 0, 0, .5)
-    frame:SetBackdropBorderColor(.5, .5, .5)
-end
 
 local function createCommsList(parent)
     local frame = CreateFrame("Frame", "ICTAllowedComms", parent, "BackdropTemplate")
     frame:SetPoint("CENTER", parent, "LEFT", 75, 0)
     frame:SetHeight(100)
     frame:SetWidth(100)
-    setBackdrop(frame)
+    UI:setBackdrop(frame)
     local scroll = UI:createScrollFrame(frame)
     local cells = ICT.Cells:new(scroll.content, 12, 100, 10)
     local tooltip = Tooltips:new(L["Link Accounts Tooltip Header"], L["Link Accounts Tooltip Body"])

@@ -4,6 +4,16 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local Colors = ICT.Colors
 local UI = ICT.UI
 
+function UI:setBackdrop(frame)
+    frame:SetBackdrop({
+        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
+        edgeSize = .5
+    })
+    frame:SetBackdropColor(0, 0, 0, .5)
+    frame:SetBackdropBorderColor(.5, .5, .5)
+end
+
 function UI:printGearScore(tab, spec, tooltip, x, y)
     if TT_GS and tab:showGearScores() then
         local scoreColor = spec.gearScore and Colors:rgbPercentage2hex(TT_GS:GetQuality(spec.gearScore)) or nil
@@ -85,7 +95,7 @@ function UI:cellDropdown(reference, f)
         frame.cells:hide()
 
         local rows = f(frame)
-        frame:SetHeight(UI:getCellHeight() * rows  + 12)
+        frame:SetHeight(UI:getCellHeight() * rows  + 16)
         _ = frame.ticker and frame.ticker:Cancel()
 
         local update = function(self)
@@ -94,6 +104,6 @@ function UI:cellDropdown(reference, f)
                 self:Cancel()
             end
         end
-        frame.ticker = C_Timer.Newtimer(.5, update)
+        frame.ticker = C_Timer.NewTimer(.5, update)
     end
 end

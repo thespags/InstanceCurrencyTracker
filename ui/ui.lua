@@ -144,12 +144,13 @@ function UI:getSelectedOrDefault()
 end
 
 function UI:createDoubleScrollFrame(parent, name)
-    local inset = CreateFrame("Frame", name, parent)
+    local inset = CreateFrame("Frame", name, parent, "BackdropTemplate")
     inset:SetAllPoints(parent)
     inset:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -60)
     inset:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -35, 35)
     inset:SetAlpha(1)
     inset:SetIgnoreParentAlpha(true)
+    UI:setBackdrop(inset)
 
     local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
     vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")

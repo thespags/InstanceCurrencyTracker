@@ -1,8 +1,6 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
 local LibInstances = LibStub("LibInstances")
-local Colors = ICT.Colors
 local UI = ICT.UI
 local LFD = {}
 ICT.LFD = LFD
