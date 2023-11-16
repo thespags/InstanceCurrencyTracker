@@ -47,7 +47,6 @@ end
 
 local messageOptions = {
     { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"] },
-    { name = L["Send LFG Messages"], key = "lfg", tooltip = L["SendLFGMessagesTooltip"] },
 }
 
 local questOptions = {

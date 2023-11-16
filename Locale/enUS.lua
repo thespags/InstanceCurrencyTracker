@@ -125,8 +125,6 @@ L["Show Professions"] = "Show Professions"
 -- Message Options
 L["Send Group Messages"] = "Send Group Messages"
 L["SendGroupMessagesTooltip"] = "Messages your party or raid on leaving an instance with the collected currency. Otherwise prints to your chat window only."
-L["Send LFG Messages"] = "Send LFG Messages"
-L["SendLFGMessagesTooltip"] = "Prints messages when enqueuing or dequeuing LFG window when clicking ICT buttons."
 
 -- Quest Options
 L["Hide Unavailable Quests"] = "Hide Unavailable Quests"
