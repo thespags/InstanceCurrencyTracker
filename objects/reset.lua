@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Reset = {}
 ICT.Reset = Reset
 

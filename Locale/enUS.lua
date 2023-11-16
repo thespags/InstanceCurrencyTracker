@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "enUS", true, true);
+local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "enUS", true, true)
 
 L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Currency Tracker: %s..."
 L["Creating player: %s"] = "Creating player: %s"

@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "frFR");
+local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "frFR")
 if not L then return end
 
 --- Professions

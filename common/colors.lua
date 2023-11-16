@@ -90,9 +90,9 @@ function Colors:gradient(color1, color2, mix)
    local r1, g1, b1 = self:inverseSrgbCompanding(color1)
    local r2, g2, b2 = self:inverseSrgbCompanding(color2)
 
-   local r3 = r1 * mix + r2 * (1 - mix);
-   local g3 = g1 * mix + g2 * (1 - mix);
-   local b3 = b1 * mix + b2 * (1 - mix);
+   local r3 = r1 * mix + r2 * (1 - mix)
+   local g3 = g1 * mix + g2 * (1 - mix)
+   local b3 = b1 * mix + b2 * (1 - mix)
 
    return self:srgbCompanding(r3, g3, b3)
 end

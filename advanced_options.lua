@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
@@ -60,7 +60,7 @@ local function createPlayerSlider(parent)
 
     levelSlider:SetSize(120, 12)
     levelSlider:SetMinMaxValues(1, ICT.MaxLevel)
-    levelSlider:SetObeyStepOnDrag(true);
+    levelSlider:SetObeyStepOnDrag(true)
     levelSlider:SetValueStep(1)
     levelSlider:SetStepsPerPage(1)
     levelSlider:SetValue(ICT.db.options.minimumLevel or ICT.MaxLevel)
@@ -84,12 +84,12 @@ local function createPlayerSlider(parent)
 
     local editBox = CreateFrame("EditBox", nil, levelSlider, "BackdropTemplate")
     editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
-    editBox:SetAutoFocus(false);
-    editBox:SetFontObject(GameFontHighlightSmall);
-    editBox:SetPoint("TOP", levelSlider, "BOTTOM");
+    editBox:SetAutoFocus(false)
+    editBox:SetFontObject(GameFontHighlightSmall)
+    editBox:SetPoint("TOP", levelSlider, "BOTTOM")
     editBox:SetSize(70, 14)
-    editBox:SetJustifyH("CENTER");
-    editBox:EnableMouse(true);
+    editBox:SetJustifyH("CENTER")
+    editBox:EnableMouse(true)
     UI:setBackdrop(editBox)
     editBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
     editBox:SetScript("OnEnter", function(self)
@@ -97,11 +97,11 @@ local function createPlayerSlider(parent)
     end)
     editBox:SetScript("OnLeave", function(self)
         self:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
-    end);
+    end)
     editBox:SetScript("OnEnterPressed", onEnterPressed)
     editBox:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
-    end);
+    end)
 
     levelSlider:HookScript("OnValueChanged", function(self, value)
         ICT.db.options.minimumLevel = value

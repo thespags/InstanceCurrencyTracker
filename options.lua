@@ -1,7 +1,7 @@
 local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 ICT.Options = {}
 local UI = ICT.UI

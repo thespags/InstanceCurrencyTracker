@@ -57,7 +57,7 @@ function Talents:calculatePrimaryTab(specId, isPet)
     local t = {}
     -- Pets talent group is always 1 regardless of specId.
     specId = isPet and 1 or specId
-    TalentFrame_UpdateSpecInfoCache(t, false, isPet, specId);
+    TalentFrame_UpdateSpecInfoCache(t, false, isPet, specId)
     return t.primaryTabIndex > 0 and t.primaryTabIndex or DEFAULT_TALENT_TAB
 end
 
@@ -72,9 +72,9 @@ function Talents:viewSpec(specId, isPet, tab)
             return
         end
         ShowUIPanel(PlayerTalentFrame)
-        PlayerSpecTab_OnClick(_G["PlayerSpecTab" .. specId]);
+        PlayerSpecTab_OnClick(_G["PlayerSpecTab" .. specId])
         tab = tab or self:calculatePrimaryTab(specId, isPet or false)
-        PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab" .. tab]);
+        PlayerTalentTab_OnClick(_G["PlayerTalentFrameTab" .. tab])
     end
 end
 

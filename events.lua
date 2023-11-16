@@ -2,7 +2,7 @@ local addOnName, ICT = ...
 
 ICT.LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local log = ICT.log
 local Player = ICT.Player
 local Players = ICT.Players

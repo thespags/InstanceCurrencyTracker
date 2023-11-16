@@ -1,6 +1,6 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
@@ -254,7 +254,7 @@ end
 
 function Player:updatePets()
     self.pets = self.pets or {}
-    local hasUI, isHunterPet = HasPetUI();
+    local hasUI, isHunterPet = HasPetUI()
     if hasUI and isHunterPet then
         ICT.Talents:updatePet(self)
     end
@@ -413,12 +413,12 @@ function Player:updateXP()
     self.currentXP = UnitXP("Player")
     self.maxXP = UnitXPMax("Player")
     self.level = UnitLevel("Player")
-    self.restedXP = GetXPExhaustion();
+    self.restedXP = GetXPExhaustion()
 end
 
 function Player:updateResting()
     self.resting = IsResting()
-    self.restedXP = GetXPExhaustion();
+    self.restedXP = GetXPExhaustion()
 end
 
 function Player:recreateCooldowns()

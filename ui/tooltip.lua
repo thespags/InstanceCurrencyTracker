@@ -7,7 +7,7 @@ local Tooltip = {}
 ICT.Tooltip = Tooltip
 
 local frame = CreateFrame("Frame", "ICTTooltip", UIParent, "TooltipBorderedFrameTemplate")
-frame:SetBackdropColor(0, 0, 0, 1);
+frame:SetBackdropColor(0, 0, 0, 1)
 frame:SetFrameStrata("DIALOG")
 frame:Hide()
 

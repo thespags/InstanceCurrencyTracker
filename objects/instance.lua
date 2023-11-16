@@ -1,7 +1,7 @@
 local addOnName, ICT = ...
 
 local LibInstances = LibStub("LibInstances")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker");
+local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Instance = {}
 ICT.Instance = Instance
 

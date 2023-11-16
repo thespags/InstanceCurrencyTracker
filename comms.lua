@@ -10,8 +10,8 @@ local Comms = {
 ICT.Comms = Comms
 
 function Comms:Init()
-    AceComm:Embed(self);
-    self:RegisterComm(self.prefix);
+    AceComm:Embed(self)
+    self:RegisterComm(self.prefix)
     self.version = GetAddOnMetadata(addOnName, "Version")
     self.ticker = C_Timer.NewTicker(30, function() Comms:pingPlayers() end)
 end
