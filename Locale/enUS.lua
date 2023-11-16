@@ -143,19 +143,18 @@ L["Verbose Currency Tooltip"] = "Verbose Currency Tooltip"
 L["VerboseCurrencyTooltipTooltip"] = "Shows instances and quests currency available and total currency for the hovered over currency."
 L["Show Realm Name"] = "Show Realm Name"
 L["ShowRealmNameTooltip"] = "Shows [{realm name}] {player name} versus {player name}."
-L["Show Level Slider"] = "Show Level Slider"
-L["ShowLevelSliderTooltip"] = "Displays the slider bar to control minimum character level."
 
 -- Advanced Options
 L["Link Accounts"] = "Linked BNet Accounts"
 L["Link Accounts Tooltip Header"] = "Account Linking"
 L["Link Accounts Tooltip Body"] = "Enable Accounts in your \"BNet list\" to receive their character data.\
 This will sync characters when both accounts on logged into to the same realm and faction."
+L["Character Level"] = "Show Level Slider"
+L["Character Level Toolip"] = "Minimum level to filter characters."
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"
 L["Delete Player Body"] = "Brings up a confirmation menu to delete the given player."
-L["LevelSliderTooltip"] = "Minimum level alts to show."
 L["EncountersSection"] = "Shows the available boss fights for the current lockout,\nout of the total for any given lockout."
 L["CurrencySection"] = "Shows the available currency for the current lockout,\nout of the total for any given lockout."
 L["Available / Total"] = "Available / Total"

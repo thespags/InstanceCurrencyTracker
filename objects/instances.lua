@@ -149,7 +149,8 @@ Instances.currency = {
     -- [603] = { currencies = ICT:set(ICT.Conquest), availableCurrency = ulduarEmblems, maxCurrency = ICT:returnX(maxUlduarEmblems) },
     [603] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBoss(1), maxCurrency = maxSameEmblemsPerBoss(1) },
     -- Onyxia's Lair
-    [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
+    -- [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(4, 5), maxCurrency = maxEmblemsPerSize(4, 5) },
+    [249] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(3, 3), maxCurrency = maxEmblemsPerSize(3, 3) },
     -- Trial of the Crusader
     [649] = { currencies = ICT:set(ICT.Triumph), availableCurrency = sameEmblemsPerBossPerSize(8, 10), maxCurrency = maxEmblemsPerSize(8, 10) },
     -- Icecrown Citadel

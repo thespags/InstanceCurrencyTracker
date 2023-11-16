@@ -82,8 +82,7 @@ function UI:CreateFrame()
 
     ICT.Options:CreatePlayerDropdown()
     ICT.Options:CreateOptionDropdown()
-    ICT.AdvOptions:createButton()
-    self:createPlayerSlider()
+    ICT.AdvOptions:create()
 end
 
 function UI:drawFrame(x, y, width, height)
@@ -251,7 +250,6 @@ function UI:addTab(frame, tab, name)
 end
 
 function UI:PrintPlayers()
-    ICT.Options:FlipSlider()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do
         -- Only update the viewed Tab.
@@ -283,73 +281,4 @@ function UI:PrintPlayers()
     self.maxX = maxX
     self.maxY = maxY
     ICT.resize:Init(ICT.frame, self:getMinWidth() + 40, self:getMinHeight(), self:calculateWidth(maxX) + 50, self:calculateHeight(maxY))
-end
-
--- Taken from NIT
-function UI:createPlayerSlider()
-    local name = "ICTCharacterLevel"
-	local levelSlider = CreateFrame("Slider", name, ICT.frame, "OptionsSliderTemplate")
-    ICT.frame.levelSlider = levelSlider
-    levelSlider:SetAlpha(1)
-    levelSlider:SetIgnoreParentAlpha(true)
-	levelSlider:SetPoint("TOP", ICT.frame.options, "BOTTOM")
-    levelSlider.tooltipText = L["LevelSliderTooltip"];
-    levelSlider:SetWidth(120)
-    levelSlider:SetHeight(12)
-    levelSlider:SetMinMaxValues(1, ICT.MaxLevel)
-    levelSlider:SetObeyStepOnDrag(true);
-    levelSlider:SetValueStep(1)
-    levelSlider:SetStepsPerPage(1)
-    levelSlider:SetValue(ICT.db.options.minimumLevel or ICT.MaxLevel)
-    _G[name .. "Low"]:SetText("1")
-    _G[name .. "High"]:SetText(ICT.MaxLevel)
-    levelSlider:HookScript("OnValueChanged", function(self, value)
-        ICT.db.options.minimumLevel = value
-        levelSlider.editBox:SetText(value);
-        UI:PrintPlayers()
-    end)
-    levelSlider:Hide()
-
-    local function EditBox_OnEnterPressed(frame)
-        local value = frame:GetText()
-        value = tonumber(value)
-        if value then
-            value = math.max(math.min(ICT.MaxLevel, value), 1)
-            ICT.db.options.minimumLevel = value
-            levelSlider:SetValue(value)
-            levelSlider.editBox:SetText(value)
-            frame:ClearFocus()
-        else
-            levelSlider.editBox:SetText(ICT.db.options.minimumLevel)
-        end
-    end
-    local ManualBackdrop = {
-        bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
-        tile = true, edgeSize = 1, tileSize = 5,
-    };
-    local editBox = CreateFrame("EditBox", nil, levelSlider, "BackdropTemplate");
-    editBox:SetText(ICT.MaxLevel);
-    levelSlider.editBox = editBox
-    editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
-    editBox:SetAutoFocus(false);
-    editBox:SetFontObject(GameFontHighlightSmall);
-    editBox:SetPoint("TOP", levelSlider, "BOTTOM");
-    editBox:SetHeight(14);
-    editBox:SetWidth(70);
-    editBox:SetJustifyH("CENTER");
-    editBox:EnableMouse(true);
-    editBox:SetBackdrop(ManualBackdrop);
-    editBox:SetBackdropColor(0, 0, 0, 0.5);
-    editBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8);
-    editBox:SetScript("OnEnter", function(frame)
-        frame:SetBackdropBorderColor(0.5, 0.5, 0.5, 1);
-    end);
-    editBox:SetScript("OnLeave", function(frame)
-        frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8);
-    end);
-    editBox:SetScript("OnEnterPressed",EditBox_OnEnterPressed );
-    editBox:SetScript("OnEscapePressed", function(frame)
-        frame:ClearFocus();
-    end);
 end

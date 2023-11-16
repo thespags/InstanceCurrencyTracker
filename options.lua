@@ -67,7 +67,6 @@ local frameOptions = {
     { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, tooltip = L["OrderLockLastTooltip"], },
     { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
     { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
-    { name = L["Show Level Slider"], key = "showLevelSlider", tooltip = L["ShowLevelSliderTooltip"], },
 }
 
 function Options:setDefaultOptions(override)
@@ -141,14 +140,6 @@ function Options:FlipOptionsMenu()
         ICT.frame.playerDropdown:Hide()
     else
         ICT.frame.playerDropdown:Show()
-    end
-end
-
-function Options:FlipSlider()
-    if ICT.db.options.frame.showLevelSlider then
-        ICT.frame.levelSlider:Show()
-    else
-        ICT.frame.levelSlider:Hide()
     end
 end
 
