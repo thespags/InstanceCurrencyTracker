@@ -206,7 +206,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
                 local color = Colors:getSelectedColor(instance.locked)
                 cell = self.cells(x, y)
                 y = cell:printLine(instance:getName(), color)
-                Tooltips:instanceTooltip(player, instance):attach(cell)
+                Tooltips:instanceTooltip(instance):attach(cell)
                 -- Only enable LFD for not locked dungeons on the current player.
                 if player:isCurrentPlayer() and not instance.locked and instance:isDungeon() then
                     cell:printLFDInstance(instance)

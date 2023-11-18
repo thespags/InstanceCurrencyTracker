@@ -1,7 +1,7 @@
 local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
-
+local Players = ICT.Players
 local UI = {
     -- Default frame location.
     defaultX = 400,
@@ -47,10 +47,13 @@ function UI:getMinHeight()
 end
 
 function UI:calculateWidth(x)
+    -- Handle resize so it doens't blow up the screen.
+    -- DEFAULT_CHAT_FRAME:AddMessage( ( GetScreenWidth() * UIParent:GetEffectiveScale() ).."x"..( GetScreenHeight() * UIParent:GetEffectiveScale() ) )
     return math.max(self:getMinWidth(), x * self:getCellWidth())
 end
 
 function UI:calculateHeight(y)
+    -- DEFAULT_CHAT_FRAME:AddMessage( ( GetScreenWidth() * UIParent:GetEffectiveScale() ).."x"..( GetScreenHeight() * UIParent:GetEffectiveScale() ) )
     return math.max(self:getMinHeight(), y * self:getCellHeight())
 end
 
@@ -259,7 +262,7 @@ function UI:PrintPlayers()
             tab.cells:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.multiPlayerView then
-                for _, player in ICT:nspairsByValue(ICT.db.players, ICT.Player.isEnabled) do
+                for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
                     x = x + 1
                     y = math.max(tab:printPlayer(player, x), y)
                 end

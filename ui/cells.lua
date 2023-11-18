@@ -82,8 +82,17 @@ function Cells:__call(x, y)
     cell.frame:SetScript("OnLeave", nil)
     cell.frame:SetAttribute("type", nil)
     cell.frame:SetAttribute("item", nil)
+    cell.frame:ClearHighlightTexture()
     cell.frame:ClearNormalTexture()
+    cell.frame:ClearPushedTexture()
+    cell.frame:ClearDisabledTexture()
     return cell
+end
+
+-- Gets the cell without reseting the information. Must exist.
+function Cells:get(x, y)
+    local name = string.format("ICTCell(%s, %s)", x, y)
+    return self.cells[name]
 end
 
 function Cell:new(parent, x, y)
@@ -163,16 +172,15 @@ function Cell:attachHyperLink(f)
     end)
 end
 
+-- Deprecating. It can make some colors unpredictable.
 function Cell:attachClickHover()
     local indent = self.parent.indent
-    -- local leftColor = self.leftColor
     self.frame:HookScript("OnEnter", function()
         local old = self.parent.indent
         self.parent.indent = indent
         self.hover = true
         self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
         self.parent.indent = old
-        self.frame:SetNormalTexture("groupfinder-highlightbar-green")
     end)
     self.frame:HookScript("OnLeave", function()
         local old = self.parent.indent
@@ -180,21 +188,30 @@ function Cell:attachClickHover()
         self.hover = false
         self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
         self.parent.indent = old
-        self.frame:SetNormalTexture("groupfinder-button-cover")
     end)
-    self.frame:SetNormalTexture("groupfinder-button-cover")
 end
 
 function Cell:attachSecureClick(itemName)
     self.frame:SetAttribute("type", "item")
     self.frame:SetAttribute("item", itemName)
-    self:attachClickHover()
+    self.frame:SetHighlightTexture("groupfinder-highlightbar-green")
+    self.frame:SetNormalTexture("groupfinder-button-cover")
+    self.frame:SetPushedTexture("groupfinder-button-cover-down")
+    self.frame:SetDisabledTexture("")
 end
 
 function Cell:attachClick(click, shiftClick)
     self.hookOnClick = click
     self:attachShiftClick(shiftClick)
-    self:attachClickHover()
+    self.frame:SetHighlightTexture("groupfinder-highlightbar-green")
+    self.frame:SetNormalTexture("groupfinder-button-cover")
+    self.frame:SetPushedTexture("groupfinder-button-cover-down")
+    self.frame:SetDisabledTexture("")
+end
+
+function Cell:setClicked(clicked)
+    local texture = clicked and "groupfinder-highlightbar-blue" or "groupfinder-button-cover"
+    self.frame:SetNormalTexture(texture)
 end
 
 function Cell:printOptionalValue(option, leftText, rightText, leftColor, rightColor)

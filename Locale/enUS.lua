@@ -4,6 +4,7 @@ L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Curren
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
 L["No Currency"] = "No Currency"
+L["Confirm"] = "Confirm"
 
 -- Tabs
 L["Main"] = "Main"
@@ -143,12 +144,25 @@ L["Show Realm Name"] = "Show Realm Name"
 L["ShowRealmNameTooltip"] = "Shows [{realm name}] {player name} versus {player name}."
 
 -- Advanced Options
+L["AdvancedOptionsTooltip"] = "Advanced Options"
+L["AdvancedOptionsTooltipBody"] = "Advanced options to control, such as account linking or reseting options."
 L["Link Accounts"] = "Linked BNet Accounts"
-L["Link Accounts Tooltip Header"] = "Account Linking"
-L["Link Accounts Tooltip Body"] = "Enable Accounts in your \"BNet list\" to receive their character data.\
+L["LinkAccountsTooltip"] = "Account Linking"
+L["LinkAccountsTooltipBody"] = "Enable Accounts in your \"BNet list\" to receive their character data.\
 This will sync characters when both accounts on logged into to the same realm and faction."
-L["Character Level"] = "Show Level Slider"
-L["Character Level Toolip"] = "Minimum level to filter characters."
+L["Character Level"] = "Level Filter"
+L["CharacterLevelToolip"] = "Level Filter"
+L["CharacterLevelToolipBody"] = "Filters out characters lower than the selected level from the display."
+L["Custom Order"] = "Custom Order"
+L["CustomOrderEnabledTooltip"] = "Enable Order"
+L["CustomOrderEnabledTooltipBody"] = "Enable to use the custom order, otherwise uses alphabetical order."
+L["CustomOrderTooltip"] = "Custom order for displaying characters"
+L["CustomOrderTooltipBody"] = "Move the character up or down to change its ordering."
+L["ResetOptionsTooltip"] = "Reset Options"
+L["ResetOptionsTooltipBody"] = "Opens a confirmation dialog to reset all options to their default value."
+L["ResetOptionsDialog"] = "Confirm Reset Options"
+L["ResetOptionsDialogBody"] = "Set all options to their default value?"
+L["Reset All"] = "Reset All"
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"

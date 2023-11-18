@@ -72,3 +72,61 @@ end
 function Players:getCurrentName()
     return string.format("[%s] %s", GetRealmName(), UnitName("Player"))
 end
+
+-- Uses the custom order define by the user, if a player does not have an order set,
+-- defaults to natural order.
+function Players.customSort(a, b)
+    if a.order and b.order then
+        return a.order < b.order
+    elseif a.order then
+        return true
+    elseif b.order then
+        return false
+    else
+        return a < b
+    end
+end
+
+function Players.byShortName(a, b)
+    return a:getName() < b.getName()
+end
+
+function Players.byClass(f)
+    return function(a, b)
+        if a.class == b.class then
+            return f and f(a, b) or a < b
+        else
+            return a.class < b.class
+        end
+    end
+end
+
+function Players.currentFirst(f)
+    return function(a, b)
+        if a:IsCurrentPlayer() then
+            return true
+        elseif b:IsCurrentPlayer() then
+            return false
+        else
+            return f(a, b)
+        end
+    end
+end
+
+function Players.getSort()
+    local sort = function(a, b) return a < b end
+    if ICT.db.options.sort.custom then
+        sort = Players.customSort
+    end
+    -- elseif ICT.db.options.sort.shortName then
+    --     sort = Players.byShortName
+    -- end
+    -- if ICT.db.options.sort.byClass then
+    --     sort = Players.byClass(sort)
+    -- end
+
+    -- if ICT.db.options.sort.currentFirst then
+    --     sort = Players.currentFirst(sort)
+    -- end
+    return sort
+end

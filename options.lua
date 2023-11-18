@@ -124,6 +124,7 @@ function Options:setDefaultOptions(override)
 
     put(options, "comms", {})
     put(options.comms, "players", {})
+    put(options, "sort", {})
 end
 
 function Options:FlipMinimapIcon()

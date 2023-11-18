@@ -466,6 +466,10 @@ function Player:getName()
     return ICT.db.options.frame.verboseName and self.fullName or self.name
 end
 
+function Player:getShortName()
+    return self.name
+end
+
 function Player:getFullName()
     return self.fullName
 end

@@ -2,10 +2,17 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
+local Players = ICT.Players
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 local AdvOptions = {}
 ICT.AdvOptions = AdvOptions
+
+local width = 355
+local height = 300
+local fontSize = 12
+local scrollWidth = 125
+local scrollHeight = fontSize
 
 local function createSectionTitle(frame, x, y, text)
     local title = frame:CreateFontString()
@@ -14,15 +21,14 @@ local function createSectionTitle(frame, x, y, text)
     title:SetPoint("CENTER", frame, "TOP", x, y)
 end
 
-local function createCommsList(parent)
-    local frame = CreateFrame("Frame", "ICTAllowedComms", parent, "BackdropTemplate")
-    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 25, -60)
-    frame:SetSize(100, 100)
+local function createLinkList(parent)
+    local frame = CreateFrame("Frame", "ICTOptionsLink", parent, "BackdropTemplate")
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, -50)
+    frame:SetSize(scrollWidth, 100)
     UI:setBackdrop(frame)
     local scroll = UI:createScrollFrame(frame)
-    local cells = ICT.Cells:new(scroll.content, 12, 100, 10)
-    local tooltip = Tooltips:new(L["Link Accounts Tooltip Header"], L["Link Accounts Tooltip Body"])
-    tooltip:attachFrame(frame)
+    local cells = ICT.Cells:new(scroll.content, fontSize, scrollWidth, scrollHeight)
+    Tooltips:info(frame, L["LinkAccountsTooltip"], L["LinkAccountsTooltipBody"])
     createSectionTitle(frame, 10, 10, L["Link Accounts"])
 
     return function()
@@ -39,54 +45,136 @@ local function createCommsList(parent)
                     cell:printLine(friend.accountName, color)
                 end
             )
-            tooltip:attach(cell)
+            Tooltips:new(friend.battleTag):attach(cell)
         end
-        scroll.content:SetSize(100, (numFriends + 1) * 10)
+        cells(1, numFriends + 1):printLine("") -- Adds a dummy line for view, because the following line doesn't seem to work as I thought.
+        scroll.content:SetSize(scrollWidth, (numFriends + 1) * scrollHeight)
         scroll.vScrollBox:FullUpdate()
     end
 end
 
-local resetConfirm = UI:createDialogWindow("ICTResetOptionsDialog", "Confirm Reset Options", "Set all options to their default value?", "Confirm")
+local function createUpArrow(frame)
+    local moveUp = CreateFrame("Button", nil, frame)
+    moveUp:SetSize(21,19)
+    moveUp:SetPoint("BOTTOMRIGHT", frame, "LEFT", 0, 0)
+    moveUp:SetNormalAtlas("hud-MainMenuBar-arrowup-up")
+    moveUp:SetPushedAtlas("hud-MainMenuBar-arrowup-down")
+    moveUp:SetDisabledAtlas("hud-MainMenuBar-arrowup-disabled")
+    moveUp:SetHighlightAtlas("hud-MainMenuBar-arrowup-highlight")
+    moveUp:SetEnabled(false)
+    return moveUp
+end
+
+local function createDownArrow(frame)
+    local moveDown = CreateFrame("Button", nil, frame)
+    moveDown:SetSize(21, 19)
+    moveDown:SetPoint("TOPRIGHT", frame, "LEFT", 0, 0)
+    moveDown:SetNormalAtlas("hud-MainMenuBar-arrowdown-up")
+    moveDown:SetPushedAtlas("hud-MainMenuBar-arrowdown-down")
+    moveDown:SetDisabledAtlas("hud-MainMenuBar-arrowdown-disabled")
+    moveDown:SetHighlightAtlas("hud-MainMenuBar-arrowdown-highlight")
+    moveDown:SetEnabled(false)
+    return moveDown
+end
+
+local function createSortList(parent)
+    local frame = CreateFrame("Frame", "ICTOptionsSort", parent, "BackdropTemplate")
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 190, -50)
+    frame:SetSize(scrollWidth, 100)
+    UI:setBackdrop(frame)
+    local scroll = UI:createScrollFrame(frame)
+    local cells = ICT.Cells:new(scroll.content, fontSize, scrollWidth, scrollHeight)
+    Tooltips:info(frame, L["CustomOrderTooltip"], L["CustomOrderTooltipBody"])
+    createSectionTitle(frame, 10, 10, L["Custom Order"])
+
+    local selectedPlayer
+    local moveUp = createUpArrow(frame)
+    local moveDown = createDownArrow(frame)
+    local ordered = {}
+    local setArrowsEnabled = function(max)
+        moveUp:SetEnabled(ICT.db.options.sort.custom and selectedPlayer and selectedPlayer.order > 1)
+        moveDown:SetEnabled(ICT.db.options.sort.custom and selectedPlayer and selectedPlayer.order < max)
+    end
+    local update = function()
+        local i = 0
+        for _, player in ICT:spairsByValue(ICT.db.players, Players.customSort) do
+            i = i + 1
+            ordered[i] = player
+            -- Sets the player order to ensure it is non nil and compact if any were deleted.
+            player.order = i
+            local cell = cells(1, i)
+            cell:printLine(player:getShortName(), player:getClassColor())
+            cell:attachClick(function()
+                for j=1,i do
+                    cells:get(1, j):setClicked(false)
+                end
+                if selectedPlayer ~= player then
+                    -- Unselect if already selected.
+                    cell:setClicked(true)
+                    selectedPlayer = player
+                else
+                    selectedPlayer = nil
+                end
+                setArrowsEnabled(i)
+            end)
+            -- If the cell is reenable then we perserve the selected player.
+            cell.frame:SetEnabled(ICT.db.options.sort.custom)
+            cell:setClicked(selectedPlayer == player)
+            Tooltips:new(player.realm):attach(cell)
+        end
+        cells(1, i + 1):printLine("") -- Adds a dummy line for view, because the following line doesn't seem to work as I thought.
+        scroll.content:SetSize(scrollWidth, (i + 1) * scrollHeight)
+        scroll.vScrollBox:FullUpdate()
+        -- Check that the player wasn't deleted.
+        selectedPlayer = selectedPlayer and ICT.db.players[selectedPlayer:getFullName()]
+    end
+
+    moveDown:SetScript("OnClick", function()
+        if #ordered == ICT:size(ICT.db.players) then
+            local prev = selectedPlayer.order
+            selectedPlayer.order = selectedPlayer.order + 1
+            ordered[selectedPlayer.order].order = prev
+            setArrowsEnabled(#ordered)
+            ICT:UpdateDisplay()
+        end
+        update()
+    end)
+    moveUp:SetScript("OnClick", function()
+        if #ordered == ICT:size(ICT.db.players) then
+            local prev = selectedPlayer.order
+            selectedPlayer.order = selectedPlayer.order - 1
+            ordered[selectedPlayer.order].order = prev
+            setArrowsEnabled(#ordered)
+            ICT:UpdateDisplay()
+        end
+        update()
+    end)
+    local button = CreateFrame("CheckButton", "ICTOptionsSortEnabled", parent, "ChatConfigCheckButtonTemplate")
+    button:SetSize(21, 19)
+    button:SetPoint("BOTTOMLEFT", frame, "TOPLEFT")
+    button:SetChecked(ICT.db.options.sort.custom)
+    button:HookScript("OnClick", function(self)
+        ICT.db.options.sort.custom = not ICT.db.options.sort.custom
+        self:SetChecked(ICT.db.options.sort.custom)
+        update()
+        setArrowsEnabled(#ordered)
+        ICT:UpdateDisplay()
+    end)
+    Tooltips:new(L["CustomOrderEnabledTooltip"], L["CustomOrderEnabledTooltipBody"]):attachFrame(button)
+    return update
+end
+
+local resetConfirm = UI:createDialogWindow("ICTResetOptionsDialog", L["ResetOptionsDialog"], L["ResetOptionsDialogBody"], L["Confirm"])
 resetConfirm.button:SetScript("OnClick", function()
     ICT.Options:setDefaultOptions(true)
     resetConfirm:Hide()
 end)
 
--- Pieces taken from NIT, creates a slider and edit box that work together to set the minimum level of characters to display.
-local function createPlayerSlider(parent)
-	local levelSlider = CreateFrame("Slider", "ICTCharacterLevel", parent, "OptionsSliderTemplate")
-	levelSlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 25, -190)
-    levelSlider.tooltipText = L["Character Level Toolip"];
-
-    levelSlider:SetSize(120, 12)
-    levelSlider:SetMinMaxValues(1, ICT.MaxLevel)
-    levelSlider:SetObeyStepOnDrag(true)
-    levelSlider:SetValueStep(1)
-    levelSlider:SetStepsPerPage(1)
-    levelSlider:SetValue(ICT.db.options.minimumLevel or ICT.MaxLevel)
-    levelSlider.Low:SetText("1")
-    levelSlider.High:SetText(ICT.MaxLevel)
-    createSectionTitle(levelSlider, 0, 10, L["Character Level"])
-
-    local function onEnterPressed(self)
-        local value = self:GetText()
-        value = tonumber(value)
-        if value then
-            value = math.max(math.min(ICT.MaxLevel, value), 1)
-            ICT.db.options.minimumLevel = value
-            levelSlider:SetValue(value)
-            self:SetText(value)
-            self:ClearFocus()
-        else
-            levelSlider.editBox:SetText(ICT.db.options.minimumLevel)
-        end
-    end
-
-    local editBox = CreateFrame("EditBox", nil, levelSlider, "BackdropTemplate")
-    editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
+local function createEditBox(parent, onEnterPressed)
+    local editBox = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
     editBox:SetAutoFocus(false)
     editBox:SetFontObject(GameFontHighlightSmall)
-    editBox:SetPoint("TOP", levelSlider, "BOTTOM")
+    editBox:SetPoint("TOP", parent, "BOTTOM")
     editBox:SetSize(70, 14)
     editBox:SetJustifyH("CENTER")
     editBox:EnableMouse(true)
@@ -102,21 +190,63 @@ local function createPlayerSlider(parent)
     editBox:SetScript("OnEscapePressed", function(self)
         self:ClearFocus()
     end)
+    return editBox
+end
+
+-- Pieces taken from NIT, creates a slider and edit box that work together to set the minimum level of characters to display.
+local function createPlayerSlider(parent)
+	local levelSlider = CreateFrame("Slider", "ICTOptionsSlider", parent, "OptionsSliderTemplate")
+	levelSlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 25, -190)
+    levelSlider:SetSize(120, 12)
+    levelSlider:SetMinMaxValues(1, ICT.MaxLevel)
+    levelSlider:SetObeyStepOnDrag(true)
+    levelSlider:SetValueStep(1)
+    levelSlider:SetStepsPerPage(1)
+    levelSlider:SetValue(ICT.db.options.minimumLevel or ICT.MaxLevel)
+    levelSlider.Low:SetText("1")
+    levelSlider.High:SetText(ICT.MaxLevel)
+    Tooltips:new(L["CharacterLevelToolip"], L["CharacterLevelToolipBody"]):attachFrame(levelSlider)
+    createSectionTitle(levelSlider, 0, 10, L["Character Level"])
+
+    local function onEnterPressed(self)
+        local value = self:GetText()
+        value = tonumber(value)
+        if value then
+            value = math.max(math.min(ICT.MaxLevel, value), 1)
+            ICT.db.options.minimumLevel = value
+            levelSlider:SetValue(value)
+            self:SetText(value)
+            self:ClearFocus()
+        else
+            levelSlider.editBox:SetText(ICT.db.options.minimumLevel)
+        end
+    end
+    local editBox = createEditBox(parent, onEnterPressed)
+    editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
 
     levelSlider:HookScript("OnValueChanged", function(self, value)
         ICT.db.options.minimumLevel = value
         editBox:SetText(value)
-        UI:PrintPlayers()
+        ICT:UpdateDisplay()
     end)
 end
 
 local function createResetButton(frame)
+    local button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local length = string.len(L["Reset All"]) * 10
+    button:SetSize(length, 22)
+    button:SetText(L["Reset All"])
+    button:SetPoint("BOTTOM", frame, "BOTTOM", 0, 20)
+    button:SetScript("OnClick", function()
+        resetConfirm:Show()
+    end)
+    Tooltips:new(L["ResetOptionsTooltip"], L["ResetOptionsTooltipBody"]):attachFrame(button)
 end
 
 local options = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
 function AdvOptions:createFrame(frame)
     frame:SetToplevel(true)
-    frame:SetSize(300, 300)
+    frame:SetSize(width, height)
     frame:SetMovable(true)
 	frame:SetScript("OnMouseDown", frame.StartMoving)
 	frame:SetScript("OnMouseUp",  frame.StopMovingOrSizing)
@@ -124,24 +254,14 @@ function AdvOptions:createFrame(frame)
     frame:SetFrameStrata("HIGH")
     table.insert(UISpecialFrames, frame:GetName())
 
-    frame.commsList = createCommsList(frame)
+    frame.linkList = createLinkList(frame)
+    frame.sortList = createSortList(frame)
     createPlayerSlider(frame)
+    createResetButton(frame)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(L["Options"])
     title:SetPoint("TOP", -10, -6)
-
-    -- frame.name = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    -- frame.name:SetText(string.format("|c%s%s|r", "FFFFFFFF", bodyText))
-    -- frame.name:SetPoint("CENTER", 0, 10)
-
-    frame.button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    frame.button:SetSize(80 ,22)
-    frame.button:SetText("Reset All")
-    frame.button:SetPoint("RIGHT", frame, "RIGHT", -30, 0)
-    frame.button:SetScript("OnClick", function()
-        resetConfirm:Show()
-    end)
 end
 
 local showOptions = true
@@ -153,7 +273,8 @@ local function openOptionsFrame()
             resetConfirm:Hide()
             return
         end
-        options.commsList()
+        options.linkList()
+        options.sortList()
         options:Show()
     end
 end
@@ -166,16 +287,10 @@ function AdvOptions:createButton()
     button:SetText("|TInterface\\Buttons\\UI-OptionsButton:12|t")
     button:SetPoint("TOPRIGHT", ICT.frame.options, "TOPLEFT", 18, -2)
     button:SetScript("OnClick", openOptionsFrame())
-    local f = function(tooltip)
-        tooltip:printTitle("Reset Options")
-        tooltip:printPlain("Opens a dialog to confirm to reset options to their default value.")
-    end
-    ICT.Tooltip:new(f)
-    :attachFrame(button)
+    Tooltips:new(L["AdvancedOptionsTooltip"], L["AdvancedOptionsTooltipBody"]):attachFrame(button)
 end
 
 function AdvOptions:create()
     self:createButton()
     self:createFrame(options)
-
 end
