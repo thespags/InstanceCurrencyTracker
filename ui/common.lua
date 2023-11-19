@@ -104,6 +104,6 @@ function UI:cellDropdown(reference, f)
                 self:Cancel()
             end
         end
-        frame.ticker = C_Timer.NewTimer(.5, update)
+        frame.ticker = C_Timer.NewTicker(.5, update)
     end
 end

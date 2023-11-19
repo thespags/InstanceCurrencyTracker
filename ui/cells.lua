@@ -327,18 +327,13 @@ end
 function Cell:attachCheckButton(key)
     local button = self.buttons[key]
     if not button then
-        button = CreateFrame("CheckButton", key, self.frame)
+        button = CreateFrame("CheckButton", key, self.frame, "UICheckButtonTemplate")
         self.buttons[key] = button
         button:SetParent(self.frame)
-        button:SetSize(UI.getFontSize(), UI.getFontSize())
         button:SetPoint("LEFT", self.frame, "LEFT", 0, 0)
-        button:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
-        button:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
-        button:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight")
-        button:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
-        button:SetDisabledCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check-Disabled")
         -- _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
     end
+    button:SetSize(UI.getFontSize() + 5, UI.getFontSize() + 5)
     button:Show()
     return button
 end
