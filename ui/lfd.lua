@@ -86,18 +86,17 @@ function LFD:specificDropdown(parent, instance)
             local cell = frame.cells(1, i)
             local name = LibInstances:getGroupName(k)
             local text = LFGConstructDeclinedMessage(v)
-            local prefix = ""
+            local button = cell:attachCheckButton("ICT" .. v, text ~= "")
             if text == "" then
-                local button = cell:attachCheckButton("ICT" .. v)
                 button:SetChecked(LFGEnabledList[v] or false)
                 button:SetEnabled(not queued)
                 button:SetScript("OnClick", self:selectSpecific(parent, instance, v))
-                prefix = "      "
             else
+                cell:lockCheckButton(button)
                 ICT.Tooltips:new(YOU_MAY_NOT_QUEUE_FOR_THIS, text):attach(cell)
-                prefix = " " .. CreateSimpleTextureMarkup("Interface\\LFGFrame\\UI-LFG-ICON-LOCK", 12, 12) .. " "
             end
-            cell:printLine(prefix .. name, Colors.text)
+            -- Offsets the name for the button.
+            cell:printLine("      " .. name, Colors.text)
         end
         return i
     end

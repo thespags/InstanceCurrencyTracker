@@ -163,6 +163,10 @@ L["ResetOptionsTooltipBody"] = "Opens a confirmation dialog to reset all options
 L["ResetOptionsDialog"] = "Confirm Reset Options"
 L["ResetOptionsDialogBody"] = "Set all options to their default value?"
 L["Reset All"] = "Reset All"
+L["Order Lock Last"] = "Order Lock Last"
+L["OrderLockLastTooltip"] = "Orders locked instances and completed quests after available instances and quests."
+L["Current Player First"] = "Current Player First"
+L["CurrentPlayerFirstTooltip"] = "Orders the current player first regardless of ordering."
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"

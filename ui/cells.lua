@@ -30,6 +30,18 @@ function Cells:hideRows(x, startY, endY)
     return startY < endY and endY or startY
 end
 
+function Cells:cellWidth()
+    return rawget(self, "width") or UI:getCellWidth()
+end
+
+function Cells:cellHeight()
+    return rawget(self, "height") or UI:getCellHeight()
+end
+
+function Cells:fontSize()
+    return rawget(self, "font") or UI:getFontSize()
+end
+
 -- Gets the associated cell or create it if it doesn't exist yet.
 function Cells:__call(x, y)
     local name = string.format("ICTCell(%s, %s)", x, y)
@@ -63,9 +75,9 @@ function Cells:__call(x, y)
     end
     -- I'm setting the table to the metatable, there's probably a better practice.
     -- Instead, I have to use rawget to avoid a loop.
-    local width = rawget(self, "width") or UI:getCellWidth()
-    local height = rawget(self, "height") or UI:getCellHeight()
-    local font = rawget(self, "font") or UI:getFontSize()
+    local width = self:cellWidth()
+    local height = self:cellHeight()
+    local font = self:fontSize()
     cell.frame:SetSize(width, height)
     cell.frame:SetPoint("TOPLEFT", 2 + (x - 1) * width, -2 - (y - 1) * height)
     cell.left:SetFont(UI.font, font)
@@ -333,7 +345,30 @@ function Cell:attachCheckButton(key)
         button:SetPoint("LEFT", self.frame, "LEFT", 0, 0)
         -- _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
     end
-    button:SetSize(UI.getFontSize() + 5, UI.getFontSize() + 5)
+    local font = self.parent:fontSize()
+    button:SetSize(font + 5, font + 5)
     button:Show()
     return button
+end
+
+function Cell:lockCheckButton(button)
+    local font = self.parent:fontSize()
+    -- This x adjustment doesn't scale with font size increase, so the lock moves left as the font increases.
+    button:SetPoint("LEFT", self.frame, "LEFT", 5, 0)
+    button:ClearHighlightTexture()
+    button:SetNormalTexture("Interface\\LFGFrame\\UI-LFG-ICON-LOCK")
+    button:SetEnabled(false)
+    button:SetSize(font, font)
+end
+
+-- These cells are created once, so I'm not preserving them for now.
+function Cell:attachCheckOption(text, tooltip, k, v)
+    self:printLine("      " .. text, Colors.text)
+    local button = self:attachCheckButton(self.frame:GetName() .. "Option")
+    button:SetChecked(ICT.db.options[k][v])
+    button:HookScript("OnClick", function(self)
+        ICT.db.options[k][v] = not ICT.db.options[k][v]
+        ICT:UpdateDisplay()
+    end)
+    tooltip:attach(self)
 end

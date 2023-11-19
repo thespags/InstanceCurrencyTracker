@@ -13,6 +13,8 @@ local height = 300
 local fontSize = 12
 local scrollWidth = 125
 local scrollHeight = fontSize
+-- Cells use fontSize plus 5.
+local iconSize = fontSize + 5
 
 local function createSectionTitle(frame, x, y, text)
     local title = frame:CreateFontString()
@@ -55,7 +57,7 @@ end
 
 local function createUpArrow(frame)
     local moveUp = CreateFrame("Button", nil, frame)
-    moveUp:SetSize(21,19)
+    moveUp:SetSize(iconSize, iconSize)
     moveUp:SetPoint("BOTTOMRIGHT", frame, "LEFT", 0, 0)
     moveUp:SetNormalAtlas("hud-MainMenuBar-arrowup-up")
     moveUp:SetPushedAtlas("hud-MainMenuBar-arrowup-down")
@@ -67,7 +69,7 @@ end
 
 local function createDownArrow(frame)
     local moveDown = CreateFrame("Button", nil, frame)
-    moveDown:SetSize(21, 19)
+    moveDown:SetSize(iconSize, iconSize)
     moveDown:SetPoint("TOPRIGHT", frame, "LEFT", 0, 0)
     moveDown:SetNormalAtlas("hud-MainMenuBar-arrowdown-up")
     moveDown:SetPushedAtlas("hud-MainMenuBar-arrowdown-down")
@@ -149,13 +151,12 @@ local function createSortList(parent)
         end
         update()
     end)
-    local button = CreateFrame("CheckButton", "ICTOptionsSortEnabled", parent, "ChatConfigCheckButtonTemplate")
-    button:SetSize(21, 19)
+    local button = CreateFrame("CheckButton", "ICTOptionsSortEnabled", parent, "UICheckButtonTemplate")
+    button:SetSize(iconSize, iconSize)
     button:SetPoint("BOTTOMLEFT", frame, "TOPLEFT")
     button:SetChecked(ICT.db.options.sort.custom)
     button:HookScript("OnClick", function(self)
         ICT.db.options.sort.custom = not ICT.db.options.sort.custom
-        self:SetChecked(ICT.db.options.sort.custom)
         update()
         setArrowsEnabled(#ordered)
         ICT:UpdateDisplay()
@@ -175,6 +176,7 @@ local function createEditBox(parent, onEnterPressed)
     editBox:SetAutoFocus(false)
     editBox:SetFontObject(GameFontHighlightSmall)
     editBox:SetPoint("TOP", parent, "BOTTOM")
+    editBox:SetNumeric(true)
     editBox:SetSize(70, 14)
     editBox:SetJustifyH("CENTER")
     editBox:EnableMouse(true)
@@ -221,7 +223,7 @@ local function createPlayerSlider(parent)
             levelSlider.editBox:SetText(ICT.db.options.minimumLevel)
         end
     end
-    local editBox = createEditBox(parent, onEnterPressed)
+    local editBox = createEditBox(levelSlider, onEnterPressed)
     editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
 
     levelSlider:HookScript("OnValueChanged", function(self, value)
@@ -243,6 +245,17 @@ local function createResetButton(frame)
     Tooltips:new(L["ResetOptionsTooltip"], L["ResetOptionsTooltipBody"]):attachFrame(button)
 end
 
+local function checkedOptions(parent)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetSize(scrollWidth, 100)
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 190, -175)
+    local cells = ICT.Cells:new(frame, fontSize, scrollWidth, scrollHeight)
+    local tooltip = Tooltips:new(L["Current Player First"], L["CurrentPlayerFirstTooltip"])
+    cells(1, 1):attachCheckOption(L["Current Player First"], tooltip, "sort", "currentFirst")
+    tooltip = Tooltips:new(L["Order Lock Last"], L["OrderLockLastTooltip"])
+    cells(1, 2):attachCheckOption(L["Order Lock Last"], tooltip, "sort", "orderLockLast")
+end
+
 local options = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
 function AdvOptions:createFrame(frame)
     frame:SetToplevel(true)
@@ -258,6 +271,7 @@ function AdvOptions:createFrame(frame)
     frame.sortList = createSortList(frame)
     createPlayerSlider(frame)
     createResetButton(frame)
+    checkedOptions(frame)
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(L["Options"])

@@ -63,9 +63,14 @@ end
 local frameOptions = {
     { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
     { name = L["Show Minimap Icon"], key = "showMinimapIcon", func = Options.minimap },
-    { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, tooltip = L["OrderLockLastTooltip"], },
     { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
     { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
+}
+
+local sortOptions = {
+    { name = L["Custom Order"], key = "custom", defaultFalse = true, },
+    { name = L["Current Player First"], key = "currentFirst", defaultFalse = true, },
+    { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, },
 }
 
 function Options:setDefaultOptions(override)
@@ -121,10 +126,10 @@ function Options:setDefaultOptions(override)
     setDefaults(messageOptions, "messages")
     setDefaults(frameOptions, "frame")
     setDefaults(questOptions, "quests")
+    setDefaults(sortOptions, "sort")
 
     put(options, "comms", {})
     put(options.comms, "players", {})
-    put(options, "sort", {})
 end
 
 function Options:FlipMinimapIcon()

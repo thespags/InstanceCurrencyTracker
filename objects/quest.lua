@@ -37,7 +37,7 @@ end
 
 function ICT.QuestSort(player)
     return function(a, b)
-        if ICT.db.options.frame.orderLockLast then
+        if ICT.db.options.sort.orderLockLast then
             if player:isQuestCompleted(a) and not player:isQuestCompleted(b) then
                 return false
             end

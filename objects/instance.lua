@@ -123,7 +123,7 @@ end
 -- This comparison groups instances with the same name together across multiple sizes.
 -- This is intended for sorting with respect to dungeons and raids separately.
 function Instance:__lt(other)
-    if ICT.db.options.frame.orderLockLast then
+    if ICT.db.options.sort.orderLockLast then
         if self.locked and not other.locked then
             return false
         end

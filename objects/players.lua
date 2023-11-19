@@ -103,9 +103,9 @@ end
 
 function Players.currentFirst(f)
     return function(a, b)
-        if a:IsCurrentPlayer() then
+        if a:isCurrentPlayer() then
             return true
-        elseif b:IsCurrentPlayer() then
+        elseif b:isCurrentPlayer() then
             return false
         else
             return f(a, b)
@@ -125,8 +125,8 @@ function Players.getSort()
     --     sort = Players.byClass(sort)
     -- end
 
-    -- if ICT.db.options.sort.currentFirst then
-    --     sort = Players.currentFirst(sort)
-    -- end
+    if ICT.db.options.sort.currentFirst then
+        sort = Players.currentFirst(sort)
+    end
     return sort
 end

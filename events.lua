@@ -68,6 +68,12 @@ local function initEvent(self, event, eventAddOn)
     if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
         ICT.Options:setDefaultOptions()
+        -- Preserve this option if necessary, remove in future versions.
+        if ICT.db.options.frame.orderLockLast then
+            ICT.db.options.sort.orderLockLast = ICT.db.options.frame.orderLockLast
+            ICT.db.options.frame.orderLockLast = nil
+        end
+
         local semVer = ICT.semver(ICT.db.version or "0.0.0")
         if semVer <= ICT.semver("v1.1.29") then
             ICT:print("Updating currencies and instances...")
