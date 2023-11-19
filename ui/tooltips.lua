@@ -188,7 +188,7 @@ local function printQuestsForCurrency(tooltip, player, currency)
             if currency:fromQuest()(quest) and player:isQuestVisible(quest) then
                 tooltip:printSection(L["Quests"])
                 local color = Colors:getQuestColor(player, quest)
-                tooltip:printValue(quest.name(player), quest.amount, color)
+                tooltip:printValue(quest.name(player), quest.currencies[currency], color)
             end
         end
     end
