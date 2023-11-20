@@ -179,7 +179,9 @@
         "BNGetNumFriends",
         "GetRealmID",
         "debugstack",
-        "date"
+        "date",
+        "GetScreenWidth",
+        "GetScreenHeight"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

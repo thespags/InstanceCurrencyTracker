@@ -362,13 +362,14 @@ function Cell:lockCheckButton(button)
 end
 
 -- These cells are created once, so I'm not preserving them for now.
-function Cell:attachCheckOption(text, tooltip, k, v)
-    self:printLine("      " .. text, Colors.text)
+function Cell:attachCheckOption(options, v)
+    self:printLine("      " .. v.name, Colors.text)
     local button = self:attachCheckButton(self.frame:GetName() .. "Option")
-    button:SetChecked(ICT.db.options[k][v])
+    button:SetChecked(options[v.key])
     button:HookScript("OnClick", function(self)
-        ICT.db.options[k][v] = not ICT.db.options[k][v]
+        options[v.key] = not options[v.key]
+        _ = v.func and v.func()
         ICT:UpdateDisplay()
     end)
-    tooltip:attach(self)
+    ICT.Tooltips:new(v.name, v.tooltip):attach(self)
 end

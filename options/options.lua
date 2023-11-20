@@ -62,15 +62,15 @@ end
 
 Options.frame = {
     { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
-    { name = L["Show Minimap Icon"], key = "showMinimapIcon", func = Options.minimap },
+    { name = L["Show Minimap Icon"], key = "showMinimapIcon", tooltip = L["ShowMinimapIconTooltip"], func = Options.minimap },
     { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
     { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
 }
 
 Options.sort = {
-    { name = L["Custom Order"], key = "custom", defaultFalse = true, },
-    { name = L["Current Player First"], key = "currentFirst", defaultFalse = true, },
-    { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, },
+    { name = L["Custom Order"], key = "custom", tooltip = L["CustomOrderTooltip"], defaultFalse = true, skipped = true, },
+    { name = L["Current Player First"], key = "currentFirst", tooltip = L["CurrentPlayerFirstTooltip"], defaultFalse = true, },
+    { name = L["Order Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
 }
 
 function Options:setDefaultOptions(override)

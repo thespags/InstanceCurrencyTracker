@@ -335,10 +335,10 @@ function MainTab:prePrint()
     self:calculateGold()
 end
 
-local tickerSpacing = function()
+local tickerSpacing = function(fontSize)
     -- Adjust spacing to fit enough apart but within the minimum size.
     -- This could probably be derived from the cell width (i.e. minimum), but it works
-    return 55 + (UI:getFontSize() - 10) * 5
+    return 55 + (fontSize - 10) * 5
 end
 
 function MainTab:postPrint()
@@ -346,17 +346,18 @@ function MainTab:postPrint()
     if selected and ICT.db.options.multiPlayerView then
         local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
         local tooltip = Tooltips:timerSectionTooltip()
+        local fontSize = math.min(16, UI:getFontSize())
 
-        local start = -tickerSpacing() * (count - 1) / 2
+        local start = -tickerSpacing(fontSize) * (count - 1) / 2
         local frame = nil
         for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
-            start, frame = self:printMultiViewResetTicker(start, v:getName(), v:expires(), v:duration())
+            start, frame = self:printMultiViewResetTicker(start, fontSize, v:getName(), v:expires(), v:duration())
             tooltip:attachFrame(frame)
         end
     end
 end
 
-function MainTab:printMultiViewResetTicker(x, title, expires, duration)
+function MainTab:printMultiViewResetTicker(x, fontSize, title, expires, duration)
     local frame = self.tickers[title] and self.tickers[title].frame
     if not frame then
         frame = CreateFrame("Button", "ICTReset" .. title, ICT.frame)
@@ -366,8 +367,9 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
         frame.textField:SetPoint("CENTER")
         frame.textField:SetJustifyH("LEFT")
     end
-    frame:SetSize(UI:getCellWidth(), UI:getCellHeight())
-    frame.textField:SetFont(UI.font, math.min(16, UI:getFontSize()))
+    frame:SetSize(UI:getCellWidth(fontSize), UI:getCellHeight(fontSize))
+    frame.textField:SetFont(UI.font, fontSize)
+    print()
     frame:SetPoint("TOP", x, -36)
     frame:Show()
     local update = function(self)
@@ -377,7 +379,7 @@ function MainTab:printMultiViewResetTicker(x, title, expires, duration)
     end
     self.tickers[title] = { ticker = C_Timer.NewTicker(1, update), frame = frame }
     update()
-    return x + tickerSpacing(), frame
+    return x + tickerSpacing(fontSize), frame
 end
 
 function MainTab:show()

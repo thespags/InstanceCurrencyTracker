@@ -131,18 +131,6 @@ L["SendGroupMessagesTooltip"] = "Messages your party or raid on leaving an insta
 L["Hide Unavailable Quests"] = "Hide Unavailable Quests"
 L["Show Quests"] = "Show Quests"
 
--- Frame Options
-L["Anchor to LFG"] = "Anchor to LFG"
-L["AnchorToLFGTooltip"] = "Brings up the frame when viewing the LFG frame otherwise detaches from the frame."
-L["Show Minimap Icon"] = "Show Minimap Icon"
-L["Order Lock Last"] = "Order Lock Last"
-L["OrderLockLastTooltip"] = "Orders locked instances and completed quests after available instances and quests."
-L["Verbose Currency"] = "Verbose Currency"
-L["Verbose Currency Tooltip"] = "Verbose Currency Tooltip"
-L["VerboseCurrencyTooltipTooltip"] = "Shows instances and quests currency available and total currency for the hovered over currency."
-L["Show Realm Name"] = "Show Realm Name"
-L["ShowRealmNameTooltip"] = "Shows [{realm name}] {player name} versus {player name}."
-
 -- Advanced Options
 L["AdvancedOptionsTooltip"] = "Advanced Options"
 L["AdvancedOptionsTooltipBody"] = "Advanced options to control, such as account linking or reseting options."
@@ -151,22 +139,37 @@ L["LinkAccountsTooltip"] = "Account Linking"
 L["LinkAccountsTooltipBody"] = "Enable Accounts in your \"BNet list\" to receive their character data.\
 This will sync characters when both accounts on logged into to the same realm and faction."
 L["Character Level"] = "Level Filter"
-L["CharacterLevelToolip"] = "Level Filter"
-L["CharacterLevelToolipBody"] = "Filters out characters lower than the selected level from the display."
-L["Custom Order"] = "Custom Order"
-L["CustomOrderEnabledTooltip"] = "Enable Order"
-L["CustomOrderEnabledTooltipBody"] = "Enable to use the custom order, otherwise uses alphabetical order."
-L["CustomOrderTooltip"] = "Custom order for displaying characters"
-L["CustomOrderTooltipBody"] = "Move the character up or down to change its ordering."
+L["CharacterLevelToolip"] = "Filters out characters lower than the selected level from the display."
+L["Font Size"] = "Font Size"
+L["FontSizeTooltip"] = "Adjust the font size of the main frame, or use /ict font {size}.\
+Using the command you can try ridiculously sizes if you choose to."
+
+-- Reset
 L["ResetOptionsTooltip"] = "Reset Options"
 L["ResetOptionsTooltipBody"] = "Opens a confirmation dialog to reset all options to their default value."
 L["ResetOptionsDialog"] = "Confirm Reset Options"
 L["ResetOptionsDialogBody"] = "Set all options to their default value?"
 L["Reset All"] = "Reset All"
+
+-- Sort Options
 L["Order Lock Last"] = "Order Lock Last"
 L["OrderLockLastTooltip"] = "Orders locked instances and completed quests after available instances and quests."
 L["Current Player First"] = "Current Player First"
 L["CurrentPlayerFirstTooltip"] = "Orders the current player first regardless of ordering."
+L["CustomOrderHelpTooltip"] = "Controls the order for displaying characters if enabled.\
+Enable to unlock the list and move the character up or down to change its ordering."
+L["Custom Order"] = "Custom Order"
+L["CustomOrderTooltip"] = "Enable to use the custom order, otherwise uses the alphabetical order."
+
+-- Frame Options
+L["Anchor to LFG"] = "Anchor to LFG"
+L["AnchorToLFGTooltip"] = "Brings up the frame when viewing the LFG frame otherwise detaches from the frame."
+L["Show Minimap Icon"] = "Show Minimap Icon"
+L["ShowMinimapIconTooltip"] = "Turns the minimap icon on and off."
+L["Verbose Currency Tooltip"] = "Verbose Currency Tooltip"
+L["VerboseCurrencyTooltipTooltip"] = "Shows instances and quests currency available and total currency for the hovered over currency."
+L["Show Realm Name"] = "Show Realm Name"
+L["ShowRealmNameTooltip"] = "Shows [{realm name}] {player name} versus {player name}."
 
 -- Tooltips
 L["Delete Player"] = "Delete Player"

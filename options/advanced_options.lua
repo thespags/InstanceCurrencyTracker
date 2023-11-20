@@ -86,7 +86,7 @@ local function createSortList(parent)
     UI:setBackdrop(frame)
     local scroll = UI:createScrollFrame(frame)
     local cells = ICT.Cells:new(scroll.content, fontSize, scrollWidth, scrollHeight)
-    Tooltips:info(frame, L["CustomOrderTooltip"], L["CustomOrderTooltipBody"])
+    Tooltips:info(frame, L["Custom Order"], L["CustomOrderHelpTooltip"])
     createSectionTitle(frame, 10, 10, L["Custom Order"])
 
     local selectedPlayer
@@ -161,7 +161,7 @@ local function createSortList(parent)
         setArrowsEnabled(#ordered)
         ICT:UpdateDisplay()
     end)
-    Tooltips:new(L["CustomOrderEnabledTooltip"], L["CustomOrderEnabledTooltipBody"]):attachFrame(button)
+    Tooltips:new(L["Custom Order"], L["CustomOrderTooltip"]):attachFrame(button)
     return update
 end
 
@@ -196,41 +196,41 @@ local function createEditBox(parent, onEnterPressed)
 end
 
 -- Pieces taken from NIT, creates a slider and edit box that work together to set the minimum level of characters to display.
-local function createPlayerSlider(parent)
-	local levelSlider = CreateFrame("Slider", "ICTOptionsSlider", parent, "OptionsSliderTemplate")
-	levelSlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 25, -190)
-    levelSlider:SetSize(120, 12)
-    levelSlider:SetMinMaxValues(1, ICT.MaxLevel)
-    levelSlider:SetObeyStepOnDrag(true)
-    levelSlider:SetValueStep(1)
-    levelSlider:SetStepsPerPage(1)
-    levelSlider:SetValue(ICT.db.options.minimumLevel or ICT.MaxLevel)
-    levelSlider.Low:SetText("1")
-    levelSlider.High:SetText(ICT.MaxLevel)
-    Tooltips:new(L["CharacterLevelToolip"], L["CharacterLevelToolipBody"]):attachFrame(levelSlider)
-    createSectionTitle(levelSlider, 0, 10, L["Character Level"])
+local function createSlider(parent, name, x, y, key, min, max)
+	local frame = CreateFrame("Slider", "ICTSlider" .. key, parent, "OptionsSliderTemplate")
+	frame:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
+    frame:SetSize(120, 12)
+    frame:SetMinMaxValues(min, max)
+    frame:SetObeyStepOnDrag(true)
+    frame:SetValueStep(1)
+    frame:SetStepsPerPage(1)
+    frame:SetValue(ICT.db.options[key] or max)
+    frame.Low:SetText(min)
+    frame.High:SetText(max)
+    createSectionTitle(frame, 0, 10, name)
 
     local function onEnterPressed(self)
         local value = self:GetText()
         value = tonumber(value)
         if value then
-            value = math.max(math.min(ICT.MaxLevel, value), 1)
-            ICT.db.options.minimumLevel = value
-            levelSlider:SetValue(value)
+            value = math.max(math.min(max, value), min)
+            ICT.db.options[key] = value
+            frame:SetValue(value)
             self:SetText(value)
             self:ClearFocus()
         else
-            levelSlider.editBox:SetText(ICT.db.options.minimumLevel)
+            frame.editBox:SetText(min)
         end
     end
-    local editBox = createEditBox(levelSlider, onEnterPressed)
-    editBox:SetText(ICT.db.options.minimumLevel or ICT.MaxLevel)
+    local editBox = createEditBox(frame, onEnterPressed)
+    editBox:SetText(ICT.db.options[key] or max)
 
-    levelSlider:HookScript("OnValueChanged", function(self, value)
-        ICT.db.options.minimumLevel = value
+    frame:HookScript("OnValueChanged", function(self, value)
+        ICT.db.options[key] = value
         editBox:SetText(value)
         ICT:UpdateDisplay()
     end)
+    return frame
 end
 
 local function createResetButton(frame)
@@ -250,10 +250,19 @@ local function checkedOptions(parent)
     frame:SetSize(scrollWidth, 100)
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 190, -175)
     local cells = ICT.Cells:new(frame, fontSize, scrollWidth, scrollHeight)
-    local tooltip = Tooltips:new(L["Current Player First"], L["CurrentPlayerFirstTooltip"])
-    cells(1, 1):attachCheckOption(L["Current Player First"], tooltip, "sort", "currentFirst")
-    tooltip = Tooltips:new(L["Order Lock Last"], L["OrderLockLastTooltip"])
-    cells(1, 2):attachCheckOption(L["Order Lock Last"], tooltip, "sort", "orderLockLast")
+    local i = 0
+    for _, v in pairs(ICT.Options.sort) do
+        if not v.skipped then
+            i = i + 1
+            cells(1, i):attachCheckOption(ICT.db.options.sort, v)
+        end
+    end
+    for _, v in pairs(ICT.Options.frame) do
+        if not v.skipped then
+            i = i + 1
+            cells(1, i):attachCheckOption(ICT.db.options.frame, v)
+        end
+    end
 end
 
 local options = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
@@ -269,7 +278,11 @@ function AdvOptions:createFrame(frame)
 
     frame.linkList = createLinkList(frame)
     frame.sortList = createSortList(frame)
-    createPlayerSlider(frame)
+    local playerSlider = createSlider(frame, L["Character Level"], 25, -180, "minimumLevel", 1, ICT.MaxLevel)
+    Tooltips:new(L["Character Level"], L["CharacterLevelToolip"]):attachFrame(playerSlider)
+    local fontSlider = createSlider(frame, L["Font Size"], 25, -230, "fontSize", 6, 100)
+    Tooltips:new(L["Font Size"], L["FontSizeTooltip"]):attachFrame(fontSlider)
+
     createResetButton(frame)
     checkedOptions(frame)
 

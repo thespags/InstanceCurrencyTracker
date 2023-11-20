@@ -33,7 +33,7 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     elseif command == "font" then
         local fontSize = tonumber(rest)
         if fontSize and fontSize > 0 then
-            ICT.db.fontSize = tonumber(rest)
+            ICT.db.options.fontSize = tonumber(rest)
         else
             ICT:print("Invalid size, must be a positive number.")
         end

@@ -27,15 +27,15 @@ local function enableMoving(frame)
 end
 
 function UI:getFontSize()
-    return ICT.db.fontSize or UI.fontSize
+    return ICT.db.options.fontSize or UI.fontSize
 end
 
-function UI:getCellWidth()
-    return self:getFontSize() * 20
+function UI:getCellWidth(fontSize)
+    return (fontSize or self:getFontSize()) * 20
 end
 
-function UI:getCellHeight()
-    return self:getFontSize()
+function UI:getCellHeight(fontSize)
+    return (fontSize or self:getFontSize())
 end
 
 function UI:getMinWidth()
@@ -47,13 +47,10 @@ function UI:getMinHeight()
 end
 
 function UI:calculateWidth(x)
-    -- Handle resize so it doens't blow up the screen.
-    -- DEFAULT_CHAT_FRAME:AddMessage( ( GetScreenWidth() * UIParent:GetEffectiveScale() ).."x"..( GetScreenHeight() * UIParent:GetEffectiveScale() ) )
     return math.max(self:getMinWidth(), x * self:getCellWidth())
 end
 
 function UI:calculateHeight(y)
-    -- DEFAULT_CHAT_FRAME:AddMessage( ( GetScreenWidth() * UIParent:GetEffectiveScale() ).."x"..( GetScreenHeight() * UIParent:GetEffectiveScale() ) )
     return math.max(self:getMinHeight(), y * self:getCellHeight())
 end
 
@@ -122,19 +119,35 @@ function UI:resetFrameButton()
     button:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetScript("OnClick", function()
-        self:drawFrame(self.defaultX, self.defaultY, self:calculateWidth(self.maxX) + 50, self:calculateHeight(self.maxY))
+        -- Prevents us from making the window go off the screen.
+        local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
+        local screenHeight = GetScreenHeight() * UIParent:GetEffectiveScale()
+        local maxWidth = math.min(self:calculateWidth(self.maxX) + 50, screenWidth)
+        local maxHeight = math.min(self:calculateHeight(self.maxY), screenHeight)
+        local x = self.defaultX
+        -- Adjust so we maximize space if the window is drawn that large.
+        -- The x formula seems slightly off but it's fine for now.
+        if self.defaultX + maxWidth > screenWidth then
+            x = (GetScreenWidth() - screenWidth) / 2
+        end
+        local y = self.defaultY
+        if self.defaultY + maxHeight > screenHeight then
+            y = GetScreenHeight() - (GetScreenHeight() - screenHeight) / 2
+        end
+        print(x, screenWidth,  GetScreenWidth())
+        self:drawFrame(x, y, maxWidth, maxHeight)
     end)
     ICT.Tooltips:new("Reset size and position"):attachFrame(button)
 end
 
-function UI:updateFrameSizes(fame, x, y)
+function UI:updateFrameSizes(frame, x, y)
     local newHeight = self:calculateHeight(y)
     -- Add 5 for delete button at the end so it isn't clipped.
     local newWidth = self:calculateWidth(x) + 5
-    fame.hScrollBox:SetHeight(newHeight)
-    fame.content:SetSize(newWidth, newHeight)
-    fame.hScrollBox:FullUpdate()
-    fame.vScrollBox:FullUpdate()
+    frame.hScrollBox:SetHeight(newHeight)
+    frame.content:SetSize(newWidth, newHeight)
+    frame.hScrollBox:FullUpdate()
+    frame.vScrollBox:FullUpdate()
     return newWidth, newHeight
 end
 

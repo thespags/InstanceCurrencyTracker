@@ -73,6 +73,10 @@ local function initEvent(self, event, eventAddOn)
             ICT.db.options.sort.orderLockLast = ICT.db.options.frame.orderLockLast
             ICT.db.options.frame.orderLockLast = nil
         end
+        if ICT.db.fontSize then
+            ICT.db.options.fontSize = ICT.db.fontSize
+            ICT.db.fontSize = nil
+        end
 
         local semVer = ICT.semver(ICT.db.version or "0.0.0")
         if semVer <= ICT.semver("v1.1.29") then

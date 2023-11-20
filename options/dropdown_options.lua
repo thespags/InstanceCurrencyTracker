@@ -197,9 +197,6 @@ function DropdownOptions:create()
                 addObjectsOption(L["Currency"], ICT.Currencies, level)
                 addObjectsOption(L["Cooldowns"], ICT.Cooldowns, level)
                 addAllPlayerOptions(L["Pets"], Player.getPets, level)
-
-                DDM:UIDropDownMenu_AddSeparator()
-                addMenuOption("      " .. L["Frame"], ICT.db.options.frame, level)
             elseif level == 2 then
                 if menuList == L["Characters"] then
                     for _, player in ICT:nspairsByValue(ICT.db.players, Player.isLevelVisible) do
@@ -221,8 +218,6 @@ function DropdownOptions:create()
                     addExpansionOptions(ICT.Cooldowns, menuList, level)
                 elseif menuList == L["Pets"] then
                     addPlayerOptions(Player.getPets, menuList, level)
-                elseif menuList == "      " .. L["Frame"] then
-                    addOptions(Options.frame, "frame", level)
                 elseif menuList == L["Character Info"] then
                     addOptions(Options.player, "player", level)
                 elseif menuList == L["Gear Info"] then
