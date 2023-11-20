@@ -83,8 +83,8 @@ function UI:CreateFrame()
     self:addTab(frame, ICT.ProfessionsTab, L["Professions"])
     PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
 
-    ICT.Options:CreatePlayerDropdown()
-    ICT.Options:CreateOptionDropdown()
+    ICT.DropdownOptions:createPlayer()
+    ICT.DropdownOptions:create()
     ICT.AdvOptions:create()
 end
 
@@ -270,7 +270,7 @@ function UI:PrintPlayers()
                 local player = self:getSelectedOrDefault()
                 x = x + 1
                 y = tab:printPlayer(player, x)
-                ICT.Options:SetPlayerDropDown(player)
+                ICT.DropdownOptions:setPlayer(player)
             end
             _ = tab.postPrint and tab:postPrint()
             self:updateFrameSizes(tab.frame, x, y)

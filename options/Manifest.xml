@@ -1,0 +1,5 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="options.lua"/>
+  <Script file="advanced_options.lua"/>
+  <Script file="dropdown_options.lua"/>
+</Ui>

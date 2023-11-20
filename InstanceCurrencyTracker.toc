@@ -9,13 +9,12 @@
 ## X-WoWI-ID: 26629
 
 Manifest.xml
-Locale\Locales.xml
+Locale\Manifest.xml
 common\Manifest.xml
 objects\Manifest.xml
 items.lua
 ui\Manifest.xml
-advanced_options.lua
-options.lua
+options\Manifest.xml
 commands.lua
 comms.lua
 events.lua

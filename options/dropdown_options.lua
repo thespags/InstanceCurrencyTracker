@@ -2,151 +2,13 @@ local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
-local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
-ICT.Options = {}
 local UI = ICT.UI
-local Options = ICT.Options
 local Instances = ICT.Instances
+local Options = ICT.Options
 local Player = ICT.Player
+ICT.DropdownOptions = {}
+local DropdownOptions = ICT.DropdownOptions
 
-local playerOptions = {
-    { name = L["Show Level"], key = "showLevel", },
-    { name = L["Show Guild"], key = "showGuild", },
-    { name = L["Show Guild Rank"], key = "showGuildRank", },
-    { name = L["Show Gold"], key = "showMoney", },
-    { name = L["Show Durability"], key = "showDurability", },
-    { name = L["Show XP"], key = "showXP", },
-    { name = L["Show Rested XP"], key = "showRestedXP", },
-    { name = L["Show Resting State"], key = "showRestedState", },
-    { name = L["Show Bags"], key = "showBags", },
-    { name = L["Show Bank Bags"], key = "showBankBags", },
-    { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
-    { name = L["Show Professions"], key = "showProfessions", },
-    { name = L["Show Cooldowns"], key = "showCooldowns", },
-}
-
-local gearOptions = {
-    { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
-}
-
-local professionOptions = {
-    { name = L["Sort By Difficulty"], key = "sortByDifficulty", defaultFalse=true, },
-    { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true, },
-}
-for i, name in ICT:rspairs(ICT.Expansions) do
-    tinsert(professionOptions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK, })
-end
-for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
-    -- For whatever reason in Spanish the list may be nil, it's not clear to me why so quick fix it to work but adding nil checks.
-    function(a, b) if not a then return false end if not b then return true end return a.isSecondary == b.isSecondary and L[a.name] < L[b.name] or b.isSecondary end,
-    function(v) return v.hasRecipes end) do
-    tinsert(professionOptions, { name = L[profession.name], key = "showProfession" .. i, defaultFalse = profession.isSecondary })
-end
-
-local messageOptions = {
-    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"] },
-}
-
-local questOptions = {
-    { name = L["Hide Unavailable Quests"], key = "hideUnavailable"},
-    { name = L["Show Quests"], key = "show", },
-    { name = L["Show Fishing Daily"], key = "Fishing Daily", }
-}
-
-function Options.minimap()
-    ICT.db.minimap.hide = not ICT.db.options.frame.showMinimapIcon
-    Options:FlipMinimapIcon()
-end
-
-local frameOptions = {
-    { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
-    { name = L["Show Minimap Icon"], key = "showMinimapIcon", func = Options.minimap },
-    { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },
-    { name = L["Show Realm Name"], key = "verboseName", defaultFalse = true, tooltip = L["ShowRealmNameTooltip"], },
-}
-
-local sortOptions = {
-    { name = L["Custom Order"], key = "custom", defaultFalse = true, },
-    { name = L["Current Player First"], key = "currentFirst", defaultFalse = true, },
-    { name = L["Order Lock Last"], key = "orderLockLast", defaultFalse = true, },
-}
-
-function Options:setDefaultOptions(override)
-    local options = ICT.db.options
-    -- If override then always put, otherwise only put if the value is "nil" i.e. absent.
-    -- We traverse each table because we may add new entries that should be defaulted on
-    -- even though the table was created.
-    local put = override and ICT.put or ICT.putIfAbsent
-    put(options, "multiPlayerView", true)
-
-    -- Display heroism and lower by default. (i.e. recent currency as new ones are added to the front of the table).
-    if not options.currency or override then
-        options.currency = {}
-    end
-
-    put(options, "currency", {})
-    for _, v in ipairs(ICT.Currencies) do
-        put(options.currency, v.id, v <= ICT.Heroism)
-    end
-
-    -- Set all WOTLK instances on by default.
-    put(options, "displayInstances", {})
-    for k, _ in pairs(ICT.Expansions) do
-        put(options["displayInstances"], k, {})
-    end
-    for _, v in pairs(Instances.infos()) do
-        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.WOTLK))
-    end
-
-    -- Set all WOTLK cooldowns on by default
-    put(options, "displayCooldowns", {})
-    for k, v in pairs(ICT.Cooldowns) do
-        put(options.displayCooldowns, k, v:fromExpansion(ICT.WOTLK))
-    end
-
-    -- Set daily and weekly resets on by default.
-    put(options, "rest", { [1] = true, [3] = false, [5] = false, [7] = true })
-
-    put(options, "pets", {})
-    for fullName, _ in pairs(ICT.db.players) do
-        put(options.pets, fullName, {})
-    end
-
-    local function setDefaults(t, key)
-        put(options, key, {})
-        for _, v in pairs(t) do
-            put(options[key], v.key, not v.defaultFalse)
-        end
-    end
-    setDefaults(playerOptions, "player")
-    setDefaults(gearOptions, "gear")
-    setDefaults(professionOptions, "professions")
-    setDefaults(messageOptions, "messages")
-    setDefaults(frameOptions, "frame")
-    setDefaults(questOptions, "quests")
-    setDefaults(sortOptions, "sort")
-
-    put(options, "comms", {})
-    put(options.comms, "players", {})
-end
-
-function Options:FlipMinimapIcon()
-    if ICT.db.options.frame.showMinimapIcon then
-        ICT.LDBIcon:Show(addOnName)
-    else
-        ICT.LDBIcon:Hide(addOnName)
-    end
-end
-
-function Options:FlipOptionsMenu()
-    if ICT.db.options.multiPlayerView then
-        ICT.frame.playerDropdown:Hide()
-    else
-        ICT.frame.playerDropdown:Show()
-    end
-end
 
 local function createInfo(text)
     local info = DDM:UIDropDownMenu_CreateInfo()
@@ -294,7 +156,7 @@ local function addOptions(options, group, level)
     end
 end
 
-function Options:CreateOptionDropdown()
+function DropdownOptions:create()
     local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", ICT.frame)
     ICT.frame.options = dropdown
     dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT", 0, 2)
@@ -319,7 +181,7 @@ function Options:CreateOptionDropdown()
                 multiPlayerView.tooltipText = L["Multi Character View Tooltip"]
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
-                    Options:FlipOptionsMenu()
+                    DropdownOptions:flipPlayerDropdown()
                     UI:PrintPlayers()
                 end
                 DDM:UIDropDownMenu_AddButton(multiPlayerView)
@@ -350,7 +212,7 @@ function Options:CreateOptionDropdown()
                 elseif menuList == L["Instances"] then
                     addExpansionOptions(Instances.infos(), menuList, level)
                 elseif menuList == L["Quests"] then
-                    addOptions(questOptions, "quests", level)
+                    addOptions(Options.quest, "quests", level)
                 elseif menuList == L["Currency"] then
                     for _, v in ipairs(ICT.Currencies) do
                         addObjectOption(v, level)
@@ -360,15 +222,15 @@ function Options:CreateOptionDropdown()
                 elseif menuList == L["Pets"] then
                     addPlayerOptions(Player.getPets, menuList, level)
                 elseif menuList == "      " .. L["Frame"] then
-                    addOptions(frameOptions, "frame", level)
+                    addOptions(Options.frame, "frame", level)
                 elseif menuList == L["Character Info"] then
-                    addOptions(playerOptions, "player", level)
+                    addOptions(Options.player, "player", level)
                 elseif menuList == L["Gear Info"] then
-                    addOptions(gearOptions, "gear", level)
+                    addOptions(Options.gear, "gear", level)
                 elseif menuList == L["Professions"] then
-                    addOptions(professionOptions, "professions", level)
+                    addOptions(Options.profession, "professions", level)
                 elseif menuList == L["Messages"] then
-                    addOptions(messageOptions, "messages", level)
+                    addOptions(Options.message, "messages", level)
                 end
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.
@@ -407,20 +269,19 @@ function Options:CreateOptionDropdown()
     )
 end
 
-function Options:PrintMessage(text)
-    if IsInGroup() and ICT.db.options.messages.group then
-        local type = IsInRaid() and "RAID" or "PARTY"
-        SendChatMessage(text, type)
+function DropdownOptions:flipPlayerDropdown()
+    if ICT.db.options.multiPlayerView then
+        ICT.frame.playerDropdown:Hide()
     else
-        print(text)
+        ICT.frame.playerDropdown:Show()
     end
 end
 
-function Options:SetPlayerDropDown(player)
+function DropdownOptions:setPlayer(player)
     DDM:UIDropDownMenu_SetText(ICT.frame.playerDropdown, player:getName())
 end
 
-function Options:CreatePlayerDropdown()
+function DropdownOptions:createPlayer()
     local playerDropdown = DDM:Create_UIDropDownMenu("PlayerSelection", ICT.frame)
     ICT.frame.playerDropdown = playerDropdown
     playerDropdown:SetPoint("TOP", ICT.frame, 0, -30)
@@ -446,5 +307,5 @@ function Options:CreatePlayerDropdown()
             end
         end
     )
-    Options:FlipOptionsMenu()
+    self:flipPlayerDropdown()
 end
