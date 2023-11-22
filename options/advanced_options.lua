@@ -47,7 +47,14 @@ local function createLinkList(parent)
                     cell:printLine(friend.accountName, color)
                 end
             )
-            Tooltips:new(friend.battleTag):attach(cell)
+            local info = {}
+            tinsert(info, friend.battleTag)
+            if friend.gameAccountInfo then
+                tinsert(info, friend.gameAccountInfo.realmName)
+                tinsert(info, friend.gameAccountInfo.factionName)
+                tinsert(info, friend.gameAccountInfo.characterName)
+            end
+            Tooltips:new(friend.accountName, table.concat(info, "\n")):attach(cell)
         end
         cells(1, numFriends + 1):printLine("") -- Adds a dummy line for view, because the following line doesn't seem to work as I thought.
         scroll.content:SetSize(scrollWidth, (numFriends + 1) * scrollHeight)
@@ -122,7 +129,7 @@ local function createSortList(parent)
             -- If the cell is reenable then we perserve the selected player.
             cell.frame:SetEnabled(ICT.db.options.sort.custom)
             cell:setClicked(selectedPlayer == player)
-            Tooltips:new(player.realm):attach(cell)
+            Tooltips:new(player:getShortName(), player.realm .. "\n" .. player:getBattleTag()):attach(cell)
         end
         cells(1, i + 1):printLine("") -- Adds a dummy line for view, because the following line doesn't seem to work as I thought.
         scroll.content:SetSize(scrollWidth, (i + 1) * scrollHeight)

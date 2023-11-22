@@ -223,9 +223,9 @@ function DropdownOptions:create()
                 elseif menuList == L["Gear Info"] then
                     addOptions(Options.gear, "gear", level)
                 elseif menuList == L["Professions"] then
-                    addOptions(Options.profession, "professions", level)
+                    addOptions(Options.professions, "professions", level)
                 elseif menuList == L["Messages"] then
-                    addOptions(Options.message, "messages", level)
+                    addOptions(Options.messages, "messages", level)
                 end
             elseif level == 3 then
                 -- If we had another 3rd layer thing we need to check if menuList is an expansion.

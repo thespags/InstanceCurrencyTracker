@@ -45,6 +45,16 @@ function Player:onLoad()
             break
         end
     end
+    local battleTag = select(2, BNGetInfo())
+    -- Update battleTag for all similar players.s
+    if self.battleTag and self.battleTag ~= battleTag then
+        for k, v in pairs(ICT.db.players) do
+            if self.battleTag == v.battleTag then
+                v.battleTag = self.battleTag
+            end
+        end
+    end
+    self.battleTag = battleTag
 end
 
 function Player:createInstances()
@@ -476,6 +486,10 @@ end
 
 function Player:getNameWithIcon()
    return string.format("|T%s:%s|t%s", ICT.ClassIcons[self.class], ICT.UI.iconSize, self:getName())
+end
+
+function Player:getBattleTag()
+    return self.battleTag or ""
 end
 
 function Player:getClassColor()
