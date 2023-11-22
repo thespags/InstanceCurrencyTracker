@@ -24,9 +24,8 @@ end
 function ICT.flipFrame()
     if ICT.frame then
         if not ICT.frame:IsVisible() then
-            -- Force display update if it's enabled.
-            UI:PrintPlayers()
             ICT.frame:Show()
+            ICT.UpdateDisplay()
         else
             ICT.frame:Hide()
         end
@@ -36,8 +35,8 @@ end
 function ICT.UpdateDisplay()
     -- Update the active players timestamp of "last updated".
     Players:get().timestamp = time()
-    -- Defer updating the display if it's not currently viewed.
-    if ICT.frame and ICT.frame:IsVisible() then
+    -- Defer updating the display if it's not currently viewed or minimized.
+    if ICT.frame and ICT.frame:IsVisible() and not ICT.frame.minimized then
         UI:PrintPlayers()
     else
         log.debug("not updating frame")

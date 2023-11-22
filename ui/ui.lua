@@ -66,14 +66,8 @@ function UI:CreateFrame()
     frame.CloseButton:SetAlpha(1)
     frame.CloseButton:SetIgnoreParentAlpha(true)
 
-    -- local minimizeButton = CreateFrame("Button", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
-    -- minimizeButton:SetPoint("RIGHT", frame.CloseButton, "LEFT", 10, 0)
-    -- minimizeButton:SetAlpha(1)
-    -- minimizeButton:SetIgnoreParentAlpha(true)
-    -- minimizeButton:SetOnMaximizedCallback(function()end)
-
-    self:resizeFrameButton()
-    self:resetFrameButton()
+    local resizeButton = self:resizeFrameButton()
+    local resetSizeButton = self:resetFrameButton()
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(addOnName)
@@ -88,16 +82,54 @@ function UI:CreateFrame()
 
     ICT.DropdownOptions:createPlayer()
     ICT.AdvOptions:create()
+
+    local minimizeButton = CreateFrame("Button", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
+    minimizeButton:SetPoint("RIGHT", frame.CloseButton, "LEFT", 10, 0)
+    minimizeButton:SetAlpha(1)
+    minimizeButton:SetIgnoreParentAlpha(true)
+    minimizeButton:SetOnMaximizedCallback(function()
+        resizeButton:Show()
+        resetSizeButton:Show()
+        for i=1,frame.numTabs do
+            frame.tabs[i].button:Show()
+        end
+        self:selectTab(frame.tabs[ICT.db.selectedTab or 1])()
+        self:drawFrame(ICT.db.X, ICT.db.Y, ICT.db.width, ICT.db.height)
+        ICT.frame.minimized = false
+    end)
+    minimizeButton:SetOnMinimizedCallback(function()
+        resizeButton:Hide()
+        resetSizeButton:Hide()
+        for i=1,frame.numTabs do
+            frame.tabs[i].button:Hide()
+            frame.tabs[i]:hide()
+        end
+        self:minFrame()
+        ICT.frame.minimized = true
+    end)
+end
+
+function UI:minFrame()
+    ICT.frame:ClearAllPoints()
+    ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", ICT.db.X, ICT.db.Y)
+    -- Enables the frame to be minimized as we enforce a min height greater than 50.
+    ICT.resize:Init(ICT.frame, 0, 0, 9999, 9999)
+    ICT.frame:SetSize(ICT.db.width, 50)
 end
 
 function UI:drawFrame(x, y, width, height)
     ICT.db.X = x or self.defaultX
     ICT.db.Y = y or self.defaultY
-    ICT.db.width = width or self:getMinWidth()
-    ICT.db.height = height or self:getMinHeight()
     ICT.frame:ClearAllPoints()
     ICT.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", ICT.db.X, ICT.db.Y)
-    ICT.frame:SetSize(ICT.db.width, ICT.db.height)
+    -- Don't set width and height if the frame was minimized
+    if ICT.frame.minimized then
+        ICT.frame:SetSize(width, height)
+    else
+        ICT.db.width = width or self:getMinWidth()
+        ICT.db.height = height or self:getMinHeight()
+        ICT.frame:SetSize(ICT.db.width, ICT.db.height)
+    end
 end
 
 function UI:resizeFrameButton()
@@ -111,6 +143,10 @@ function UI:resizeFrameButton()
         ICT.db.width = ICT.frame:GetWidth()
         ICT.db.height = ICT.frame:GetHeight()
     end)
+    -- Enables the frame to be redrawn correctly if it was minimized after a reload.
+    -- I'm not sure why it's necessary if a reload is recreating this, but it is.
+    button:Init(ICT.frame, self:getMinWidth() + 40, self:getMinHeight(), 9999, 9999)
+    return button
 end
 
 function UI:resetFrameButton()
@@ -143,6 +179,7 @@ function UI:resetFrameButton()
         self:drawFrame(x, y, maxWidth, maxHeight)
     end)
     ICT.Tooltips:new("Reset size and position"):attachFrame(button)
+    return button
 end
 
 function UI:updateFrameSizes(frame, x, y)
