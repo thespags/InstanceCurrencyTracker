@@ -32,7 +32,6 @@ Options.gear = {
 }
 
 Options.professions = {
-    { name = L["Sort By Difficulty"], key = "sortByDifficulty", defaultFalse=true, },
     { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true, },
 }
 for i, name in ICT:rspairs(ICT.Expansions) do
@@ -70,7 +69,8 @@ Options.frame = {
 Options.sort = {
     { name = L["Custom Order"], key = "custom", tooltip = L["CustomOrderTooltip"], defaultFalse = true, skipped = true, },
     { name = L["Current Player First"], key = "currentFirst", tooltip = L["CurrentPlayerFirstTooltip"], defaultFalse = true, },
-    { name = L["Order Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
+    { name = L["Orider Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
+    { name = L["Order By Difficulty"], key = "orderByDifficulty", tooltip = L["OrderByDifficultyTooltip"], defaultFalse=true, },
 }
 
 function Options:setDefaultOptions(override)

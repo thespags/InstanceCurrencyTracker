@@ -156,16 +156,12 @@ local function addOptions(options, group, level)
     end
 end
 
-function DropdownOptions:create()
-    local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", ICT.frame)
-    ICT.frame.options = dropdown
-    dropdown:SetPoint("TOPRIGHT", ICT.frame, "BOTTOMRIGHT", 0, 2)
-    dropdown:SetAlpha(1)
-    dropdown:SetIgnoreParentAlpha(true)
+function DropdownOptions:create(frame)
+    local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", frame)
+    dropdown:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, 2)
 
-    -- Width set to slightly smaller than parent frame.
-    DDM:UIDropDownMenu_SetWidth(dropdown, 80)
-    DDM:UIDropDownMenu_SetText(dropdown, L["Options"])
+    DDM:UIDropDownMenu_SetWidth(dropdown, 90)
+    DDM:UIDropDownMenu_SetText(dropdown, L["Shown Info"])
     local options = ICT.db.options
 
     DDM:UIDropDownMenu_Initialize(
@@ -209,7 +205,7 @@ function DropdownOptions:create()
                 elseif menuList == L["Instances"] then
                     addExpansionOptions(Instances.infos(), menuList, level)
                 elseif menuList == L["Quests"] then
-                    addOptions(Options.quest, "quests", level)
+                    addOptions(Options.quests, "quests", level)
                 elseif menuList == L["Currency"] then
                     for _, v in ipairs(ICT.Currencies) do
                         addObjectOption(v, level)

@@ -92,12 +92,13 @@ L["Missing Prerequesite"] = "Missing Prerequesite"
 
 -- Options
 L["Options"] = "Options"
+L["Shown Info"] = "Shown Info"
 L["Multi Character View"] = "Multi Character View"
 L["Multi Character View Tootip"] = "Displays all selected characters in the frame or a single character selected with the drop down list."
 L["Messages"] = "Messages"
 L["Character Info"] = "Character Info"
 L["Character Info Toolip"] = "Enables and disables information about a character to appear."
-L["Gear Info"] = "Gear Info"
+L["Gear Info"] = "Gear Tab"
 L["Gear Info Toolip"] = "Enables and disables information for the gear tab."
 L["Professions Toolip"] = "Enables and disables information for the professions tab."
 L["Characters"] = "Characters"
@@ -160,6 +161,8 @@ L["CustomOrderHelpTooltip"] = "Controls the order for displaying characters if e
 Enable to unlock the list and move the character up or down to change its ordering."
 L["Custom Order"] = "Custom Order"
 L["CustomOrderTooltip"] = "Enable to use the custom order, otherwise uses the alphabetical order."
+L["Order By Difficulty"] = "Order By Difficulty"
+L["OrderByDifficultyTooltip"]= "Orders trade skill items by their difficulty instead of alphabetical."
 
 -- Frame Options
 L["Anchor to LFG"] = "Anchor to LFG"

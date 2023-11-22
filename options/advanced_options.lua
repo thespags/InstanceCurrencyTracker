@@ -255,7 +255,7 @@ end
 local function checkedOptions(parent)
     local frame = CreateFrame("Frame", nil, parent)
     frame:SetSize(scrollWidth, 100)
-    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 190, -175)
+    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 180, -165)
     local cells = ICT.Cells:new(frame, fontSize, scrollWidth, scrollHeight)
     local i = 0
     for _, v in pairs(ICT.Options.sort) do
@@ -314,17 +314,19 @@ local function openOptionsFrame()
 end
 
 function AdvOptions:createButton()
-    local button = CreateFrame("Button", "ICTResetOptions", ICT.frame, "UIPanelButtonTemplate")
-    button:SetSize(24, 24)
+    local button = CreateFrame("Button", "ICTAdvancedOptions", ICT.frame, "UIPanelButtonTemplate")
+    button:SetToplevel(true)
+    button:SetSize(22, 22)
     button:SetAlpha(1)
     button:SetIgnoreParentAlpha(true)
     button:SetText("|TInterface\\Buttons\\UI-OptionsButton:12|t")
-    button:SetPoint("TOPRIGHT", ICT.frame.options, "TOPLEFT", 18, -2)
+    button:SetPoint("TOPLEFT", ICT.frame, "TOPLEFT", 1, -1)
     button:SetScript("OnClick", openOptionsFrame())
     Tooltips:new(L["AdvancedOptionsTooltip"], L["AdvancedOptionsTooltipBody"]):attachFrame(button)
 end
 
 function AdvOptions:create()
+    ICT.DropdownOptions:create(options)
     self:createButton()
     self:createFrame(options)
 end

@@ -181,7 +181,8 @@
         "debugstack",
         "date",
         "GetScreenWidth",
-        "GetScreenHeight"
+        "GetScreenHeight",
+        "BNGetInfo"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

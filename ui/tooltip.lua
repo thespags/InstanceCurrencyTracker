@@ -38,8 +38,6 @@ local function tooltipEnter(reference, tooltip)
         frame:SetWidth(frame.textField:GetStringWidth() + 18)
         frame:SetHeight(frame.textField:GetStringHeight() + 12)
         frame:Show()
-        -- local scale = frame:GetEffectiveScale()
-        -- local x, y = GetCursorPosition()
         frame:SetPoint("LEFT", reference, "RIGHT")
     end
 end

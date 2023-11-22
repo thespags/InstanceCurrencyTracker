@@ -66,6 +66,12 @@ function UI:CreateFrame()
     frame.CloseButton:SetAlpha(1)
     frame.CloseButton:SetIgnoreParentAlpha(true)
 
+    -- local minimizeButton = CreateFrame("Button", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
+    -- minimizeButton:SetPoint("RIGHT", frame.CloseButton, "LEFT", 10, 0)
+    -- minimizeButton:SetAlpha(1)
+    -- minimizeButton:SetIgnoreParentAlpha(true)
+    -- minimizeButton:SetOnMaximizedCallback(function()end)
+
     self:resizeFrameButton()
     self:resetFrameButton()
 
@@ -81,7 +87,6 @@ function UI:CreateFrame()
     PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
 
     ICT.DropdownOptions:createPlayer()
-    ICT.DropdownOptions:create()
     ICT.AdvOptions:create()
 end
 
