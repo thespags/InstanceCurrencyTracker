@@ -69,7 +69,7 @@ Options.frame = {
 Options.sort = {
     { name = L["Custom Order"], key = "custom", tooltip = L["CustomOrderTooltip"], defaultFalse = true, skipped = true, },
     { name = L["Current Player First"], key = "currentFirst", tooltip = L["CurrentPlayerFirstTooltip"], defaultFalse = true, },
-    { name = L["Orider Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
+    { name = L["Order Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
     { name = L["Order By Difficulty"], key = "orderByDifficulty", tooltip = L["OrderByDifficultyTooltip"], defaultFalse=true, },
 }
 
