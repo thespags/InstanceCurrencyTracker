@@ -107,7 +107,7 @@ function Options:setDefaultOptions(override)
     end
 
     -- Set daily and weekly resets on by default.
-    put(options, "rest", { [1] = true, [3] = false, [5] = false, [7] = true })
+    put(options, "reset", { [1] = true, [3] = false, [5] = false, [7] = true })
 
     put(options, "pets", {})
     for fullName, _ in pairs(ICT.db.players) do
