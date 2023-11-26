@@ -60,9 +60,16 @@ ICT.QuestInfo = {
         prereq = level80,
         weekly = true
     },
-    ["ICC Weekly"] = {
-        name = ICT:returnX("ICC Weekly"),
+    ["ICC 25 Weekly"] = {
+        name = ICT:returnX("ICC 25 Weekly"),
         ids = { 24876 },
+        currencies = { [ICT.Frost] = 5 },
+        prereq = level80,
+        weekly = true
+    },
+    ["ICC 10 Weekly"] = {
+        name = ICT:returnX("ICC 10 Weekly"),
+        ids = { 24871 },
         currencies = { [ICT.Frost] = 5 },
         prereq = level80,
         weekly = true
