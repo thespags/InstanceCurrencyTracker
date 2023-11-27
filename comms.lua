@@ -12,8 +12,8 @@ ICT.Comms = Comms
 function Comms:Init()
     AceComm:Embed(self)
     self:RegisterComm(self.prefix)
-    self.version = GetAddOnMetadata(addOnName, "Version")
-    self.ticker = C_Timer.NewTicker(30, function() Comms:pingPlayers() end)
+    self.version = "v1.2.5" --GetAddOnMetadata(addOnName, "Version")
+    self.ticker = C_Timer.NewTicker(5, function() Comms:pingPlayers() end)
 end
 
 function Comms:transmitPlayer(target, player)
@@ -67,6 +67,15 @@ function Comms:receivePlayer(sender, data)
     end
 end
 
+function Comms:transmitMismatchVersion(target, targetVersion)
+    local data = { callback = "mismatchVersion", version = targetVersion, otherVersion = self.version }
+    self:transmit(target, data)
+end
+
+function Comms:mismatchVersion(sender, data)
+    log.info("Mismatch versions from %s, expected %s but was %s", sender, self.version or "nil", data.version or "nil")
+end
+
 function Comms:pingPlayers()
     log.info("Pinging other accounts.")
     local allowed = ICT.db.options.comms.players or {}
@@ -77,7 +86,8 @@ function Comms:pingPlayers()
         local friend = C_BattleNet.GetFriendAccountInfo(i)
         if ICT.db.options.comms.players[friend.battleTag] then
             local info = friend.gameAccountInfo
-            if info.characterName and info.realmID == GetRealmID() and info.factionName == UnitFactionGroup("Player") then
+            if info.characterName and info.realmID == GetRealmID() then
+                log.info("Pinging: %s", info.characterName)
                 self:transmitPlayerMetadata(info.characterName)
             end
             seen[friend.battleTag] = true
@@ -106,8 +116,8 @@ function Comms:OnCommReceived(prefix, payload, distribution, sender)
     if not success then
         return
     end
-    if self.version ~= data.version then
-        ICT:print("Mismatch versions, expected %s but was %s", self.version or "nil", data.version or "nil")
+    if self.version ~= data.version and data.callback ~= "mismatchVersion" then
+        Comms:mismatchVersion(sender, data)
         return
     end
     if data.callback then

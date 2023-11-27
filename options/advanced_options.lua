@@ -245,7 +245,7 @@ local function createResetButton(frame)
     local length = string.len(L["Reset All"]) * 10
     button:SetSize(length, 22)
     button:SetText(L["Reset All"])
-    button:SetPoint("BOTTOM", frame, "BOTTOM", 0, 20)
+    button:SetPoint("BOTTOM", frame, "BOTTOM", 0, 10)
     button:SetScript("OnClick", function()
         resetConfirm:Show()
     end)
@@ -327,6 +327,7 @@ end
 
 function AdvOptions:create()
     ICT.DropdownOptions:create(options)
+    ICT.DropdownOptions:foobar(options)
     self:createButton()
     self:createFrame(options)
 end

@@ -6,6 +6,7 @@ local UI = ICT.UI
 local Instances = ICT.Instances
 local Options = ICT.Options
 local Player = ICT.Player
+local Tooltips = ICT.Tooltips
 ICT.DropdownOptions = {}
 local DropdownOptions = ICT.DropdownOptions
 
@@ -156,9 +157,37 @@ local function addOptions(options, group, level)
     end
 end
 
+function DropdownOptions:foobar(frame)
+    local dropdown = DDM:Create_UIDropDownMenu("foobar", frame)
+    ICT.db.logLevel = ICT.db.logLevel or "error"
+    dropdown:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 4)
+    Tooltips:new(L["Log Level"], L["LogLevelTooltip"]):attachFrame(dropdown)
+    DDM:UIDropDownMenu_SetWidth(dropdown, 90)
+    DDM:UIDropDownMenu_Initialize(
+        dropdown,
+        function(self, level, menuList)
+            if (level or 1) == 1 then
+                for _, v in pairs(ICT.log.modes) do
+                    local info = createInfo(WrapTextInColorCode(v.name, v.color))
+                    info.checked = ICT.db.logLevel == v.name
+                    if info.checked then
+                        DDM:UIDropDownMenu_SetText(dropdown, info.text)
+                    end
+                    info.func = function(self)
+                        ICT.db.logLevel = v.name
+                        DDM:UIDropDownMenu_SetText(dropdown, info.text)
+                    end
+                    info.keepShownOnClick = false
+                    DDM:UIDropDownMenu_AddButton(info, level)
+                end
+            end
+        end
+    )
+end
+
 function DropdownOptions:create(frame)
     local dropdown = DDM:Create_UIDropDownMenu("ICTOptions", frame)
-    dropdown:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", 0, 2)
+    dropdown:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 4)
 
     DDM:UIDropDownMenu_SetWidth(dropdown, 90)
     DDM:UIDropDownMenu_SetText(dropdown, L["Shown Info"])

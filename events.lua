@@ -38,8 +38,6 @@ function ICT.UpdateDisplay()
     -- Defer updating the display if it's not currently viewed or minimized.
     if ICT.frame and ICT.frame:IsVisible() and not ICT.frame.minimized then
         UI:PrintPlayers()
-    else
-        log.debug("not updating frame")
     end
 end
 
@@ -209,8 +207,7 @@ restFrame:SetScript("OnEvent", ICT:throttleFunction("Rest", 0, Player.updateRest
 local durabilityFrame = CreateFrame("Frame")
 durabilityFrame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
 durabilityFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
--- Don't throttle but use the is db init check.
-durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", 0, Player.updateDurability, ICT.UpdateDisplay))
+durabilityFrame:SetScript("OnEvent", ICT:throttleFunction("Durability", .5, Player.updateDurability, ICT.UpdateDisplay))
 
 local cooldownFrame = CreateFrame("Frame")
 cooldownFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")

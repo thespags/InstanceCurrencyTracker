@@ -144,6 +144,8 @@ L["CharacterLevelToolip"] = "Filters out characters lower than the selected leve
 L["Font Size"] = "Font Size"
 L["FontSizeTooltip"] = "Adjust the font size of the main frame, or use /ict font {size}.\
 Using the command you can try ridiculously sizes if you choose to."
+L["Log Level"] = "Log Level"
+L["LogLevelTooltip"] = "Controls which log messages you see."
 
 -- Reset
 L["ResetOptionsTooltip"] = "Reset Options"
