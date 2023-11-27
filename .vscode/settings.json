@@ -182,7 +182,10 @@
         "date",
         "GetScreenWidth",
         "GetScreenHeight",
-        "BNGetInfo"
+        "BNGetInfo",
+        "WrapTextInColorCode",
+        "ItemRefTooltip",
+        "WorldFrame"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

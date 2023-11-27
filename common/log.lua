@@ -25,6 +25,7 @@ end
 
 local regex = log.prefix .. "([%w/]+).lua\"]:(%d+):"
 
+
 for i, x in ipairs(log.modes) do
   local nameupper = x.name:upper()
   log[x.name] = function(message, ...)
