@@ -25,8 +25,8 @@ function Player:onLoad()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
     ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
-    -- Even with getItemInfoInstance we still fail on initial log in so delay.
-    ICT:throttleFunction("onLoad", 1, Player.updateBags, ICT.UpdateDisplay)()
+    -- Bank Bag name is sometimes nil.
+    ICT:throttleFunction("onLoad", 2, Player.updateBags, ICT.UpdateDisplay)()
     self:updateMoney()
     self:updateGuild()
     self:updateXP()
