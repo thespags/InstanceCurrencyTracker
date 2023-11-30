@@ -78,6 +78,7 @@ function UI:CreateFrame()
     self:addTab(frame, ICT.MainTab, L["Main"])
     self:addTab(frame, ICT.GearTab, L["Gear"])
     self:addTab(frame, ICT.ProfessionsTab, L["Professions"])
+    -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
 
     ICT.DropdownOptions:createPlayer()
@@ -279,6 +280,7 @@ end
 
 function UI:addTab(frame, tab, name)
     local tabFrame = UI:createDoubleScrollFrame(frame, "ICT" .. name)
+    _ = tab.init and tab:init()
     tab.frame = tabFrame
     tab.cells = ICT.Cells:new(tabFrame.content)
 

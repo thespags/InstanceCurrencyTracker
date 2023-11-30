@@ -3,8 +3,22 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Colors = ICT.Colors
-local ProfessionsTab = {}
+local UI = ICT.UI
+local ProfessionsTab = {
+}
 ICT.ProfessionsTab = ProfessionsTab
+
+-- Load all the recipe names to be searched through.
+local matches = nil
+local haystacks = {}
+C_Timer.After(5, function()
+    for _, infos in pairs(LibTradeSkillRecipes:GetCategories()) do
+        for _, info in pairs(infos) do
+            local name = select(1, GetSpellInfo(info.spellId))
+            tinsert(haystacks, name)
+        end
+    end
+end)
 
 local getDifficultyColor = function(difficulty)
     if difficulty == "difficult" then
@@ -63,8 +77,9 @@ local infoDifficultySort = function(player)
     end
 end
 
-local infoFilter = function(v)
-    return ICT.db.options.professions["showExpansion" .. v.expansionId]
+local infoFilter = function(info)
+    local name = GetSpellInfo(info.spellId)
+    return (not matches or matches[name]) and ICT.db.options.professions["showExpansion" .. info.expansionId]
 end
 
 function ProfessionsTab:printProfession(player, profession, x, y)
@@ -147,13 +162,50 @@ function ProfessionsTab:printPlayer(player, x)
     return y
 end
 
-function ProfessionsTab:prePrint()
+function ProfessionsTab:init()
+    local editBox = UI:createEditBox(ICT.frame)
+    self.editBox = editBox
+    editBox:SetPoint("TOP", ICT.frame, "TOP", 0, -30)
+    editBox:SetFont(UI.font, 14, "")
+    editBox:SetSize(140, 24)
+    editBox:SetAlpha(1)
+    editBox:SetIgnoreParentAlpha(true)
+    editBox:SetScript("OnTextChanged", function(self)
+        local length = string.len(self:GetText())
+        if length > 0 then
+            matches = {}
+            -- If the length is 1, relax the score.
+            local score = length > 1 and 1 or 0
+            for _, match in pairs(ICT.fzy.filter(self:GetText(), haystacks)) do
+                if match[3] > score then
+                    matches[haystacks[match[1]]] = true
+                end
+            end
+        else
+            matches = nil
+        end
+        UI:PrintPlayers()
+    end)
+    local clearEditBox = CreateFrame("Button", nil, ICT.frame, "UIPanelButtonTemplate")
+    self.clearEditBox = clearEditBox
+    clearEditBox:SetPoint("LEFT", editBox, "RIGHT", 5, 0)
+    clearEditBox:SetSize(24, 24)
+    clearEditBox:SetAlpha(1)
+    clearEditBox:SetIgnoreParentAlpha(true)
+    clearEditBox:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+    clearEditBox:SetScript("OnClick", function()
+        editBox:SetText("")
+    end)
 end
 
 function ProfessionsTab:show()
+    self.editBox:Show()
     self.frame:Show()
+    self.clearEditBox:Show()
 end
 
 function ProfessionsTab:hide()
+    self.editBox:Hide()
     self.frame:Hide()
+    self.clearEditBox:Hide()
 end

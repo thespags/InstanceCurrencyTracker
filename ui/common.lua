@@ -107,3 +107,23 @@ function UI:cellDropdown(reference, f)
         frame.ticker = C_Timer.NewTicker(.5, update)
     end
 end
+
+function UI:createEditBox(parent)
+    local editBox = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
+    editBox:SetAutoFocus(false)
+    editBox:SetFontObject(GameFontHighlightSmall)
+    editBox:SetJustifyH("CENTER")
+    editBox:EnableMouse(true)
+    UI:setBackdrop(editBox)
+    editBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    editBox:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    end)
+    editBox:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    end)
+    editBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+    end)
+    return editBox
+end

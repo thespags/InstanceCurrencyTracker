@@ -6,4 +6,5 @@
   <Script file="functions.lua"/>
   <Script file="colors.lua"/>
   <Script file="time.lua"/>
+  <Script file="fzy.lua"/>
 </Ui>
