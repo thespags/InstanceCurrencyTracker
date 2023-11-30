@@ -369,7 +369,6 @@ function MainTab:printMultiViewResetTicker(x, fontSize, title, expires, duration
     end
     frame:SetSize(UI:getCellWidth(fontSize), UI:getCellHeight(fontSize))
     frame.textField:SetFont(UI.font, fontSize)
-    print()
     frame:SetPoint("TOP", x, -36)
     frame:Show()
     local update = function(self)
