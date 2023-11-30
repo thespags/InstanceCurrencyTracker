@@ -122,7 +122,15 @@ L["Show Bags"] = "Show Bags"
 L["Show Bank Bags"] = "Show Bank Bags"
 L["Show Specs"] = "Show Specs"
 L["Show Gear Scores"] = "Show Gear Scores"
+L["ShowGearScoresTooltip"] = "If TacoTip is available, this will display gear scores for each spec respectively."
 L["Show Professions"] = "Show Professions"
+
+-- Filter Options
+L["Same Account"] = "Same Account"
+L["Same Realm"] = "Same Realm"
+L["Same Faction"] = "Same Faction"
+L["Same Class"] = "Same Class"
+L["Same Guild"] = "Same Guild"
 
 -- Message Options
 L["Send Group Messages"] = "Send Group Messages"
@@ -214,6 +222,7 @@ L["LFD Instance Shift Click"] = "Open instance difficulty"
 
 -- Professions Tab
 L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."
+L["OpenTradeSkillsOther"] = "Login to this character to load recipes."
 
 -- Slash Commands
 L["Invalid command"] = "Invalid command"

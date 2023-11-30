@@ -115,9 +115,11 @@ function ProfessionsTab:printProfession(player, profession, x, y)
             self.cells.indent = ""
         else
             cell = self.cells(x, y)
-            y = cell:printLine(L["OpenTradeSkills"], Colors.text)
             if player:isCurrentPlayer() then
+                y = cell:printLine(L["OpenTradeSkills"], Colors.text)
                 cell:attachClick(function() self:updateSkills(player, skillLine) end)
+            else
+                y = cell:printLine(L["OpenTradeSkillsOther"], Colors.text)
             end
         end
     end
