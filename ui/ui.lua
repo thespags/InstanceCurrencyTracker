@@ -296,9 +296,9 @@ function UI:addTab(frame, tab, name)
 	tabButton:SetScript("OnClick", self:selectTab(tab))
 	tab.button = tabButton
     -- Hide then show to ensure scroll bars load.
-	tabFrame:Hide()
+	tab:hide()
     if ICT.db.selectedTab == frame.numTabs then
-        tabFrame:Show()
+        tab:show()
     end
 
 	if frame.numTabs == 1 then

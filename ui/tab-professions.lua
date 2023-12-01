@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Colors = ICT.Colors
+local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 local ProfessionsTab = {
 }
@@ -167,6 +168,8 @@ end
 function ProfessionsTab:init()
     local editBox = UI:createEditBox(ICT.frame)
     self.editBox = editBox
+    Tooltips:info(editBox, L["Search Trade Skills"], L["SearchTradeSkillsTooltip"])
+    :SetPoint("RIGHT", editBox, "LEFT", 0, 0)
     editBox:SetPoint("TOP", ICT.frame, "TOP", 0, -30)
     editBox:SetFont(UI.font, 14, "")
     editBox:SetSize(140, 24)

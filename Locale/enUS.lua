@@ -222,7 +222,9 @@ L["LFD Instance Shift Click"] = "Open instance difficulty"
 
 -- Professions Tab
 L["OpenTradeSkills"] = "Click here or open the trade skill to load recipes."
-L["OpenTradeSkillsOther"] = "Login to this character to load recipes."
+L["OpenTradeSkillsOther"] = "Log in to this character to load recipes."
+L["Search Trade Skills"] = "Search Trade Skills"
+L["SearchTradeSkillsTooltip"] =  "Performs a fuzzy search for matching trade skills."
 
 -- Slash Commands
 L["Invalid command"] = "Invalid command"

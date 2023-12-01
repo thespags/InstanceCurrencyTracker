@@ -267,6 +267,5 @@ function Tooltips:info(parent, title, text)
     icon:SetSize(21, 19)
     icon:SetNormalTexture("Interface/common/help-i")
     self:new(title, text):attachFrame(icon)
-    icon:SetPoint("BOTTOMRIGHT", parent, "TOPRIGHT", 30, 0)
     return icon
 end

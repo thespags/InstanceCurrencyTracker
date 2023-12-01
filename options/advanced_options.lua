@@ -31,6 +31,7 @@ local function createLinkList(parent)
     local scroll = UI:createScrollFrame(frame)
     local cells = ICT.Cells:new(scroll.content, fontSize, scrollWidth, scrollHeight)
     Tooltips:info(frame, L["LinkAccountsTooltip"], L["LinkAccountsTooltipBody"])
+    :SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 30, 0)
     createSectionTitle(frame, 10, 10, L["Link Accounts"])
 
     return function()
@@ -94,6 +95,7 @@ local function createSortList(parent)
     local scroll = UI:createScrollFrame(frame)
     local cells = ICT.Cells:new(scroll.content, fontSize, scrollWidth, scrollHeight)
     Tooltips:info(frame, L["Custom Order"], L["CustomOrderHelpTooltip"])
+    :SetPoint("BOTTOMRIGHT", frame, "TOPRIGHT", 30, 0)
     createSectionTitle(frame, 10, 10, L["Custom Order"])
 
     local selectedPlayer
