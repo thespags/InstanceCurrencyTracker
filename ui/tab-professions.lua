@@ -84,11 +84,11 @@ local infoFilter = function(info)
 end
 
 function ProfessionsTab:printProfession(player, profession, x, y)
-    local options = ICT.db.options.professions
+    local options = ICT.db.options
     local skillLine = profession.skillLine
     local skills = player.skills[skillLine]
     local cell = self.cells(x, y)
-    local sort = options.sortByDifficulty and infoDifficultySort(player) or infoSort
+    local sort = options.sort.orderByDifficulty and infoDifficultySort(player) or infoSort
     y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
     if cell:isSectionExpanded(profession.name) then
@@ -106,7 +106,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                 if cell:isSectionExpanded(section) then
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
-                    if skill or options.showUnknown then
+                    if skill or options.professions.showUnknown then
                         y = cell:printLine(ICT:getColoredSpellLink(info.spellId, color))
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)
