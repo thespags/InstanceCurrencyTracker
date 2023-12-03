@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Players = ICT.Players
+local Tabs = ICT.Tabs
 local UI = {
     -- Default frame location.
     defaultX = 400,
@@ -75,9 +76,11 @@ function UI:CreateFrame()
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
 
-    self:addTab(frame, ICT.MainTab, L["Main"])
-    self:addTab(frame, ICT.GearTab, L["Gear"])
-    self:addTab(frame, ICT.ProfessionsTab, L["Professions"])
+    Tabs:mixin(frame, ICT.db, "selectedTab")
+    frame.update = function() return self:PrintPlayers() end
+    Tabs:addPanel(frame, ICT.MainTab, L["Main"])
+    Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
+    Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
 
@@ -94,7 +97,7 @@ function UI:CreateFrame()
         for i=1,frame.numTabs do
             frame.tabs[i].button:Show()
         end
-        self:selectTab(frame.tabs[ICT.db.selectedTab or 1])()
+        Tabs:select(frame.tabs[ICT.db.selectedTab or 1])()
         self:drawFrame(ICT.db.X, ICT.db.Y, ICT.db.width, ICT.db.height)
         ICT.frame.minimized = false
     end)
@@ -176,7 +179,6 @@ function UI:resetFrameButton()
         if self.defaultY + maxHeight > screenHeight then
             y = GetScreenHeight() - (GetScreenHeight() - screenHeight) / 2
         end
-        print(x, screenWidth,  GetScreenWidth())
         self:drawFrame(x, y, maxWidth, maxHeight)
     end)
     ICT.Tooltips:new("Reset size and position"):attachFrame(button)
@@ -201,119 +203,12 @@ function UI:getSelectedOrDefault()
     return ICT.db.players[ICT.selectedPlayer]
 end
 
-function UI:createDoubleScrollFrame(parent, name)
-    local inset = CreateFrame("Frame", name, parent, "BackdropTemplate")
-    inset:SetAllPoints(parent)
-    inset:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -60)
-    inset:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -35, 35)
-    inset:SetAlpha(1)
-    inset:SetIgnoreParentAlpha(true)
-    UI:setBackdrop(inset)
-
-    local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
-    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
-    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
-
-    local hScrollBar = CreateFrame("EventFrame", name .. "HScrollBar", inset, "WowTrimHorizontalScrollBar")
-    hScrollBar:SetPoint("TOPLEFT", inset, "BOTTOMLEFT")
-    hScrollBar:SetPoint("TOPRIGHT", inset, "BOTTOMRIGHT")
-
-    local vScrollBox = CreateFrame("Frame", name .. "VScrollbox", inset, "WowScrollBox")
-    inset.vScrollBox = vScrollBox
-    vScrollBox:SetAllPoints(inset)
-
-    local hScrollBox = CreateFrame("Frame", name .. "HScrollbox", vScrollBox, "WowScrollBox")
-    inset.hScrollBox = hScrollBox
-    hScrollBox:SetScript("OnMouseWheel", nil)
-    hScrollBox.scrollable = true
-
-    inset.content = CreateFrame("Frame", name .. "Content", hScrollBox, "ResizeLayoutFrame")
-    inset.content.scrollable = true
-
-    local hView = CreateScrollBoxLinearView()
-    hView:SetPanExtent(50)
-    hView:SetHorizontal(true)
-
-    local vView = CreateScrollBoxLinearView()
-    vView:SetPanExtent(50)
-
-    ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
-    ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
-    return inset
-end
-
-function UI:createScrollFrame(inset)
-    local name = inset:GetName()
-    local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
-    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
-    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
-
-    local vScrollBox = CreateFrame("Frame", name .. "VScrollbox", inset, "WowScrollBox")
-    inset.vScrollBox = vScrollBox
-    vScrollBox:SetAllPoints(inset)
-
-    inset.content = CreateFrame("Frame", name .. "Content", vScrollBox, "ResizeLayoutFrame")
-    inset.content.scrollable = true
-
-    local vView = CreateScrollBoxLinearView()
-    vView:SetPanExtent(50)
-
-    ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
-    return inset
-end
-
-function UI:selectTab(tab)
-    return function()
-        local parent = tab.frame:GetParent()
-        PanelTemplates_SetTab(parent, tab.button:GetID())
-        for i=1,parent.numTabs do
-            parent.tabs[i]:hide()
-        end
-        ICT.db.selectedTab = tab.button:GetID()
-        self:PrintPlayers()
-        tab:show()
-        if tab.OnSelect then
-            tab.OnSelect(tab)
-        end
-    end
-end
-
-function UI:addTab(frame, tab, name)
-    local tabFrame = UI:createDoubleScrollFrame(frame, "ICT" .. name)
-    _ = tab.init and tab:init()
-    tab.frame = tabFrame
-    tab.cells = ICT.Cells:new(tabFrame.content)
-
-	local frameName = frame:GetName()
-	frame.numTabs = frame.numTabs and frame.numTabs + 1 or 1
-    frame.tabs = frame.tabs or {}
-	local tabButton = CreateFrame("Button", frameName.."Tab"..frame.numTabs, frame, "CharacterFrameTabButtonTemplate")
-    tabButton:SetAlpha(1)
-    tabButton:SetIgnoreParentAlpha(true)
-    frame.tabs[frame.numTabs] = tab
-	tabButton:SetID(frame.numTabs)
-	tabButton:SetText(name)
-	tabButton:SetScript("OnClick", self:selectTab(tab))
-	tab.button = tabButton
-    -- Hide then show to ensure scroll bars load.
-	tab:hide()
-    if ICT.db.selectedTab == frame.numTabs then
-        tab:show()
-    end
-
-	if frame.numTabs == 1 then
-		tabButton:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 4, 3)
-	else
-		tabButton:SetPoint("TOPLEFT", frame.tabs[frame.numTabs-1].button, "TOPRIGHT", -14, 0)
-	end
-	return frame.numTabs
-end
 
 function UI:PrintPlayers()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do
         -- Only update the viewed Tab.
-        if ICT.db.selectedTab == tab.button:GetID() then
+        if ICT.frame:getSelectedTab() == tab.button:GetID() then
             local x = 0
             local y = 0
             tab.cells:hide()

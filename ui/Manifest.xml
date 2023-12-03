@@ -1,4 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Script file="tabs.lua"/>
   <Script file="ui.lua"/>
   <Script file="common.lua"/>
   <Script file="lfd.lua"/>
@@ -9,4 +10,5 @@
   <Script file="tab-main.lua"/>
   <Script file="tab-gear.lua"/>
   <Script file="tab-professions.lua"/>
+  <!-- <Script file="tab-inventory.lua"/> -->
 </Ui>

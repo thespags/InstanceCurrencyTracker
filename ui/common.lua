@@ -127,3 +127,64 @@ function UI:createEditBox(parent)
     end)
     return editBox
 end
+
+function UI:createDoubleScrollFrame(parent, name)
+    local inset = CreateFrame("Frame", name, parent, "BackdropTemplate")
+    inset:SetAllPoints(parent)
+    inset:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -60)
+    inset:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -35, 35)
+    inset:SetAlpha(1)
+    inset:SetIgnoreParentAlpha(true)
+    UI:setBackdrop(inset)
+
+    local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
+    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
+    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
+
+    local hScrollBar = CreateFrame("EventFrame", name .. "HScrollBar", inset, "WowTrimHorizontalScrollBar")
+    hScrollBar:SetPoint("TOPLEFT", inset, "BOTTOMLEFT")
+    hScrollBar:SetPoint("TOPRIGHT", inset, "BOTTOMRIGHT")
+
+    local vScrollBox = CreateFrame("Frame", name .. "VScrollbox", inset, "WowScrollBox")
+    inset.vScrollBox = vScrollBox
+    vScrollBox:SetAllPoints(inset)
+
+    local hScrollBox = CreateFrame("Frame", name .. "HScrollbox", vScrollBox, "WowScrollBox")
+    inset.hScrollBox = hScrollBox
+    hScrollBox:SetScript("OnMouseWheel", nil)
+    hScrollBox.scrollable = true
+
+    inset.content = CreateFrame("Frame", name .. "Content", hScrollBox, "ResizeLayoutFrame")
+    inset.content.scrollable = true
+
+    local hView = CreateScrollBoxLinearView()
+    hView:SetPanExtent(50)
+    hView:SetHorizontal(true)
+
+    local vView = CreateScrollBoxLinearView()
+    vView:SetPanExtent(50)
+
+    ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
+    ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
+    return inset
+end
+
+function UI:createScrollFrame(inset)
+    local name = inset:GetName()
+    local vScrollBar = CreateFrame("EventFrame", name .. "VScrollBar", inset, "WowTrimScrollBar")
+    vScrollBar:SetPoint("TOPLEFT", inset, "TOPRIGHT")
+    vScrollBar:SetPoint("BOTTOMLEFT", inset, "BOTTOMRIGHT")
+
+    local vScrollBox = CreateFrame("Frame", name .. "VScrollbox", inset, "WowScrollBox")
+    inset.vScrollBox = vScrollBox
+    vScrollBox:SetAllPoints(inset)
+
+    inset.content = CreateFrame("Frame", name .. "Content", vScrollBox, "ResizeLayoutFrame")
+    inset.content.scrollable = true
+
+    local vView = CreateScrollBoxLinearView()
+    vView:SetPanExtent(50)
+
+    ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
+    return inset
+end

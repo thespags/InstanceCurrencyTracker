@@ -157,7 +157,7 @@ local function addOptions(options, group, level)
     end
 end
 
-function DropdownOptions:foobar(frame)
+function DropdownOptions:logLevels(frame)
     local dropdown = DDM:Create_UIDropDownMenu("foobar", frame)
     ICT.db.logLevel = ICT.db.logLevel or "error"
     dropdown:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 4)
