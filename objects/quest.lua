@@ -14,7 +14,7 @@ end
 
 -- Grab the first id and try it.
 function Quest:inExpansion()
-    return GetQuestExpansion(self.ids[0]) ~= nil
+    return C_TaskQuest.GetQuestInfoByQuestID(self.ids[1]) ~= nil
 end
 
 -- As far as I can tell, WOW groups daily quests, i.e. we could check a single quest of the group to check completed.

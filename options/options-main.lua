@@ -4,13 +4,10 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
 local Players = ICT.Players
 local Tooltips = ICT.Tooltips
-local Tabs = ICT.Tabs
 local UI = ICT.UI
 local MainOptions = {}
 ICT.MainOptions = MainOptions
 
-local width = 355
-local height = 300
 local fontSize = 12
 local scrollWidth = 125
 local scrollHeight = fontSize

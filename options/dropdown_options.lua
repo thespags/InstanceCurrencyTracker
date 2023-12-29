@@ -79,23 +79,25 @@ end
 
 local function addExpansionOptions(objects, menuList, level)
     for expansion, name in ICT:rspairs(ICT.Expansions) do
-        local info = createInfo(name)
-        local contains = function(v)
-            -- v is visible or it's not from that expansion.
-            return v:isVisible() or not v:fromExpansion(expansion)
-        end
-        info.checked = ICT:containsAllValues(objects, contains)
-        info.menuList = menuList .. ":" .. expansion
-        info.hasArrow = true
-
-        info.func = function(self)
-            local wasChecked = ICT:containsAllValues(objects, contains)
-            for _, o in ICT:fpairsByValue(objects, function(v) return v:fromExpansion(expansion) end ) do
-                o:setVisible(not wasChecked)
+        if expansion <= ICT.Expansion then
+            local info = createInfo(name)
+            local contains = function(v)
+                -- v is visible or it's not from that expansion.
+                return v:isVisible() or not v:fromExpansion(expansion)
             end
-            UI:PrintPlayers()
+            info.checked = ICT:containsAllValues(objects, contains)
+            info.menuList = menuList .. ":" .. expansion
+            info.hasArrow = true
+
+            info.func = function(self)
+                local wasChecked = ICT:containsAllValues(objects, contains)
+                for _, o in ICT:fpairsByValue(objects, function(v) return v:fromExpansion(expansion) end ) do
+                    o:setVisible(not wasChecked)
+                end
+                UI:PrintPlayers()
+            end
+            DDM:UIDropDownMenu_AddButton(info, level)
         end
-        DDM:UIDropDownMenu_AddButton(info, level)
     end
 end
 
@@ -211,7 +213,7 @@ function DropdownOptions:create(frame)
                 multiPlayerView.checked = options.multiPlayerView
                 multiPlayerView.tooltipTitle = multiPlayerView.text
                 multiPlayerView.tooltipOnButton = true
-                multiPlayerView.tooltipText = L["Multi Character View Tooltip"]
+                multiPlayerView.tooltipText = L["MultiCharacterViewTooltip"]
                 multiPlayerView.func = function(self)
                     options.multiPlayerView = not options.multiPlayerView
                     DropdownOptions:flipPlayerDropdown()
@@ -226,7 +228,9 @@ function DropdownOptions:create(frame)
                 addObjectsOption(L["Characters"], ICT.db.players, level, Player.isLevelVisible)
                 addObjectsOption(L["Reset Timers"], ICT.Resets, level)
                 addObjectsOption(L["Instances"], Instances.infos(), level)
-                addMenuOption(L["Quests"], ICT.db.options.quests, level)
+                if ICT:size(ICT.Quests) > 0 then
+                    addMenuOption(L["Quests"], ICT.db.options.quests, level)
+                end
                 addObjectsOption(L["Currency"], ICT.Currencies, level)
                 addObjectsOption(L["Cooldowns"], ICT.Cooldowns, level)
                 addAllPlayerOptions(L["Pets"], Player.getPets, level)

@@ -79,10 +79,12 @@ function UI:CreateFrame()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
-    Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
-    Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
+    if ICT.Expansion == ICT.WOTLK then
+        Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
+        Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
+    end
     -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
-    PanelTemplates_SetTab(frame, ICT.db.selectedTab or 1)
+    PanelTemplates_SetTab(frame, frame:getSelectedTab())
 
     ICT.DropdownOptions:createPlayer()
     ICT.AdvOptions:create()
@@ -97,7 +99,7 @@ function UI:CreateFrame()
         for i=1,frame.numTabs do
             frame.tabs[i].button:Show()
         end
-        Tabs:select(frame.tabs[ICT.db.selectedTab or 1])()
+        frame.selectTab()
         self:drawFrame(ICT.db.X, ICT.db.Y, ICT.db.width, ICT.db.height)
         ICT.frame.minimized = false
     end)

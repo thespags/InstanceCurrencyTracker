@@ -154,3 +154,43 @@ for id, v in pairs(items) do
         ICT.Cooldowns[id] = Cooldown:new(v)
     end
 end
+
+
+local scanningTooltip = CreateFrame("GameTooltip", "ICTScanningTooltip", nil, "GameTooltipTemplate")
+scanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE" )
+
+local function parseReagents(unit)
+    scanningTooltip:ClearLines()
+    scanningTooltip:SetSpellByID(unit)
+    return _G["ICTScanningTooltipTextLeft2"]:GetText()
+end
+
+-- local function scanTooltip(unit)
+--     print(unit)
+--     scanningTooltip:ClearLines()
+--     scanningTooltip:SetSpellByID(unit)
+    
+--     local i=1
+--     while _G["ICTScanningTooltipTextLeft" .. i] do
+--         local text = _G["ICTScanningTooltipTextLeft" .. i]:GetText()
+--         if text and text ~= "" then print(text) end
+--         i = i + 1
+--     end
+-- end
+
+local function addReagents(tooltip)
+    local _, itemLink = tooltip:GetItem()
+    if itemLink == nil then
+        return
+    end
+    local itemId = GetItemInfoInstant(itemLink)
+    local info = LibTradeSkillRecipes:GetInfoByItemId(itemId)
+    local spellId = info and info[1] and info[1].spellId
+    if spellId then
+        local line = parseReagents(spellId)
+        tooltip:AddLine(line)
+    end
+end
+
+GameTooltip:HookScript("OnTooltipSetItem", addReagents)
+ItemRefTooltip:HookScript("OnTooltipSetItem", addReagents)

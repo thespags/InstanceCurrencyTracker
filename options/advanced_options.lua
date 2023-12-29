@@ -1,21 +1,13 @@
 local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
-local Colors = ICT.Colors
-local Players = ICT.Players
 local Tooltips = ICT.Tooltips
 local Tabs = ICT.Tabs
-local UI = ICT.UI
 local AdvOptions = {}
 ICT.AdvOptions = AdvOptions
 
 local width = 355
 local height = 300
-local fontSize = 12
-local scrollWidth = 125
-local scrollHeight = fontSize
--- Cells use fontSize plus 5.
-local iconSize = fontSize + 5
 
 local options = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
 function AdvOptions:createFrame(frame)
@@ -28,12 +20,12 @@ function AdvOptions:createFrame(frame)
     frame:SetFrameStrata("HIGH")
     table.insert(UISpecialFrames, frame:GetName())
 
+    Tabs:mixin(frame, ICT.db.options, "selectedTab")
     frame.update = function()
         ICT.MainOptions:prePrint()
     end
-    Tabs:mixin(frame, ICT.db.options, "selectedTab")
-    Tabs:add(frame, ICT.MainOptions, "Main")
-    PanelTemplates_SetTab(frame, ICT.db.options.selectedTab or 1)
+    Tabs:add(frame, ICT.MainOptions, L["Main"])
+    PanelTemplates_SetTab(frame, frame:getSelectedTab())
     frame.CloseButton:HookScript("OnClick", function()
         ICT.MainOptions.resetConfirm:Hide()
     end)
@@ -53,6 +45,8 @@ local function openOptionsFrame()
             return
         end
         options:Show()
+        -- Refresh any information
+        options.update()
     end
 end
 

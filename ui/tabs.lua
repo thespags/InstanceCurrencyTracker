@@ -7,7 +7,7 @@ ICT.Tabs = Tabs
 function Tabs:mixin(frame, table, key)
     Mixin(frame, {
         getSelectedTab = function()
-            return table[key]
+            return table[key] or 1
         end,
         setSelectedTab = function(value)
             table[key] = value

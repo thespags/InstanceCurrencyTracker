@@ -1,13 +1,10 @@
 local addOnName, ICT = ...
 
-local DDM = LibStub("LibUIDropDownMenu-4.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
-ICT.Options = {}
-local UI = ICT.UI
-local Options = ICT.Options
 local Instances = ICT.Instances
-local Player = ICT.Player
+local Options = {}
+ICT.Options = Options
 
 Options.player = {
     { name = L["Show Level"], key = "showLevel", },
@@ -21,21 +18,24 @@ Options.player = {
     { name = L["Show Bags"], key = "showBags", },
     { name = L["Show Bank Bags"], key = "showBankBags", },
     { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
+    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = L["ShowGearScoresTooltip"], },
     { name = L["Show Professions"], key = "showProfessions", },
     { name = L["Show Cooldowns"], key = "showCooldowns", },
 }
 
 Options.gear = {
     { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = "If TacoTip is available, this will display gear scores for each spec respectively.", },
+    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = L["ShowGearScoresTooltip"], },
 }
 
 Options.professions = {
-    { name = L["Show Unknown"], key = "showUnknown", defaultFalse=true, },
+    { name = L["Show Unknown"], key = "showUnknown", defaultFalse = true, },
 }
 for i, name in ICT:rspairs(ICT.Expansions) do
-    tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.WOTLK, })
+    -- Don't show expansions if there's only one.
+    if ICT.Vanilla < ICT.Expansion and i <= ICT.Expansion then
+        tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.Expansion, })
+    end
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
     -- For whatever reason in Spanish the list may be nil, it's not clear to me why so quick fix it to work but adding nil checks.
@@ -45,11 +45,11 @@ for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
 end
 
 Options.messages = {
-    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"] },
+    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], },
 }
 
 Options.quests = {
-    { name = L["Hide Unavailable Quests"], key = "hideUnavailable"},
+    { name = L["Hide Unavailable Quests"], key = "hideUnavailable", },
     { name = L["Show Quests"], key = "show", },
     { name = L["Show Fishing Daily"], key = "Fishing Daily", }
 }
@@ -70,7 +70,15 @@ Options.sort = {
     { name = L["Custom Order"], key = "custom", tooltip = L["CustomOrderTooltip"], defaultFalse = true, skipped = true, },
     { name = L["Current Player First"], key = "currentFirst", tooltip = L["CurrentPlayerFirstTooltip"], defaultFalse = true, },
     { name = L["Order Lock Last"], key = "orderLockLast", tooltip = L["OrderLockLastTooltip"], defaultFalse = true, },
-    { name = L["Order By Difficulty"], key = "orderByDifficulty", tooltip = L["OrderByDifficultyTooltip"], defaultFalse=true, },
+    { name = L["Order By Difficulty"], key = "orderByDifficulty", tooltip = L["OrderByDifficultyTooltip"], defaultFalse = true, },
+}
+
+Options.playerFilters = {
+    { name = L["Same Account"], key = "sameBNet", defaultFalse = true, },
+    { name = L["Same Realm"], key = "sameRealm", defaultFalse = true, },
+    { name = L["Same Faction"], key = "sameFaction", defaultFalse = true },
+    { name = L["Same Class"], key = "sameClass", defaultFalse = true, },
+    { name = L["Same Guild"], key = "sameGuild", defaultFalse = true, },
 }
 
 function Options:setDefaultOptions(override)
@@ -91,19 +99,19 @@ function Options:setDefaultOptions(override)
         put(options.currency, v.id, v <= ICT.Heroism)
     end
 
-    -- Set all WOTLK instances on by default.
+    -- Set all current expansion's instances on by default.
     put(options, "displayInstances", {})
     for k, _ in pairs(ICT.Expansions) do
         put(options["displayInstances"], k, {})
     end
     for _, v in pairs(Instances.infos()) do
-        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.WOTLK))
+        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.Expansion))
     end
 
-    -- Set all WOTLK cooldowns on by default
+    -- Set all current expansion's cooldowns on by default
     put(options, "displayCooldowns", {})
     for k, v in pairs(ICT.Cooldowns) do
-        put(options.displayCooldowns, k, v:fromExpansion(ICT.WOTLK))
+        put(options.displayCooldowns, k, v:fromExpansion(ICT.Expansion))
     end
 
     -- Set daily and weekly resets on by default.
@@ -114,19 +122,20 @@ function Options:setDefaultOptions(override)
         put(options.pets, fullName, {})
     end
 
-    local function setDefaults(t, key)
+    local function setDefaults(key)
         put(options, key, {})
-        for _, v in pairs(t) do
+        for _, v in pairs(self[key]) do
             put(options[key], v.key, not v.defaultFalse)
         end
     end
-    setDefaults(self.player, "player")
-    setDefaults(self.gear, "gear")
-    setDefaults(self.professions, "professions")
-    setDefaults(self.messages, "messages")
-    setDefaults(self.frame, "frame")
-    setDefaults(self.quests, "quests")
-    setDefaults(self.sort, "sort")
+    setDefaults("player")
+    setDefaults("gear")
+    setDefaults("professions")
+    setDefaults("messages")
+    setDefaults("frame")
+    setDefaults("quests")
+    setDefaults("sort")
+    setDefaults("playerFilters")
 
     put(options, "comms", {})
     put(options.comms, "players", {})

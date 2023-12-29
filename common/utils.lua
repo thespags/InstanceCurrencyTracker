@@ -77,7 +77,7 @@ function ICT:castTradeSkill(player, skillLine, expectedName)
             CloseTradeSkill()
         end
     end
-    ICT:print(L["No skill found: %s"], expectedName)
+    ICT.log.error(L["No skill found: %s"], expectedName)
 end
 
 -- Helper function when debugging.

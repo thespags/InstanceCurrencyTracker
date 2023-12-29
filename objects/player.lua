@@ -348,7 +348,7 @@ local function addBags(index, bags, bagsTotal)
         local free, type = GetContainerNumFreeSlots(index)
         -- By name requires the item in your inventory so store this for the player.
         if not name then
-            print("no bag name " .. index)
+            ICT.log.info("no bag name %s", index)
         end
         local icon = select(5, GetItemInfoInstant(name))
         icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
@@ -359,7 +359,7 @@ local function addBags(index, bags, bagsTotal)
 
         -- Handle cases if new bag types are added.
         if not ICT.BagFamily[type] then
-            ICT:print(L["Unknown bag type %s (%s), please report this on the addon page."], type, name)
+            ICT.log.error(L["Unknown bag type %s (%s), please report this on the addon page."], type, name)
             ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
         end
     end
