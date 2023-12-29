@@ -158,14 +158,9 @@ Instances.currency = {
 }
 -- End Currency Helpers
 
-ICT.WOTLK = 2
-ICT.TBC = 1
-ICT.VANILLA = 0
-ICT.Expansions = {
-    [ICT.WOTLK] = "Wrath of the Lich King",
-    [ICT.TBC] = "The Burning Crusade",
-    [ICT.VANILLA] = "Vanilla"
-}
+function Instances.inExpansion(info, size)
+    return info:getExpansion(size) <= ICT.Expansion
+end
 
 -- Attaches the localize name to info for sorting in the options menu.
 local infos
@@ -174,19 +169,21 @@ function Instances.infos()
         return infos
     end
     infos = {}
-    for _, instance in pairs(LibInstances:GetInfos()) do
-        local size = instance:getSizes()[1]
+    for _, info in pairs(LibInstances:GetInfos()) do
+        local size = info:getSizes()[1]
         if size then
-            local info = Instance:new({}, instance.id, size)
-            -- Drop size from name.
-            info.name = GetRealZoneText(instance.id)
-            tinsert(infos, info)
+            if Instances.inExpansion(info, size) then
+                local instance = Instance:new({}, info, size)
+                -- Drop size from name.
+                instance.name = GetRealZoneText(info.id)
+                tinsert(infos, instance)
+            end
 
-            local legacySize = instance:getLegacySize()
-            if legacySize then
-                info = Instance:new({}, instance.id, legacySize)
-                info.name = GetRealZoneText(instance.id)
-                tinsert(infos, info)
+            local legacySize = info:getLegacySize()
+            if legacySize and Instances.inExpansion(info, legacySize) then
+                local instance = Instance:new({}, info, legacySize)
+                instance.name = GetRealZoneText(info.id)
+                tinsert(infos, instance)
             end
         end
     end

@@ -42,6 +42,11 @@ function Cells:fontSize()
     return rawget(self, "font") or UI:getFontSize()
 end
 
+function Cells:isSectionExpanded(key)
+    key = self.frame:GetName() .. key
+    return not ICT.db.options.collapsible[key]
+end
+
 -- Gets the associated cell or create it if it doesn't exist yet.
 function Cells:__call(x, y)
     local name = string.format("ICTCell(%s, %s)", x, y)
@@ -228,11 +233,6 @@ end
 
 function Cell:printOptionalValue(option, leftText, rightText, leftColor, rightColor)
     return option and self:printValue(leftText, rightText, leftColor, rightColor) or self.y
-end
-
-function Cell:isSectionExpanded(key)
-    key = self.parent.frame:GetName() .. key
-    return not ICT.db.options.collapsible[key]
 end
 
 -- Key if you want different titles across columns. Currently only for character names to share the same collapse.

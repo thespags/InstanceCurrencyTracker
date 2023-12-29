@@ -5,14 +5,14 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Instance = {}
 ICT.Instance = Instance
 
-function Instance:new(instance, id, size)
+function Instance:new(instance, info, size)
     instance = instance or {}
     setmetatable(instance, self)
     self.__index = self
-    instance.info = LibInstances:GetInfo(id)
-    instance.id = id
+    instance.info = info
+    instance.id = info.id
     instance.size = size
-    instance.expansion = instance.info:getExpansion(size)
+    instance.expansion = info:getExpansion(size)
     instance:localizeName()
     instance:resetIfNecessary()
     instance.encounterSize = #instance:encounters()

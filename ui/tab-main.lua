@@ -35,7 +35,7 @@ function MainTab:calculatePadding()
         and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
     self.paddings.specs = 2
-    self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.QuestInfo, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
+    self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.Quests, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
 end
 
 function MainTab:getPadding(y, name)
@@ -48,11 +48,16 @@ function MainTab:calculateGold()
     end
 end
 
+-- Same as canQueue for now, but may be different if I support retail ever or if a season adds specs.
+local function canSpecSwap(player)
+    return player:isCurrentPlayer() and ICT.Expansion == ICT.WOTLK
+end
+
 function MainTab:printCharacterInfo(player, x, y)
     local cell = self.cells(x, y)
     y = cell:printSectionTitle(L["Info"])
     local options = ICT.db.options
-    if not cell:isSectionExpanded(L["Info"]) then
+    if not self.cells:isSectionExpanded(L["Info"]) then
         return self.cells(x, y):hide()
     end
     self.cells.indent = "  "
@@ -91,7 +96,7 @@ function MainTab:printCharacterInfo(player, x, y)
         y = cell:printSectionTitle(L["Bags"])
         tooltip:attach(cell)
 
-        if cell:isSectionExpanded(L["Bags"]) then
+        if self.cells:isSectionExpanded(L["Bags"]) then
             padding = self:getPadding(y, "bags")
             local bags = player.bagsTotal or {}
             for k, bag in ICT:nspairs(bags, function(k, v) return v.total > 0 end) do
@@ -117,7 +122,7 @@ function MainTab:printCharacterInfo(player, x, y)
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Specs"])
 
-        if cell:isSectionExpanded("Specs") then
+        if self.cells:isSectionExpanded("Specs") then
             padding = self:getPadding(y, "specs")
             for _, spec in pairs(player:getSpecs()) do
                 if Talents:isValidSpec(spec) then
@@ -132,7 +137,7 @@ function MainTab:printCharacterInfo(player, x, y)
                         :printValue(L["Shift Click"], L["Spec Shift Click"])
                     end
                     ICT.Tooltip:new(f):attach(cell)
-                    if player:isCurrentPlayer() then
+                    if canSpecSwap(player) then
                         cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
                     end
                 end
@@ -147,7 +152,7 @@ function MainTab:printCharacterInfo(player, x, y)
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Professions"])
 
-        if cell:isSectionExpanded(L["Professions"]) then
+        if self.cells:isSectionExpanded(L["Professions"]) then
             padding = self:getPadding(y, "professions")
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
@@ -167,7 +172,7 @@ function MainTab:printCharacterInfo(player, x, y)
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Cooldowns"])
 
-        if cell:isSectionExpanded(L["Cooldowns"]) then
+        if self.cells:isSectionExpanded(L["Cooldowns"]) then
             padding = self:getPadding(y, "cooldowns")
             for _, v in ICT:nspairsByValue(player.cooldowns, ICT.Cooldown.isVisible) do
                 cell = self.cells(x, y)
@@ -188,6 +193,10 @@ function MainTab:printCharacterInfo(player, x, y)
     return y
 end
 
+local function canQueue(player)
+    return player:isCurrentPlayer() and ICT.Expansion == ICT.WOTLK
+end
+
 -- Prints all the instances with associated tooltips.
 function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     if size == 0 then
@@ -200,7 +209,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     Tooltips:instanceSectionTooltip():attach(cell)
 
     -- If the section is collapsible then short circuit here.
-    if cell:isSectionExpanded(key) then
+    if self.cells:isSectionExpanded(key) then
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
                 local color = Colors:getSelectedColor(instance.locked)
@@ -208,7 +217,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
                 y = cell:printLine(instance:getName(), color)
                 Tooltips:instanceTooltip(instance):attach(cell)
                 -- Only enable LFD for not locked dungeons on the current player.
-                if player:isCurrentPlayer() and not instance.locked and instance:isDungeon() then
+                if canQueue(player) and not instance.locked and instance:isDungeon() then
                     cell:printLFDInstance(instance)
                     cell:attachClick(LFD:selectInstance(cell, instance), LFD:specificDropdown(cell, instance))
                 end
@@ -221,7 +230,7 @@ end
 function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
 
-    if player:isCurrentPlayer() then
+    if canQueue(player) then
         local cell = self.cells(x, y)
         y = cell:printLFDType(LFDQueueFrame.type)
         cell:attachClick(LFD:queue(cell), LFD:randomDropdown(cell))
@@ -238,7 +247,7 @@ function MainTab:printAllInstances(player, x, y)
             local cell = self.cells(x, y)
             y = cell:printSectionTitle(name)
 
-            if cell:isSectionExpanded(name) then
+            if self.cells:isSectionExpanded(name) then
                 self.cells.indent = "  "
                 for k, v in ipairs(subSections) do
                     y = self:printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, y)
@@ -268,7 +277,7 @@ function MainTab:printCurrency(player, x, y)
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Currency"])
         Tooltips:currencySectionTooltip():attach(cell)
-        if cell:isSectionExpanded(L["Currency"]) then
+        if self.cells:isSectionExpanded(L["Currency"]) then
             for _, currency in ipairs(ICT.Currencies) do
                 if currency:isVisible() then
                     y = self:printCurrencyShort(player, currency, x, y)
@@ -280,13 +289,13 @@ function MainTab:printCurrency(player, x, y)
 end
 
 function MainTab:printQuests(player, x, y)
-    if ICT.db.options.quests.show then
+    if ICT.db.options.quests.show and ICT:size(ICT.Quests, player:isQuestVisible()) > 0 then
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Quests"])
-       Tooltips: questSectionTooltip():attach(cell)
-        if cell:isSectionExpanded(L["Quests"]) then
+        Tooltips:questSectionTooltip():attach(cell)
+        if self.cells:isSectionExpanded(L["Quests"]) then
             local padding = self:getPadding(y, "quests")
-            for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player), player:isQuestVisible()) do
+            for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player), player:isQuestVisible()) do
                 local color = Colors:getQuestColor(player, quest)
                 local name = quest.name(player)
                 cell = self.cells(x, y)
@@ -306,7 +315,7 @@ function MainTab:printResetTimers(x, y)
         y = cell:printSectionTitle(L["Reset"])
         Tooltips:timerSectionTooltip():attach(cell)
 
-        if cell:isSectionExpanded(L["Reset"]) then
+        if self.cells:isSectionExpanded(L["Reset"]) then
             for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end

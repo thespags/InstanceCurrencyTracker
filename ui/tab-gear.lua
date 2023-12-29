@@ -64,7 +64,7 @@ function GearTab:printGlyphs(player, spec, x, y)
         Tooltip:new(tooltip):attach(cell)
     end
 
-    if cell:isSectionExpanded(L["Glyphs"]) then
+    if self.cells:isSectionExpanded(L["Glyphs"]) then
         local padding = self:getPadding(y, "glyphs", spec.id)
         y = self:printGlyph(spec, 1, L["Major"], x, y)
         y = self:printGlyph(spec, 2, L["Minor"], x, y)
@@ -94,7 +94,7 @@ function GearTab:printSpec(player, x, y, spec)
         Tooltip:new(tooltip):attach(cell)
         cell:attachClick(Talents:activateSpec(spec.id), Talents:viewSpec(spec.id))
     end
-    if not cell:isSectionExpanded(key) then
+    if not self.cells:isSectionExpanded(key) then
         return self.cells(x, y):hide()
     end
 
@@ -135,7 +135,7 @@ function GearTab:printSpec(player, x, y, spec)
     cell = self.cells(x, y)
     y = cell:printSectionTitle(L["Items"])
 
-    if cell:isSectionExpanded(L["Items"]) then
+    if self.cells:isSectionExpanded(L["Items"]) then
         padding = self:getPadding(y, "items", spec.id)
         for k, item in pairs(spec.items or {}) do
             local text = ICT:addGems(k, item, true)
@@ -149,7 +149,7 @@ function GearTab:printSpec(player, x, y, spec)
 
     cell = self.cells(x, y)
     y = cell:printSectionTitle(L["Enchants"])
-    if cell:isSectionExpanded(L["Enchants"]) then
+    if self.cells:isSectionExpanded(L["Enchants"]) then
         padding = self:getPadding(y, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]

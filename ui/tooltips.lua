@@ -184,7 +184,7 @@ end
 local function printQuestsForCurrency(tooltip, player, currency)
     if ICT.db.options.quests.show then
         tooltip.shouldPrintTitle = true
-        for _, quest in ICT:spairsByValue(ICT.QuestInfo, ICT.QuestSort(player)) do
+        for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player)) do
             if currency:fromQuest()(quest) and player:isQuestVisible(quest) then
                 tooltip:printSection(L["Quests"])
                 local color = Colors:getQuestColor(player, quest)

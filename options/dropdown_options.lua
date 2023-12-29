@@ -100,6 +100,10 @@ local function addExpansionOptions(objects, menuList, level)
 end
 
 local function addObjectsOption(name, objects, level, filter)
+    -- Adding in expansion filters the options may be empty so don't add an empty list.
+    if ICT:size(objects) == 0 then
+        return
+    end
     local info = createInfo(name)
     filter = filter or ICT:returnX(true)
     local contains = function(v) return filter(v) and v:isVisible() end
@@ -118,6 +122,10 @@ local function addObjectsOption(name, objects, level, filter)
 end
 
 local function addMenuOption(name, options, level, tooltip)
+    -- Adding in expansion filters the options may be empty so don't add an empty list.
+    if ICT:size(options) == 0 then
+        return
+    end
     local info = createInfo(name)
     info.menuList = info.text
     info.checked = ICT:containsAllValues(options)

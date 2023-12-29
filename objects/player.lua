@@ -5,6 +5,7 @@ local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Instance = ICT.Instance
+local Instances = ICT.Instances
 ICT.Player = {}
 local Player = ICT.Player
 
@@ -61,8 +62,10 @@ function Player:createInstances()
     self.instances = self.instances or {}
     for id, info in pairs(LibInstances:GetInfos()) do
         for _, size in pairs(info:getSizes()) do
-            local key = Instance:key(id, size)
-            self.instances[key] = Instance:new(self.instances[key], id, size)
+            if Instances.inExpansion(info, size) then
+                local key = Instance:key(id, size)
+                self.instances[key] = Instance:new(self.instances[key], info, size)
+            end
         end
     end
 end
@@ -71,7 +74,7 @@ function Player:dailyReset()
     for _, currency in ipairs(ICT.Currencies) do
         self.currency.daily[currency.id] = self.currency.maxDaily[currency.id] or 0
     end
-    for k, quest in pairs(ICT.QuestInfo) do
+    for k, quest in pairs(ICT.Quests) do
         if quest:isDaily() then
             self.quests.completed[k] = false
         end
@@ -83,7 +86,7 @@ function Player:weeklyReset()
         self.currency.weekly[currency.id] = currency:calculateMaxRaid(self)
         self.currency.maxWeekly[currency.id] = currency:calculateMaxRaid(self)
     end
-    for k, quest in pairs(ICT.QuestInfo) do
+    for k, quest in pairs(ICT.Quests) do
         if quest:isWeekly() then
             self.quests.completed[k] = false
         end
@@ -137,7 +140,7 @@ function Player:totalCurrency(currency)
 end
 
 function Player:calculateQuest()
-    for k, quest in pairs(ICT.QuestInfo) do
+    for k, quest in pairs(ICT.Quests) do
         self.quests.prereq[k] = quest.prereq(self)
         self.quests.completed[k] = quest:isCompleted()
     end
@@ -560,7 +563,7 @@ function Player:setVisible(checked)
 end
 
 function Player:isEnabled()
-    return self:isVisible() and self:isLevelVisible()
+    return true --self:isVisible() and self:isLevelVisible()
 end
 
 function Player:isLevelVisible()

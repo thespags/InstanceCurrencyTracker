@@ -91,7 +91,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
     local sort = options.sort.orderByDifficulty and infoDifficultySort(player) or infoSort
     y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
-    if cell:isSectionExpanded(profession.name) then
+    if self.cells:isSectionExpanded(profession.name) then
         if skills and ICT:size(skills) > 0 then
             self.cells.indent = "  "
             local expansion, section
@@ -102,11 +102,11 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     section = skillLine .. ":" .. expansion
                     y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
                 end
-                cell = self.cells(x, y)
-                if cell:isSectionExpanded(section) then
+                if self.cells:isSectionExpanded(section) then
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.professions.showUnknown then
+                        cell = self.cells(x, y)
                         y = cell:printLine(ICT:getColoredSpellLink(info.spellId, color))
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)

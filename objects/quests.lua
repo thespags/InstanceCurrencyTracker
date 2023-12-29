@@ -52,7 +52,7 @@ local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllian
     end
 end
 
-ICT.QuestInfo = {
+ICT.Quests = {
     ["Raid Weekly"] = {
         name = ICT:returnX("Raid Weekly"),
         ids = { 24579 },
@@ -160,7 +160,8 @@ ICT.QuestInfo = {
 }
 
 -- Set the key on the value for convenient lookups to other tables, i.e. player infos.
-for k, v in pairs(ICT.QuestInfo) do
+for k, v in pairs(ICT.Quests) do
     v.key = k
-    ICT.QuestInfo[k] = ICT.Quest:new(v)
+    local quest = ICT.Quest:new(v)
+    ICT.Quests[k] = quest.inExpansion and quest
 end

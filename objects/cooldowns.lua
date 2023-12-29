@@ -84,65 +84,73 @@ local items = {
     -- End WOTLK
 }
 
+local function inExpansion(info)
+    return info and info.expansionId and info.expansionId <= ICT.Expansion
+end
+
 for _, id in pairs(spells) do
     local v = {}
     v.id = id
 
     local info = LibTradeSkillRecipes:GetInfoBySpellId(id)
-    v.skillLine = info.categoryId
-    v.expansion = info.expansionId
-    local name, _, icon = GetSpellInfo(id)
-    v.icon = info.itemId and select(5, GetItemInfoInstant(info.itemId)) or icon
-    v.spellName = name
-    -- Remove transmute prefix, trying to ignore languages by just using :, 
-    -- in the future we may have non transmutes with :.
-    local i = name:find(":")
-    if i then
-        name = string.sub(name, i + 2)
-        v.transmute = true
-    end
-    v.name = name
-    v.link = GetSpellLink(id)
+    if inExpansion(info) then
+        v.skillLine = info.categoryId
+        v.expansion = info.expansionId
+        local name, _, icon = GetSpellInfo(id)
+        v.icon = info.itemId and select(5, GetItemInfoInstant(info.itemId)) or icon
+        v.spellName = name
+        -- Remove transmute prefix, trying to ignore languages by just using :, 
+        -- in the future we may have non transmutes with :.
+        local i = name:find(":")
+        if i then
+            name = string.sub(name, i + 2)
+            v.transmute = true
+        end
+        v.name = name
+        v.link = GetSpellLink(id)
 
-    -- Converts ms to seconds
-    v.duration = GetSpellBaseCooldown(id) / 1000
-    if v.duration > 0 then
-        ICT.Cooldowns[id] = Cooldown:new(v)
-        -- print(string.format("|T%s:14|t %s = %s", v.icon, v.spellName, v.duration))
-    else
-        -- print("skipping ".. v.spellName)
+        -- Converts ms to seconds
+        v.duration = GetSpellBaseCooldown(id) / 1000
+        if v.duration > 0 then
+            ICT.Cooldowns[id] = Cooldown:new(v)
+            -- print(string.format("|T%s:14|t %s = %s", v.icon, v.spellName, v.duration))
+        else
+            -- print("skipping ".. v.spellName)
+        end
     end
 end
 
 for id, v in pairs(items) do
-    v.id = id
     local info = LibTradeSkillRecipes:GetInfoByItemId(id)
-    v.skillLine = v.skillLine or info[1].categoryId
-    if not v.skillLine then
-        ICT:print(L["Cooldown missing skillLine: %s"], id)
-    end
-    v.expansion = v.expansion or info[1].expansionId
-    if not v.expansion then
-        ICT:print(L["Cooldown missing expansion: %s"], id)
-    end
-    -- Default values until loaded.
-    v.name = id
-    v.icon = "134400"
-    v.link = id
-    local item = Item:CreateFromItemID(id)
-    item:ContinueOnItemLoad(function()
-        v.name = item:GetItemName()
-        v.itemName = v.name
-        local i = v.name:find(":")
-        if i then
-            v.name = string.sub(v.name, i + 2)
+    if inExpansion(info) then
+        v.id = id
+        v.skillLine = v.skillLine or info[1].categoryId
+        if not v.skillLine then
+            ICT:print(L["Cooldown missing skillLine: %s"], id)
         end
-        v.icon = item:GetItemIcon()
-        v.link = item:GetItemLink()
-        -- Make sure function is loaded.
-        if ICT.UpdateDisplay then
-            ICT:UpdateDisplay()
+        v.expansion = v.expansion or info[1].expansionId
+        if not v.expansion then
+            ICT:print(L["Cooldown missing expansion: %s"], id)
         end
-    end)
-    ICT.Cooldowns[id] = Cooldown:new(v)
+        -- Default values until loaded.
+        v.name = id
+        v.icon = "134400"
+        v.link = id
+        local item = Item:CreateFromItemID(id)
+        item:ContinueOnItemLoad(function()
+            v.name = item:GetItemName()
+            v.itemName = v.name
+            local i = v.name:find(":")
+            if i then
+                v.name = string.sub(v.name, i + 2)
+            end
+            v.icon = item:GetItemIcon()
+            v.link = item:GetItemLink()
+            -- Make sure function is loaded.
+            if ICT.UpdateDisplay then
+                ICT:UpdateDisplay()
+            end
+        end)
+        ICT.Cooldowns[id] = Cooldown:new(v)
+    end
 end

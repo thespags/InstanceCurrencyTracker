@@ -33,6 +33,10 @@ ICT.Currencies = {
     ICT.HonorPoints,
 }
 
+-- Defines the sorting order based on the order above, as well as removing any currencies not available yet.
 for k, v in ipairs(ICT.Currencies) do
     v.order = k
+    if not v:inExpansion() then
+       ICT.Currencies[k] = nil
+    end
 end

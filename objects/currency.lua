@@ -15,6 +15,10 @@ function Currency:showLimit()
     return false
 end
 
+function Currency:inExpansion()
+    return C_CurrencyInfo.GetCurrencyInfo(self.id) ~= nil
+end
+
 local function getNameWithIconTooltipSize(id, size)
     local currency = C_CurrencyInfo.GetCurrencyInfo(id)
     return string.format("|T%s:%s|t%s", currency["iconFileID"], size, currency["name"])
@@ -59,7 +63,7 @@ end
 function Currency:calculateAvailableQuest(player, currency, f)
     local op = function(quest) return f(quest) and quest.prereq(player) and not quest:isCompleted() and quest.currencies[currency] or 0 end
     local filter = self:fromQuest()
-    return ICT:sum(ICT.QuestInfo, op, filter)
+    return ICT:sum(ICT.Quests, op, filter)
 end
 
 function Currency:calculateAvailableDailyQuest(player, currency)
@@ -89,7 +93,7 @@ end
 function Currency:calculateMaxQuest(player, currency, f)
     local op = function(quest) return f(quest) and quest.prereq(player) and quest.currencies[currency] or 0 end
     local filter = self:fromQuest()
-    return ICT:sum(ICT.QuestInfo, op, filter)
+    return ICT:sum(ICT.Quests, op, filter)
 end
 
 function Currency:calculateMaxDailyQuest(player, currency)

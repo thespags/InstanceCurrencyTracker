@@ -12,6 +12,11 @@ function Quest:new(quest)
     return quest
 end
 
+-- Grab the first id and try it.
+function Quest:inExpansion()
+    return GetQuestExpansion(self.ids[0]) ~= nil
+end
+
 -- As far as I can tell, WOW groups daily quests, i.e. we could check a single quest of the group to check completed.
 -- However, to be overly cautious check all quests in the groups looking for any true value.
 function Quest:isCompleted()

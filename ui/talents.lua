@@ -22,9 +22,11 @@ function Talents:updateSpec(spec, id)
     end
     spec.totalPoints = t.totalPointsSpent
     spec.glyphs = {}
-    for j=1,6 do
-        local enabled, type, spellId, icon = GetGlyphSocketInfo(j, id)
-        spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
+    if ICT.WOTLK == ICT.Expansion then
+        for j=1,6 do
+            local enabled, type, spellId, icon = GetGlyphSocketInfo(j, id)
+            spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }
+        end
     end
     return spec
 end
