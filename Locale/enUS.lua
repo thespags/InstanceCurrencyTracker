@@ -139,6 +139,8 @@ L["SendGroupMessagesTooltip"] = "Messages your party or raid on leaving an insta
 -- Quest Options
 L["Hide Unavailable Quests"] = "Hide Unavailable Quests"
 L["Show Quests"] = "Show Quests"
+L["Show Fishing Daily"] = "Show Fishing Daily"
+L["Show Ashenvale Weekly"] = "Show Ashenvale Weekly"
 
 -- Advanced Options
 L["AdvancedOptionsTooltip"] = "Advanced Options"

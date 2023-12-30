@@ -1,5 +1,7 @@
 local addOnName, ICT = ...
 
+local log = ICT.log
+
 ICT.WOTLK = 2
 ICT.TBC = 1
 ICT.Vanilla = 0
@@ -17,5 +19,5 @@ elseif ICT.TBC == ICT.Expansion then
 elseif ICT.WOTLK == ICT.Expansion then
     ICT.MaxLevel = 80
 else
-    ICT.log.error("Expansion not configured for level cap %s", ICT.Expansion)
+    log.error("Expansion not configured for level cap %s", ICT.Expansion)
 end

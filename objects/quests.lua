@@ -25,6 +25,10 @@ local level80 = function(player)
     return player:isLevel(80)
 end
 
+local level25 = function(player)
+    return player:isLevel(25)
+end
+
 local isJewelCrafter = function(player)
     return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:isJewelCrafter(375)
 end
@@ -38,17 +42,23 @@ local hasFishing = function(player)
 end
 
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
-local tournamentQuestName = function(nonDeathKnightAllianceID, deathKnightAllianceID, deathKnightHordeID, nonDeathKnightHordeID)
+local tournamentQuestName = function(nonDeathKnightAllianceId, deathKnightAllianceId, deathKnightHordeId, nonDeathKnightHordeId)
     return function(player)
-        local questID
+        local questId
         if player.faction == "Horde" then
-            questID = player.class == "DEATHKNIGHT" and deathKnightHordeID or nonDeathKnightHordeID
+            questId = player.class == "DEATHKNIGHT" and deathKnightHordeId or nonDeathKnightHordeId
         elseif player.faction == "Alliance" then
-            questID = player.class == "DEATHKNIGHT" and deathKnightAllianceID or nonDeathKnightAllianceID
+            questId = player.class == "DEATHKNIGHT" and deathKnightAllianceId or nonDeathKnightAllianceId
         else
             return "Unknown"
         end
-        return select(1, C_QuestLog.GetQuestInfo(questID)) or "Unknnown"
+        return select(1, C_QuestLog.GetQuestInfo(questId)) or "Unknnown"
+    end
+end
+
+local function questId(id)
+    return function()
+        return select(1, C_QuestLog.GetQuestInfo(id)) or "Unknnown"
     end
 end
 
@@ -139,7 +149,7 @@ ICT.Quests = {
     },
     ["Crusader Silverdawn"] = {
         name = ICT:returnX("Crusader Silverdawn"),
-        ids = { 14108, 14107},
+        ids = { 14108, 14107 },
         currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentFaction,
     },
@@ -156,6 +166,14 @@ ICT.Quests = {
         ids = { 14096, 14142, 14074, 14143, 14136, 14152, 14080, 14140, 14077, 14144 },
         currencies = { [ICT.ChampionsSeal] = 1 },
         prereq = isExaltedTournamentChampion,
+    },
+    -- Season of Discovery.
+    ["Ashenvale Weekly"] = {
+        name = questId(79098),
+        ids = { 79098 },
+        currencies = {},
+        prereq = level25,
+        weekly = true
     }
 }
 

@@ -155,15 +155,14 @@ for id, v in pairs(items) do
     end
 end
 
+-- local scanningTooltip = CreateFrame("GameTooltip", "ICTScanningTooltip", nil, "GameTooltipTemplate")
+-- scanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE" )
 
-local scanningTooltip = CreateFrame("GameTooltip", "ICTScanningTooltip", nil, "GameTooltipTemplate")
-scanningTooltip:SetOwner(WorldFrame, "ANCHOR_NONE" )
-
-local function parseReagents(unit)
-    scanningTooltip:ClearLines()
-    scanningTooltip:SetSpellByID(unit)
-    return _G["ICTScanningTooltipTextLeft2"]:GetText()
-end
+-- local function parseReagents(unit)
+--     scanningTooltip:ClearLines()
+--     scanningTooltip:SetSpellByID(unit)
+--     return _G["ICTScanningTooltipTextLeft2"]:GetText()
+-- end
 
 -- local function scanTooltip(unit)
 --     print(unit)
@@ -178,19 +177,19 @@ end
 --     end
 -- end
 
-local function addReagents(tooltip)
-    local _, itemLink = tooltip:GetItem()
-    if itemLink == nil then
-        return
-    end
-    local itemId = GetItemInfoInstant(itemLink)
-    local info = LibTradeSkillRecipes:GetInfoByItemId(itemId)
-    local spellId = info and info[1] and info[1].spellId
-    if spellId then
-        local line = parseReagents(spellId)
-        tooltip:AddLine(line)
-    end
-end
+-- local function addReagents(tooltip)
+--     local _, itemLink = tooltip:GetItem()
+--     if itemLink == nil then
+--         return
+--     end
+--     local itemId = GetItemInfoInstant(itemLink)
+--     local info = LibTradeSkillRecipes:GetInfoByItemId(itemId)
+--     local spellId = info and info[1] and info[1].spellId
+--     if spellId then
+--         local line = parseReagents(spellId)
+--         tooltip:AddLine(line)
+--     end
+-- end
 
-GameTooltip:HookScript("OnTooltipSetItem", addReagents)
-ItemRefTooltip:HookScript("OnTooltipSetItem", addReagents)
+-- GameTooltip:HookScript("OnTooltipSetItem", addReagents)
+-- ItemRefTooltip:HookScript("OnTooltipSetItem", addReagents)

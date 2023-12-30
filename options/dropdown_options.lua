@@ -2,11 +2,12 @@ local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
-local UI = ICT.UI
 local Instances = ICT.Instances
+local log = ICT.log
 local Options = ICT.Options
 local Player = ICT.Player
 local Tooltips = ICT.Tooltips
+local UI = ICT.UI
 ICT.DropdownOptions = {}
 local DropdownOptions = ICT.DropdownOptions
 
@@ -177,7 +178,7 @@ function DropdownOptions:logLevels(frame)
         dropdown,
         function(self, level, menuList)
             if (level or 1) == 1 then
-                for _, v in pairs(ICT.log.modes) do
+                for _, v in pairs(log.modes) do
                     local info = createInfo(WrapTextInColorCode(v.name, v.color))
                     info.checked = ICT.db.logLevel == v.name
                     if info.checked then

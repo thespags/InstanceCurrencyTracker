@@ -24,18 +24,18 @@ function MainTab:calculatePadding()
     self.paddings.rested = ICT:containsAnyValue(db.players, function(player) return player.level < ICT.MaxLevel and player:isEnabled() end)
         and ICT:sumNonNil({options.player.showXP, options.player.showRestedXP, options.player.showRestedState})
         or 0
-    self.paddings.bags = options.player.showBags
-        and ICT:max(db.players, function(player) return ICT:sum(player.bagsTotal, ICT:returnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
-        or 0
-    self.paddings.bags = self.paddings.bags + (options.player.showBags and options.player.showBankBags
-        and ICT:max(db.players, function(player) return ICT:sum(player.bankBagsTotal, ICT:returnX(1), function(v) return v.total > 0 end) end, Player.isEnabled)
-        or 0)
+    local bagCount = function(player)
+        return ICT:sum(player.bagsTotal, ICT:returnX(1), function(v) return v.total > 0 end)
+            + (options.player.showBankBags and ICT:sum(player.bankBagsTotal, ICT:returnX(1), function(v) return v.total > 0 end) or 0)
+    end
+    self.paddings.bags = options.player.showBags and ICT:max(db.players,  bagCount, Player.isEnabled) or 0
     self.paddings.professions = ICT:max(db.players, function(player) return ICT:size(player.professions) end, Player.isEnabled)
     self.paddings.cooldowns = options.player.showCooldowns
         and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
-    self.paddings.specs = 2
+    self.paddings.specs = ICT.WOTLK <= ICT.Expansion and 2 or 1
     self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.Quests, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
+    self.paddings.worldBuffs = ICT:max(db.players, function(player) return ICT:size(player.worldBuffs) + ICT:size(player.consumes) end, Player.isEnabled)
 end
 
 function MainTab:getPadding(y, name)
@@ -88,6 +88,32 @@ function MainTab:printCharacterInfo(player, x, y)
         y = self.cells(x, y):printOptionalValue(options.player.showRestedState, L["Resting State"], resting)
     end
     y = self.cells:hideRows(x, y, padding)
+
+    if true or options.player.showWorldBuffs then
+        y = self.cells(x, y):hide()
+        cell = self.cells(x, y)
+        --i18n
+        y = cell:printSectionTitle(L["World Buffs"])
+        if self.cells:isSectionExpanded(L["World Buffs"]) then
+            padding = self:getPadding(y, "worldBuffs")
+            for id, buff in ICT:nspairs(player.worldBuffs or {}) do
+                cell = self.cells(x, y)
+                local name, _, icon = GetSpellInfo(id)
+                local title = string.format("|T%s:12|t%s", icon, name)
+                y = buff.booned
+                    and cell:printValue(title, string.format("|T%s:12|t%s", 133881, ICT:displayTime(buff.duration)))
+                    or cell:printBuffTicker(title, buff.expires, buff.duration)
+            end
+
+            for id, _ in ICT:nspairs(player.consumes or {}) do
+                cell = self.cells(x, y)
+                local name, _, _, _, _, _, _, _, _, icon = GetItemInfo(id)
+                local title = string.format("|T%s:12|t%s", icon, name)
+                y = cell:printValue(title)
+            end
+            y = self.cells:hideRows(x, y, padding)
+        end
+    end
 
     if options.player.showBags then
         y = self.cells(x, y):hide()
@@ -188,7 +214,7 @@ function MainTab:printCharacterInfo(player, x, y)
             y = self.cells:hideRows(x, y, padding)
         end
     end
-    y = self.cells(x, y):hide()
+    -- y = self.cells(x, y):hide()
     self.cells.indent = ""
     return y
 end

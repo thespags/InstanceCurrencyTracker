@@ -219,6 +219,20 @@ local queueFrame = CreateFrame("Frame")
 queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
+if ICT.Expansion == ICT.Vanilla then
+    local buffFrame = CreateFrame("Frame")
+    buffFrame:RegisterEvent("UNIT_AURA")
+    buffFrame:SetScript("OnEvent", function(self, event, unit, info)
+        if unit == "player" then
+            ICT:throttleFunction("WorldBuffs", 5, Player.updateWorldBuffs, ICT.UpdateDisplay)()
+        end
+    end)
+
+    local consumeFrame = CreateFrame("Frame")
+    consumeFrame:RegisterEvent("BAG_UPDATE")
+    consumeFrame:SetScript("OnEvent", ICT:throttleFunction("Consumes", 5, Player.updateConsumes, ICT.UpdateDisplay))
+end
+
 -- message and add option
 local function messageResults(player, instance)
     -- Only broadcast if we are locked and collected something...

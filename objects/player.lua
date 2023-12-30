@@ -6,6 +6,7 @@ local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Instance = ICT.Instance
 local Instances = ICT.Instances
+local log = ICT.log
 ICT.Player = {}
 local Player = ICT.Player
 
@@ -34,6 +35,8 @@ function Player:onLoad()
     self:updateResting()
     self:updateCooldowns()
     self:updatePets()
+    self:updateWorldBuffs()
+    self:updateConsumes()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -159,6 +162,73 @@ function Player:update()
     self:calculateCurrency()
     self:calculateQuest()
     self:calculateResetTimes()
+end
+
+local boonId = 349981
+
+-- SpellId to chrono boon slot.
+local worldBuffs = {
+    [22817] = { slot = 17 },
+    [22818] = { slot = 18 },
+    [22820] = { slot = 19 },
+    [22888] = { slot = 20 },
+    [16609] = { slot = 21 },
+    [24425] = { slot = 22 },
+    [15366] = { slot = 23 },
+    -- Darkmoon faire has a bunch of types defined in slot 23 with duration in slot 24.
+    [23736] = { type = 24, slot = 25 },
+    [23768] = { type = 24, slot = 25 },
+    [23766] = { type = 24, slot = 25 },
+    [23769] = { type = 24, slot = 25 },
+    [23738] = { type = 24, slot = 25 },
+    [23737] = { type = 24, slot = 25 },
+    [23735] = { type = 24, slot = 25 },
+    [430947] = { slot = 26 },
+}
+
+local function getBuff(i)
+    return { UnitBuff("Player", i) }
+end
+
+function Player:updateWorldBuffs()
+    local buffs = {}
+    local i = 1
+    local buff = getBuff(i)
+    while buff[1] do
+        local buffId = buff[10]
+        if worldBuffs[buffId] then
+            -- We have to convert from our computer's time to the server time.
+            local expires = GetServerTime() + buff[6] - GetTime()
+            buffs[buffId] = { duration = buff[5], expires = expires, booned = false }
+        end
+        if buffId == boonId then
+            for k, v in pairs(worldBuffs) do
+                local duration = buff[v.slot]
+                if (not v.type or buff[v.type] == k) and duration > 0 then
+                    buffs[k] = { duration = duration, booned = true }
+                end
+            end
+        end
+        i = i + 1
+        buff = getBuff(i)
+    end
+    self.worldBuffs = buffs
+end
+
+local itemBuffs = {
+    [211813] = {},
+    [211814] = {},
+    [211815] = {},
+    [211816] = {},
+}
+
+function Player:updateConsumes()
+    local consumes = {}
+    for k, v in pairs(itemBuffs) do
+        local count = GetItemCount(k, true)
+        consumes[k] = count > 0 and count or nil
+    end
+    self.consumes = consumes
 end
 
 function Player:calculateResetTimes()
@@ -348,7 +418,7 @@ local function addBags(index, bags, bagsTotal)
         local free, type = GetContainerNumFreeSlots(index)
         -- By name requires the item in your inventory so store this for the player.
         if not name then
-            ICT.log.info("no bag name %s", index)
+            log.info("no bag name %s", index)
         end
         local icon = select(5, GetItemInfoInstant(name))
         icon = icon ~= 134400 and icon or "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack"
@@ -359,7 +429,7 @@ local function addBags(index, bags, bagsTotal)
 
         -- Handle cases if new bag types are added.
         if not ICT.BagFamily[type] then
-            ICT.log.error(L["Unknown bag type %s (%s), please report this on the addon page."], type, name)
+            log.error(L["Unknown bag type %s (%s), please report this on the addon page."], type, name)
             ICT.BagFamily[type] = { icon = 134400, name = "Unknown" }
         end
     end

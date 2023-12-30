@@ -51,8 +51,13 @@ Options.messages = {
 Options.quests = {
     { name = L["Hide Unavailable Quests"], key = "hideUnavailable", },
     { name = L["Show Quests"], key = "show", },
-    { name = L["Show Fishing Daily"], key = "Fishing Daily", }
 }
+
+for k, v in pairs(ICT.Quests) do
+    if ICT:size(v.currencies) == 0 then
+        tinsert(Options.quests, { name = L["Show " .. k], key = k})
+    end
+end
 
 function Options.minimap()
     ICT.db.minimap.hide = not ICT.db.options.frame.showMinimapIcon

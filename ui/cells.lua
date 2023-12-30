@@ -128,14 +128,22 @@ function Cell:hide()
     return self.y + 1
 end
 
-function Cell:printTicker(title, expires, duration, colorOverride)
+-- Gradient goes from happy to sad.
+function Cell:printBuffTicker(title, expires, duration)
+    return self:printTicker(title, expires, duration, Colors.green, Colors.red)
+end
+
+-- Gradient goes from sad to happy.
+function Cell:printTicker(title, expires, duration, startColor, endColor)
     local indent = self.parent.indent
     local update = function(ticker)
         ICT:cancelTicker(ticker)
-        local time, color = ICT:countdown(expires, duration, Colors.red, Colors.green)
+        startColor = startColor or Colors.red
+        endColor = endColor or Colors.green
+        local time, color = ICT:countdown(expires, duration, startColor, endColor)
         local old = self.parent.indent
         self.parent.indent = indent
-        local y = self:printValue(title, time, nil, colorOverride or color)
+        local y = self:printValue(title, time, nil, color)
         self.parent.indent = old
         return y
     end
