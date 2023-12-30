@@ -223,6 +223,7 @@ if ICT.Expansion == ICT.Vanilla then
     local buffFrame = CreateFrame("Frame")
     buffFrame:RegisterEvent("UNIT_AURA")
     buffFrame:SetScript("OnEvent", function(self, event, unit, info)
+        -- The info parameter isn't available in era. So we have to full scan aura's every time.
         if unit == "player" then
             ICT:throttleFunction("WorldBuffs", 5, Player.updateWorldBuffs, ICT.UpdateDisplay)()
         end

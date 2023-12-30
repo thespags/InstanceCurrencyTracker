@@ -60,7 +60,7 @@ ICT.BagFamily = {
     -- Generic
     [0] = { icon = "Interface\\Addons\\InstanceCurrencyTracker\\icons\\backpack", name = L["General"] },
     -- Arrows
-    [1] = { icon = 41165, name = L["Arrows"] },
+    [1] = { icon = 132382, name = L["Arrows"] },
     -- Bullets
     [2] = { icon = 249175, name = L["Bullets"] },
     -- Soul Shards
