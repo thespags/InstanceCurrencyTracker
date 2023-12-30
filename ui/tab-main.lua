@@ -105,10 +105,14 @@ function MainTab:printCharacterInfo(player, x, y)
             end
 
             for id, _ in ICT:nspairs(player.consumes or {}) do
-                cell = self.cells(x, y)
-                local name, _, _, _, _, _, _, _, _, icon = GetItemInfo(id)
-                local title = string.format("|T%s:12|t%s", icon, name)
-                y = cell:printValue(title)
+                -- I think I have to lock this variable so it doesn't change when on item load is called.
+                local cell = self.cells(x, y)
+                local item = Item:CreateFromItemID(id)
+                y = y + 1
+                item:ContinueOnItemLoad(function()
+                    local title = string.format("|T%s:12|t%s", item:GetItemIcon(), item:GetItemName())
+                    cell:printValue(title)
+                end)
             end
             y = self.cells:hideRows(x, y, padding)
         end
