@@ -21,6 +21,16 @@ local factionQuestName = function(hordeName, allianceName)
     end
 end
 
+local function questName(id)
+    return select(1, C_QuestLog.GetQuestInfo(id)) or "Unknnown"
+end
+
+local factionQuestNameById = function(hordeId, allianceId)
+    return function(player)
+        return player.faction == "Horde" and questName(hordeId) or player.faction == "Alliance" and questName(allianceId) or "Unknown"
+    end
+end
+
 local level80 = function(player)
     return player:isLevel(80)
 end
@@ -52,13 +62,7 @@ local tournamentQuestName = function(nonDeathKnightAllianceId, deathKnightAllian
         else
             return "Unknown"
         end
-        return select(1, C_QuestLog.GetQuestInfo(questId)) or "Unknnown"
-    end
-end
-
-local function questId(id)
-    return function()
-        return select(1, C_QuestLog.GetQuestInfo(id)) or "Unknnown"
+        return questName(questId)
     end
 end
 
@@ -169,8 +173,8 @@ ICT.Quests = {
     },
     -- Season of Discovery.
     ["Ashenvale Weekly"] = {
-        name = questId(79098),
-        ids = { 79098 },
+        name = factionQuestNameById(79098, 79090),
+        ids = { 79098, 79090 },
         currencies = {},
         prereq = level25,
         weekly = true
