@@ -55,6 +55,7 @@ L["Resting"] = "Resting"
 L["Not Resting"] = "Not Resting"
 L["Resting State"] = "Resting State"
 L["Realm Gold"] = "Realm Gold"
+L["World Buffs"] = "World Buffs"
 
 -- Bag Tooltip
 L["Bag Space"] = "Bag Space"

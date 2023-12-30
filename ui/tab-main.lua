@@ -92,7 +92,6 @@ function MainTab:printCharacterInfo(player, x, y)
     if true or options.player.showWorldBuffs then
         y = self.cells(x, y):hide()
         cell = self.cells(x, y)
-        --i18n
         y = cell:printSectionTitle(L["World Buffs"])
         if self.cells:isSectionExpanded(L["World Buffs"]) then
             padding = self:getPadding(y, "worldBuffs")
@@ -214,7 +213,7 @@ function MainTab:printCharacterInfo(player, x, y)
             y = self.cells:hideRows(x, y, padding)
         end
     end
-    -- y = self.cells(x, y):hide()
+    y = self.cells(x, y):hide()
     self.cells.indent = ""
     return y
 end

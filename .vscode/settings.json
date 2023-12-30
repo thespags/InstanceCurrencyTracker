@@ -193,7 +193,8 @@
         "WOW_PROJECT_MAINLINE",
         "C_TaskQuest",
         "LE_EXPANSION_LEVEL_CURRENT",
-        "Mixin"
+        "Mixin",
+        "UnitBuff"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"
