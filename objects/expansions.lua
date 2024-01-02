@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local LibInstances = LibStub("LibInstances")
 local log = ICT.log
 
 ICT.WOTLK = 2
@@ -34,8 +35,30 @@ function Expansion.current(value)
     return value == Expansion.value
 end
 
+function Expansion.isSod(player)
+    return player.season == 2
+end
+
+local function hasHardcoreLock(player)
+    -- Locks go away at level 60.
+    return player.season == 3 and not player:isMaxLevel()
+end
+
 if Expansion.isVanilla() then
     Expansion.MaxLevel = 25
+    for id, info in pairs(LibInstances:GetInfos()) do
+        -- Hack to handle hardcore
+        tinsert(info.sizes, 5)
+        info.resets[5] = 1
+        info.seasons = {}
+        info.seasons[5] = hasHardcoreLock
+        -- Hack to handle Season of Discovery.
+        if id == 48 then
+            tinsert(info.sizes, 10)
+            info.resets[10] = 3
+            info.seasons[10] = Expansion.isSod
+        end
+    end
 elseif ICT.TBC == Expansion.value then
     Expansion.MaxLevel = 70
 elseif Expansion.isWOTLK() then

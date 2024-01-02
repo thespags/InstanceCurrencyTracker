@@ -194,7 +194,8 @@
         "C_TaskQuest",
         "LE_EXPANSION_LEVEL_CURRENT",
         "Mixin",
-        "UnitBuff"
+        "UnitBuff",
+        "C_Seasons"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

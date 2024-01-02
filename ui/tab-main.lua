@@ -58,7 +58,7 @@ function MainTab:printCharacterInfo(player, x, y)
     y = cell:printSectionTitle(L["Info"])
     local options = ICT.db.options
     if not self.cells:isSectionExpanded(L["Info"]) then
-        return self.cells(x, y):hide()
+        return y
     end
     self.cells.indent = "  "
     local padding = self:getPadding(y, "info")
@@ -217,7 +217,6 @@ function MainTab:printCharacterInfo(player, x, y)
             y = self.cells:hideRows(x, y, padding)
         end
     end
-    y = self.cells(x, y):hide()
     self.cells.indent = ""
     return y
 end

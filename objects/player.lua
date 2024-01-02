@@ -24,6 +24,7 @@ end
 -- Called when the addon is loaded to update any fields.
 -- Only for the active player.
 function Player:onLoad()
+    self.season = C_Seasons.GetActiveSeason()
     self:updateProfessions()
     -- Talents calls self:updateGear() for us.
     -- Delay loading talents(specifically gear) until wow has loaded more.
@@ -62,13 +63,22 @@ function Player:onLoad()
     self.battleTag = battleTag
 end
 
+function Player:fromSeason(info, size)
+    -- Associates sizes to a specific season. If we have multiple seasons with the same size, we will have to adjust.
+    local f = info.seasons and info.seasons[size] or ICT:returnX(true)
+    return f(self)
+end
+
 function Player:createInstances()
     self.instances = self.instances or {}
     for id, info in pairs(LibInstances:GetInfos()) do
         for _, size in pairs(info:getSizes()) do
-            if Instances.inExpansion(info, size) then
-                local key = Instance:key(id, size)
+            local key = Instance:key(id, size)
+            if Instances.inExpansion(info, size) and self:fromSeason(info, size) then
                 self.instances[key] = Instance:new(self.instances[key], info, size)
+            else
+                -- We have to remove they instance so we don't track it anymore.
+                self.instances[key] = nil
             end
         end
     end
