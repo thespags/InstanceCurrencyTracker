@@ -1,5 +1,6 @@
 local addOnName, ICT = ...
 
+local Expansion = ICT.Expansion
 local Talents = {}
 ICT.Talents = Talents
 
@@ -22,7 +23,7 @@ function Talents:updateSpec(spec, id)
     end
     spec.totalPoints = t.totalPointsSpent
     spec.glyphs = {}
-    if ICT.WOTLK == ICT.Expansion then
+    if Expansion.isWOTLK() then
         for j=1,6 do
             local enabled, type, spellId, icon = GetGlyphSocketInfo(j, id)
             spec.glyphs[j] = { enabled = enabled, type = type, spellId = spellId, icon = icon }

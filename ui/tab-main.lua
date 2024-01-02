@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
+local Expansion = ICT.Expansion
 local LFD = ICT.LFD
 local Player = ICT.Player
 local Reset = ICT.Reset
@@ -20,8 +21,7 @@ function MainTab:calculatePadding()
     local db = ICT.db
     local options = db.options
     self.paddings.info = ICT:sumNonNil({options.player.showLevel, options.player.showGuild, options.player.showGuildRank, options.player.showMoney, options.player.showDurability})
-    -- If there is a viewable player under 80 then pad for XP info.
-    self.paddings.rested = ICT:containsAnyValue(db.players, function(player) return player.level < ICT.MaxLevel and player:isEnabled() end)
+    self.paddings.rested = ICT:containsAnyValue(db.players, function(player) return not player:isMaxLevel() and player:isEnabled() end)
         and ICT:sumNonNil({options.player.showXP, options.player.showRestedXP, options.player.showRestedState})
         or 0
     local bagCount = function(player)
@@ -33,7 +33,7 @@ function MainTab:calculatePadding()
     self.paddings.cooldowns = options.player.showCooldowns
         and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
-    self.paddings.specs = ICT.WOTLK <= ICT.Expansion and 2 or 1
+    self.paddings.specs = ICT.WOTLK <= Expansion.value and 2 or 1
     self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.Quests, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
     self.paddings.worldBuffs = ICT:max(db.players, function(player) return ICT:size(player.worldBuffs) + ICT:size(player.consumes) end, Player.isEnabled)
 end
@@ -50,7 +50,7 @@ end
 
 -- Same as canQueue for now, but may be different if I support retail ever or if a season adds specs.
 local function canSpecSwap(player)
-    return player:isCurrentPlayer() and ICT.Expansion == ICT.WOTLK
+    return player:isCurrentPlayer() and Expansion.isWOTLK()
 end
 
 function MainTab:printCharacterInfo(player, x, y)
@@ -76,7 +76,7 @@ function MainTab:printCharacterInfo(player, x, y)
     y = UI:printGearScore(self, spec, tooltip, x, y)
 
     padding = self:getPadding(y, "rested")
-    if player.level < ICT.MaxLevel then
+    if not player:isMaxLevel() then
         local currentXP = player.currentXP or 0
         local maxXP = player.maxXP or 1
         local xpPercentage = currentXP / maxXP * 100
@@ -89,7 +89,7 @@ function MainTab:printCharacterInfo(player, x, y)
     end
     y = self.cells:hideRows(x, y, padding)
 
-    if true or options.player.showWorldBuffs then
+    if options.player.showWorldBuffs then
         y = self.cells(x, y):hide()
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["World Buffs"])
@@ -223,7 +223,7 @@ function MainTab:printCharacterInfo(player, x, y)
 end
 
 local function canQueue(player)
-    return player:isCurrentPlayer() and ICT.Expansion == ICT.WOTLK
+    return player:isCurrentPlayer() and Expansion.isWOTLK()
 end
 
 -- Prints all the instances with associated tooltips.

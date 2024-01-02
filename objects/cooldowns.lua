@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Cooldown = ICT.Cooldown
+local Expansion = ICT.Expansion
 ICT.Cooldowns = {}
 
 local spells = {
@@ -85,7 +86,7 @@ local items = {
 }
 
 local function inExpansion(info)
-    return info and info.expansionId and info.expansionId <= ICT.Expansion
+    return info and info.expansionId and Expansion.active(info.expansionId)
 end
 
 for _, id in pairs(spells) do

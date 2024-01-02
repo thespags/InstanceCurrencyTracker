@@ -36,6 +36,7 @@ function ICT:rspairs(t, filter)
 end
 
 -- Sorted pairs iterator determined by mapping the values.
+-- Only supports filters on value.
 function ICT:spairsByValue(t, comparator, filter)
     comparator = comparator or function(a, b) return a < b end
     return self:spairs(t, function(a, b) return comparator(t[a], t[b]) end, filter and function(k) return filter(t[k]) end)
@@ -78,13 +79,9 @@ function ICT:fpairsByValue(t, f)
 end
 
 -- Returns true if all values or mapped values in the table are true, otherwise false.
----@generic V : any
----@param t table<any, V>
----@param op? fun(self: V): boolean
----@return boolean
-function ICT:containsAllValues(t, op)
-    for _, v in pairs(t or {}) do
-        if op and not op(v) or not op and not v then
+function ICT:containsAllValues(t, op, filter)
+    for k, v in pairs(t or {}) do
+        if (not filter or filter(k, v)) and op and not op(v) or not op and not v then
             return false
         end
     end
@@ -104,10 +101,6 @@ function ICT:containsAnyKey(t, op)
 end
 
 --- Returns true if any value or mapped value in the table are true, otherwise false.
----@generic V : any
----@param t table<any, V>
----@param op? fun(self: V): boolean
----@return boolean
 function ICT:containsAnyValue(t, op)
     for _, v in pairs(t or {}) do
         if op and op(v) or not op and v then

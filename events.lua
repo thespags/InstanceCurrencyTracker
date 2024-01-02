@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 ICT.LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local Expansion = ICT.Expansion
 local log = ICT.log
 local Player = ICT.Player
 local Players = ICT.Players
@@ -219,7 +220,7 @@ local queueFrame = CreateFrame("Frame")
 queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
-if ICT.Expansion == ICT.Vanilla then
+if Expansion.isVanilla() then
     local buffFrame = CreateFrame("Frame")
     buffFrame:RegisterEvent("UNIT_AURA")
     buffFrame:SetScript("OnEvent", function(self, event, unit, info)

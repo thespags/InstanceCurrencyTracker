@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local Expansion = ICT.Expansion
 local Instances = ICT.Instances
 local log = ICT.log
 local Options = ICT.Options
@@ -80,7 +81,7 @@ end
 
 local function addExpansionOptions(objects, menuList, level)
     for expansion, name in ICT:rspairs(ICT.Expansions) do
-        if expansion <= ICT.Expansion then
+        if Expansion.active(expansion) then
             local info = createInfo(name)
             local contains = function(v)
                 -- v is visible or it's not from that expansion.

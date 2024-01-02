@@ -17,8 +17,8 @@ function GearTab:calculatePadding()
     local db = ICT.db
     self.paddings.pets = ICT:max(
         db.players,
-        function(player) return ICT:sum(player:getPets(), function(v) return 
-        v:isVisible() and player:getSpec().pets[v:getName()] and 1 or 0 end) end, Player.isEnabled
+        function(player) return ICT:sum(player:getPets(), function(v) return v:isVisible() and player:getSpec().pets[v:getName()] and 1 or 0 end) end,
+        Player.isEnabled
     )
     self.paddings.items = ICT:max(db.players, function(player) return ICT:size(player:getSpec().items) end, Player.isEnabled)
     self.paddings.glyphs = ICT:max(db.players, function(player) return ICT:sum(player:getSpec().glyphs, function(v) return v.enabled and 1 or 0 end) end, Player.isEnabled)

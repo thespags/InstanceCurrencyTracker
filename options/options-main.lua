@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
+local Expansion = ICT.Expansion
 local Players = ICT.Players
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
@@ -256,7 +257,7 @@ function MainOptions:init(parent)
     self.frame:SetAllPoints(parent)
     self.linkList = createLinkList(self.frame)
     self.sortList = createSortList(self.frame)
-    local playerSlider = createSlider(self.frame, L["Character Level"], 25, -180, "minimumLevel", 1, ICT.MaxLevel)
+    local playerSlider = createSlider(self.frame, L["Character Level"], 25, -180, "minimumLevel", 1, Expansion.MaxLevel)
     Tooltips:new(L["Character Level"], L["CharacterLevelToolip"]):attachFrame(playerSlider)
     local fontSlider = createSlider(self.frame, L["Font Size"], 25, -230, "fontSize", 6, 100)
     Tooltips:new(L["Font Size"], L["FontSizeTooltip"]):attachFrame(fontSlider)

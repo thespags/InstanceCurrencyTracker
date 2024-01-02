@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Colors = ICT.Colors
+local Expansion = ICT.Expansion
 local Tooltips = ICT.Tooltips
 local UI = ICT.UI
 local ProfessionsTab = {
@@ -81,7 +82,7 @@ end
 local infoFilter = function(info)
     local name = GetSpellInfo(info.spellId)
     -- Filter by matches and expansions if there is more than one otherwise always show if only vanilla.
-    return (not matches or matches[name]) and (ICT.db.options.professions["showExpansion" .. info.expansionId] or ICT.Expansion == ICT.Vanilla)
+    return (not matches or matches[name]) and (ICT.db.options.professions["showExpansion" .. info.expansionId] or Expansion.isVanilla())
 end
 
 function ProfessionsTab:printProfession(player, profession, x, y)

@@ -159,7 +159,7 @@ Instances.currency = {
 -- End Currency Helpers
 
 function Instances.inExpansion(info, size)
-    return info:getExpansion(size) <= ICT.Expansion
+    return Expansion.active(info:getExpansion(size))
 end
 
 -- Attaches the localize name to info for sorting in the options menu.

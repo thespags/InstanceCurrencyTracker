@@ -2,6 +2,7 @@ local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local Expansion = ICT.Expansion
 local Instances = ICT.Instances
 local Options = {}
 ICT.Options = Options
@@ -15,6 +16,7 @@ Options.player = {
     { name = L["Show XP"], key = "showXP", },
     { name = L["Show Rested XP"], key = "showRestedXP", },
     { name = L["Show Resting State"], key = "showRestedState", },
+    { name = L["Show World Buffs"], key = "showWorldBuffs", predicate = Expansion.isVanilla, },
     { name = L["Show Bags"], key = "showBags", },
     { name = L["Show Bank Bags"], key = "showBankBags", },
     { name = L["Show Specs"], key = "showSpecs", },
@@ -33,8 +35,8 @@ Options.professions = {
 }
 for i, name in ICT:rspairs(ICT.Expansions) do
     -- Don't show expansions if there's only one.
-    if ICT.Vanilla < ICT.Expansion and i <= ICT.Expansion then
-        tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = i ~= ICT.Expansion, })
+    if ICT.Vanilla < Expansion.value and Expansion.active(i) then
+        tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = not Expansion.current(i), })
     end
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
@@ -110,13 +112,13 @@ function Options:setDefaultOptions(override)
         put(options["displayInstances"], k, {})
     end
     for _, v in pairs(Instances.infos()) do
-        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(ICT.Expansion))
+        put(options.displayInstances[v.expansion], v.id, v:fromExpansion(Expansion.value))
     end
 
     -- Set all current expansion's cooldowns on by default
     put(options, "displayCooldowns", {})
     for k, v in pairs(ICT.Cooldowns) do
-        put(options.displayCooldowns, k, v:fromExpansion(ICT.Expansion))
+        put(options.displayCooldowns, k, v:fromExpansion(Expansion.value))
     end
 
     -- Set daily and weekly resets on by default.
@@ -130,7 +132,13 @@ function Options:setDefaultOptions(override)
     local function setDefaults(key)
         put(options, key, {})
         for _, v in pairs(self[key]) do
-            put(options[key], v.key, not v.defaultFalse)
+            -- Add the option if it always exists or predicated to exist, e.g. available for this wow version.
+            -- Otherwise remove it.
+            if not v.predicate or v.predicate() then
+                put(options[key], v.key, not v.defaultFalse)
+            else
+                options[key][v.key] = nil
+            end
         end
     end
     setDefaults("player")

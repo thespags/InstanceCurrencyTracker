@@ -4,6 +4,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local Expansion = ICT.Expansion
 local Instance = ICT.Instance
 local Instances = ICT.Instances
 local log = ICT.log
@@ -176,13 +177,13 @@ local worldBuffs = {
     [24425] = { slot = 22 },
     [15366] = { slot = 23 },
     -- Darkmoon faire has a bunch of types defined in slot 23 with duration in slot 24.
-    [23736] = { type = 24, slot = 25 },
-    [23768] = { type = 24, slot = 25 },
-    [23766] = { type = 24, slot = 25 },
-    [23769] = { type = 24, slot = 25 },
-    [23738] = { type = 24, slot = 25 },
-    [23737] = { type = 24, slot = 25 },
-    [23735] = { type = 24, slot = 25 },
+    [23736] = { type = 25, slot = 24 },
+    [23768] = { type = 25, slot = 24 },
+    [23766] = { type = 25, slot = 24 },
+    [23769] = { type = 25, slot = 24 },
+    [23738] = { type = 25, slot = 24 },
+    [23737] = { type = 25, slot = 24 },
+    [23735] = { type = 25, slot = 24 },
     [430947] = { slot = 26 },
 }
 
@@ -617,7 +618,7 @@ function Player:isLevel(level)
 end
 
 function Player:isMaxLevel()
-    return self:isLevel(ICT.MaxLevel)
+    return self:isLevel(Expansion.MaxLevel)
 end
 
 function Player:isCurrentPlayer()
@@ -633,11 +634,11 @@ function Player:setVisible(checked)
 end
 
 function Player:isEnabled()
-    return true --self:isVisible() and self:isLevelVisible()
+    return self:isVisible() and self:isLevelVisible()
 end
 
 function Player:isLevelVisible()
-    return self:isLevel(ICT.db.options.minimumLevel or ICT.MaxLevel)
+    return self:isLevel(ICT.db.options.minimumLevel or Expansion.MaxLevel)
 end
 
 function Player:__eq(other)

@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local Expansion = ICT.Expansion
 local Players = ICT.Players
 local Tabs = ICT.Tabs
 local UI = {
@@ -79,7 +80,7 @@ function UI:CreateFrame()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
-    if ICT.Expansion == ICT.WOTLK then
+    if Expansion.isWOTLK() then
         Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
         Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     end

@@ -10,14 +10,37 @@ ICT.Expansions = {
     [ICT.TBC] = "The Burning Crusade",
     [ICT.Vanilla] = "Vanilla"
 }
-ICT.Expansion = LE_EXPANSION_LEVEL_CURRENT
-ICT.MaxLevel = 80
-if ICT.Vanilla == ICT.Expansion then
-    ICT.MaxLevel = 25
-elseif ICT.TBC == ICT.Expansion then
-    ICT.MaxLevel = 70
-elseif ICT.WOTLK == ICT.Expansion then
-    ICT.MaxLevel = 80
+
+Expansion = {}
+ICT.Expansion = Expansion
+
+Expansion.value = LE_EXPANSION_LEVEL_CURRENT
+
+function Expansion.isVanilla()
+    return ICT.Vanilla == Expansion.value
+end
+
+function Expansion.isWOTLK()
+    return ICT.WOTLK == Expansion.value
+end
+
+-- Whether or not the value was released, e.g. false if value is Vanilla and current is WOTLK.
+function Expansion.active(value)
+    return value <= Expansion.value
+end
+
+-- Whether the value is for the current expansion.
+function Expansion.current(value)
+    return value == Expansion.value
+end
+
+if Expansion.isVanilla() then
+    Expansion.MaxLevel = 25
+elseif ICT.TBC == Expansion.value then
+    Expansion.MaxLevel = 70
+elseif Expansion.isWOTLK() then
+    Expansion.MaxLevel = 80
 else
-    log.error("Expansion not configured for level cap %s", ICT.Expansion)
+    Expansion.MaxLevel = 80
+    log.error("Expansion not configured for level cap %s", Expansion.value)
 end
