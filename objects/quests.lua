@@ -35,8 +35,8 @@ local level80 = function(player)
     return player:isLevel(80)
 end
 
-local level25 = function(player)
-    return player:isLevel(25)
+local level25Sod = function(player)
+    return Expansion.isSod(player) and player:isLevel(25)
 end
 
 local isJewelCrafter = function(player)
@@ -176,7 +176,7 @@ ICT.Quests = {
         name = factionQuestNameById(79098, 79090),
         ids = { 79098, 79090 },
         currencies = {},
-        prereq = level25,
+        prereq = level25Sod,
         weekly = true
     }
 }
