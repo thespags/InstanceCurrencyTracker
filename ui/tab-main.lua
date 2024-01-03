@@ -98,9 +98,11 @@ function MainTab:printCharacterInfo(player, x, y)
             for id, buff in ICT:nspairs(player.worldBuffs or {}) do
                 cell = self.cells(x, y)
                 local name, _, icon = GetSpellInfo(id)
-                local title = string.format("|T%s:12|t%s", icon, name)
-                y = buff.booned
-                    and cell:printValue(title, string.format("|T%s:12|t%s", 133881, ICT:displayTime(buff.duration)))
+                local title = buff.booned
+                    and string.format("|T%s:12|t|T%s:12|t%s", 133881, icon, name)
+                    or string.format("|T%s:12|t%s", icon, name)
+                y = (not player:isCurrentPlayer() or buff.booned)
+                    and cell:printValue(title, ICT:displayTime(buff.duration))
                     or cell:printBuffTicker(title, buff.expires, buff.duration)
             end
 
@@ -344,7 +346,7 @@ function MainTab:printResetTimers(x, y)
         Tooltips:timerSectionTooltip():attach(cell)
 
         if self.cells:isSectionExpanded(L["Reset"]) then
-            for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
+            for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
@@ -381,13 +383,13 @@ end
 function MainTab:postPrint()
     local selected = ICT.frame:getSelectedTab() == self.button:GetID()
     if selected and ICT.db.options.multiPlayerView then
-        local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
+        local count = ICT:sum(ICT.Resets, function(v) return v:isVisibleAndActive() and 1 or 0 end)
         local tooltip = Tooltips:timerSectionTooltip()
         local fontSize = math.min(16, UI:getFontSize())
 
         local start = -tickerSpacing(fontSize) * (count - 1) / 2
         local frame = nil
-        for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisible) do
+        for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
             start, frame = self:printMultiViewResetTicker(start, fontSize, v:getName(), v:expires(), v:duration())
             tooltip:attachFrame(frame)
         end

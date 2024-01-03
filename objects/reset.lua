@@ -31,6 +31,10 @@ function Reset:expires()
     return ICT.db.reset[self.id]
 end
 
+function Reset:isVisibleAndActive()
+    return self:isVisible() and self:expires()
+end
+
 function Reset:reset()
     local timestamp = GetServerTime()
     if self:expires() and self:expires() < timestamp then

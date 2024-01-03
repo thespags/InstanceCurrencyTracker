@@ -121,8 +121,8 @@ function Options:setDefaultOptions(override)
         put(options.displayCooldowns, k, v:fromExpansion(Expansion.value))
     end
 
-    -- Set daily and weekly resets on by default.
-    put(options, "reset", { [1] = true, [3] = false, [5] = false, [7] = true })
+    -- All resets on by default but we don't display unknown tickers.
+    put(options, "reset", { [1] = true, [3] = true, [5] = true, [7] = true })
 
     put(options, "pets", {})
     for fullName, _ in pairs(ICT.db.players) do
