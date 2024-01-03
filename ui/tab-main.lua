@@ -379,7 +379,7 @@ local tickerSpacing = function(fontSize)
 end
 
 function MainTab:postPrint()
-    local selected = ICT.db.selectedTab == self.button:GetID()
+    local selected = ICT.frame:getSelectedTab() == self.button:GetID()
     if selected and ICT.db.options.multiPlayerView then
         local count = ICT:sum(ICT.db.options.reset, function(v) return v and 1 or 0 end)
         local tooltip = Tooltips:timerSectionTooltip()

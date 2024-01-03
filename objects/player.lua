@@ -195,6 +195,8 @@ local worldBuffs = {
     [23737] = { type = 25, slot = 24 },
     [23735] = { type = 25, slot = 24 },
     [430947] = { slot = 26 },
+    -- Not boonable "world buffs".
+    [430352] = {},
 }
 
 local function getBuff(i)
@@ -213,7 +215,7 @@ function Player:updateWorldBuffs()
             buffs[buffId] = { duration = buff[5], expires = expires, booned = false }
         end
         if buffId == boonId then
-            for k, v in pairs(worldBuffs) do
+            for k, v in ICT:fpairsByValue(worldBuffs, function(v) return v.slot end) do
                 local duration = buff[v.slot]
                 if (not v.type or buff[v.type] == k) and duration > 0 then
                     buffs[k] = { duration = duration, booned = true }

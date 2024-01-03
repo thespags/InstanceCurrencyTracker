@@ -99,8 +99,9 @@ function UI:CreateFrame()
         resetSizeButton:Show()
         for i=1,frame.numTabs do
             frame.tabs[i].button:Show()
+            frame.tabs[i]:show()
         end
-        frame.selectTab()
+        PanelTemplates_SetTab(frame, frame:getSelectedTab())
         self:drawFrame(ICT.db.X, ICT.db.Y, ICT.db.width, ICT.db.height)
         ICT.frame.minimized = false
     end)
