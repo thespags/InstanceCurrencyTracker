@@ -12,7 +12,7 @@ local UI = {
     maxY = 0,
     --font = "Fonts\\FRIZQT__.TTF"
     font = "Fonts\\ARIALN.ttf",
-    fontSize = 10,
+    fontSize = 12,
     iconSize = 12,
 }
 ICT.UI = UI
@@ -29,7 +29,8 @@ local function enableMoving(frame)
 end
 
 function UI:getFontSize()
-    return ICT.db.options.fontSize or UI.fontSize
+    ICT.db.options.fontSize = ICT.db.options.fontSize or UI.fontSize
+    return ICT.db.options.fontSize
 end
 
 function UI:getCellWidth(fontSize)
