@@ -4,6 +4,7 @@ local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
 local Player = ICT.Player
+local Reset = ICT.Reset
 local Tooltip = ICT.Tooltip
 
 local Tooltips = {}
@@ -245,11 +246,15 @@ function Tooltips:questSectionTooltip()
     return Tooltip:new(f)
 end
 
-function Tooltips:timerSectionTooltip()
+function Tooltips:timerSectionTooltip(resets)
     local f = function(tooltip)
         tooltip:printTitle(L["Reset Timers"])
         :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
-        :printPlain("\nNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.")
+        tooltip:printValue("Today", date("%A, %B %d"))
+        for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
+            tooltip:printValue(v:getName(), date(" %H:%M %A, %B %d", v:expires() + 1))
+        end
+        tooltip:printPlain("\nNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.")
     end
    return Tooltip:new(f)
 end

@@ -343,7 +343,7 @@ function MainTab:printResetTimers(x, y)
     if not ICT.db.options.multiPlayerView then
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Reset"])
-        Tooltips:timerSectionTooltip():attach(cell)
+        Tooltips:timerSectionTooltip(ICT.Resets):attach(cell)
 
         if self.cells:isSectionExpanded(L["Reset"]) then
             for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
@@ -384,7 +384,7 @@ function MainTab:postPrint()
     local selected = ICT.frame:getSelectedTab() == self.button:GetID()
     if selected and ICT.db.options.multiPlayerView then
         local count = ICT:sum(ICT.Resets, function(v) return v:isVisibleAndActive() and 1 or 0 end)
-        local tooltip = Tooltips:timerSectionTooltip()
+        local tooltip = Tooltips:timerSectionTooltip(ICT.Resets)
         local fontSize = math.min(16, UI:getFontSize())
 
         local start = -tickerSpacing(fontSize) * (count - 1) / 2
