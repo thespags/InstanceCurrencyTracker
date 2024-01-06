@@ -3,6 +3,7 @@ local addOnName, ICT = ...
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Colors = ICT.Colors
+local Expansion = ICT.Expansion
 local Player = ICT.Player
 local Reset = ICT.Reset
 local Tooltip = ICT.Tooltip
@@ -254,6 +255,19 @@ function Tooltips:timerSectionTooltip(resets)
         for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
             tooltip:printValue(v:getName(), date(" %H:%M %A, %B %d", v:expires() + 1))
         end
+        tooltip:printPlain("")
+        local x = GetServerTime()
+        for k, v in ICT:spairsByValue(Expansion.pvpWeekend()) do
+            local diff = x - v
+            if x > v and diff < Expansion.pvpLength() then
+                tooltip:printValue(k, "Active")
+            else
+                local cycles = x > v and math.ceil(diff / Expansion.pvpCycle()) or 0
+                v = v + cycles * Expansion.pvpCycle() + ICT:timezone() * ICT.OneHour
+                tooltip:printValue(k, date("%x", v))
+            end
+        end
+
         tooltip:printPlain("\nNote: 3 and 5 day resets need a known lockout to calculate from\nas Blizzard doesn't provide a way through their API.")
     end
    return Tooltip:new(f)

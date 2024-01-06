@@ -2,7 +2,9 @@
 local addOn, ICT = ...
 
 local Colors = ICT.Colors
-ICT.OneDay = 86400
+ICT.OneHour = 60 * 60
+ICT.OneDay = ICT.OneHour * 24
+ICT.OneWeek = ICT.OneDay * 7
 
 function ICT:convertFrom32bitNegative(int32)
     -- Is a 32bit negative value?
@@ -60,4 +62,10 @@ function ICT:cancelTicker(ticker)
     if ticker and not ICT.frame:IsShown() then
         ticker:Cancel()
     end
+end
+
+-- Add one to handle DST differences and hope no servers' timezones overflow..
+local timezone = (GetServerTime() - C_DateAndTime.GetServerTimeLocal()) / ICT.OneHour + 1
+function ICT:timezone()
+    return timezone
 end

@@ -44,6 +44,7 @@ local function hasHardcoreLock(player)
     return player.season == 3 and not player:isMaxLevel()
 end
 
+local pvpWeekend = {}
 if Expansion.isVanilla() then
     Expansion.MaxLevel = 25
     for id, info in pairs(LibInstances:GetInfos()) do
@@ -59,11 +60,34 @@ if Expansion.isVanilla() then
             info.seasons[10] = Expansion.isSod
         end
     end
+    pvpWeekend["Alterac Valley"] = 1704412800
+    pvpWeekend["Warsong Gulch"] = 1705017600
+    pvpWeekend["Arathi Basin"] = 1705622400
+    pvpWeekend["None"] = 1706227200
 elseif ICT.TBC == Expansion.value then
     Expansion.MaxLevel = 70
 elseif Expansion.isWOTLK() then
     Expansion.MaxLevel = 80
+    pvpWeekend["Strand of the Ancients"] = 1704412800
+    pvpWeekend["Alterac Valley"] = 1705017600
+    pvpWeekend["Eye of the Storm"] = 1705622400
+    pvpWeekend["Warsong Gulch"] = 1706227200
+    pvpWeekend["Arathi Basin"] = 1706860800
 else
     Expansion.MaxLevel = 80
     log.error("Expansion not configured for level cap %s", Expansion.value)
+end
+
+function Expansion.pvpWeekend()
+    return pvpWeekend
+end
+
+local cycle = ICT.OneWeek * ICT:size(pvpWeekend)
+function Expansion.pvpCycle()
+    return cycle
+end
+
+local length = ICT.OneDay * 3 + ICT.OneHour * 8
+function Expansion.pvpLength()
+    return length
 end
