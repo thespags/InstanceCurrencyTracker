@@ -12,5 +12,5 @@
     <Include file="Libs\LibSerialize\LibSerialize.lua"/>
     <!-- My Libraries -->
     <Include file="Libs\LibInstances\LibInstances.lua"/>
-    <Include file="Libs\LibTradeSkillRecipes\lib-wotlk.xml"/>
+    <Include file="Libs\LibTradeSkillRecipes\lib.xml"/>
 </Ui>

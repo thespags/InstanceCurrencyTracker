@@ -109,7 +109,10 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.professions.showUnknown then
                         cell = self.cells(x, y)
-                        y = cell:printLine(ICT:getColoredSpellLink(info.spellId, color))
+                        -- Vanilla doesn't have sharing spell links.
+                        local link =  Expansion.isVanilla() and ICT:getColoredItemLink(info.itemId, color)
+                            or ICT:getColoredSpellLink(info.spellId, color)
+                        y = cell:printLine(link)
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)
                     end
@@ -138,11 +141,17 @@ function ProfessionsTab:updateSkills(player, skillLine)
                 local name, difficulty = GetTradeSkillInfo(i)
                 if name and difficulty ~= "header" then
                     local spellLink = GetTradeSkillRecipeLink(i)
-                    local id = tonumber(ICT:enchantLinkSplit(spellLink)[1])
+                    local itemLink = GetTradeSkillItemLink(i)
+                    local id = spellLink and ICT:enchantLinkSplit(spellLink)[1]
+                    or itemLink and ICT:itemLinkSplit(itemLink)[1]
+                    id = tonumber(id)
                     if id then
-                        local categoryId = LibTradeSkillRecipes:GetInfoBySpellId(id).categoryId
+                        -- error handle this
+                        local result = spellLink and LibTradeSkillRecipes:GetInfoBySpellId(id) or LibTradeSkillRecipes:GetInfoByItemId(id)[1]
+                        spellLink = spellLink or GetSpellLink(result.spellId)
+                        local categoryId = result.categoryId
                         player.skills[categoryId] = player.skills[categoryId] or {}
-                        player.skills[categoryId][id] = { link = spellLink, difficulty = difficulty }
+                        player.skills[categoryId][result.spellId] = { link = spellLink, difficulty = difficulty }
                     end
                 end
             end

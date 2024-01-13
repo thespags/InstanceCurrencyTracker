@@ -81,9 +81,9 @@ function UI:CreateFrame()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
+    Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     if Expansion.isWOTLK() then
         Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
-        Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     end
     -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, frame:getSelectedTab())

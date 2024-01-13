@@ -46,6 +46,11 @@ function ICT:getColoredSpellLink(spellId, color)
     return name and string.format("|c%s|Henchant:%s|h[%s]|h|r", color, spellId, name)
 end
 
+function ICT:getColoredItemLink(itemId, color)
+    local name = select(1, GetItemInfo(itemId))
+    return name and string.format("|c%s|Hitem:%s|h[%s]|h|r", color, itemId, name)
+end
+
 function ICT:getSpellLink(spellId)
     -- Remap glyph of vampiric blood because Blizard has the worng one.
     if spellId == 58676 then
