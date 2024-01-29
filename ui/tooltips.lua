@@ -253,7 +253,7 @@ function Tooltips:timerSectionTooltip(resets)
         :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
         tooltip:printValue("Today", date("%A, %B %d"))
         for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
-            tooltip:printValue(v:getName(), date(" %H:%M %A, %B %d", v:expires() + 1))
+            tooltip:printValue(v:getName(), date(" %H:%M %A, %B %d", v:expires() + 10))
         end
         tooltip:printPlain("")
         local x = GetServerTime()

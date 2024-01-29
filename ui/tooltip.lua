@@ -73,7 +73,7 @@ function Tooltip:printValue(label, value, labelColor, valueColor)
     if value then
         labelColor = labelColor or Colors.subtitle
         valueColor = valueColor or Colors.text
-        local separator = string.len(value) > 0 and ":" or ""
+        local separator = value:len() > 0 and ":" or ""
         tinsert(self.text, string.format("\n|c%s%s%s|r |c%s%s|r", labelColor, label, separator, valueColor, value))
     end
     return self
