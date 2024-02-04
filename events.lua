@@ -220,6 +220,10 @@ local queueFrame = CreateFrame("Frame")
 queueFrame:RegisterEvent("LFG_LIST_ACTIVE_ENTRY_UPDATE")
 queueFrame:SetScript("OnEvent", ICT:throttleFunction("Cooldowns", 0, function() end, ICT.UpdateDisplay))
 
+local reputationFrame = CreateFrame("Frame")
+reputationFrame:RegisterEvent("UPDATE_FACTION")
+reputationFrame:SetScript("OnEvent", ICT:throttleFunction("Reputation", 5, Player.updateReputation, ICT.UpdateDisplay))
+
 if Expansion.isVanilla() then
     local buffFrame = CreateFrame("Frame")
     buffFrame:RegisterEvent("UNIT_AURA")

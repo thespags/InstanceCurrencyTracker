@@ -10,6 +10,7 @@ L["Confirm"] = "Confirm"
 L["Main"] = "Main"
 L["Gear"] = "Gear"
 L["Professions"] = "Professions"
+L["Reputation"] = "Reputation"
 
 -- Professions
 L["Alchemy"] = "Alchemy"

@@ -39,6 +39,7 @@ function Player:onLoad()
     self:updatePets()
     self:updateWorldBuffs()
     self:updateConsumes()
+    self:updateReputation()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -515,6 +516,49 @@ end
 function Player:updateResting()
     self.resting = IsResting()
     self.restedXP = GetXPExhaustion()
+end
+
+function Player:updateReputation()
+    local reputationHeaders = {}
+    ExpandAllFactionHeaders()
+    local parent, subParent
+    for i=1,GetNumFactions() do
+        local _, _, standingId, min, max, value, _, _, isHeader, _, hasRep, _, isChild, factionId = GetFactionInfo(i)
+        local t
+        if not isHeader or hasRep then
+            t = {
+                factionId = factionId,
+                standingId = standingId,
+                min = min,
+                max = max,
+                hasRep = true,
+                value = value,
+                isHeader = isHeader
+            }
+        else
+            t = {
+                factionId = factionId,
+                standingId = standingId,
+                isHeader = isHeader
+            }
+        end
+        if isHeader then
+            t.children = {}
+            if isChild then
+                subParent = t
+                tinsert(parent.children, t)
+            else
+                subParent = nil
+                parent = t
+                tinsert(reputationHeaders, t)
+            end
+        else
+            -- Afaik, wow only has two levels of headers.
+            local faction = subParent or parent
+            _ = faction and tinsert(faction.children, t)
+        end
+    end
+    self.reputationHeaders = reputationHeaders
 end
 
 function Player:recreateCooldowns()

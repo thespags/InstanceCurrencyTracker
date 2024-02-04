@@ -7,4 +7,5 @@
   <Script file="colors.lua"/>
   <Script file="time.lua"/>
   <Script file="fzy.lua"/>
+  <Script file="LibSimpleBar-1.0.lua"/>
 </Ui>

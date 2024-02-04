@@ -40,7 +40,7 @@ function Tabs:addPanel(parent, tab, name)
     return self:add(parent, tab, name)
 end
 
--- Adds a tab with 
+-- Adds a tab with no scroll.
 function Tabs:add(parent, tab, name)
     tab.parent = parent
     _ = tab.init and tab:init(parent)
