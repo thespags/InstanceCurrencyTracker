@@ -43,6 +43,7 @@ function MainTab:getPadding(y, name)
 end
 
 function MainTab:calculateGold()
+    self.realmGold = {}
     for _, player in pairs(ICT.db.players) do
         self.realmGold[player.realm] = (self.realmGold[player.realm] or 0) + (player.money or 0)
     end

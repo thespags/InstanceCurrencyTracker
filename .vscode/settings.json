@@ -195,7 +195,15 @@
         "LE_EXPANSION_LEVEL_CURRENT",
         "Mixin",
         "UnitBuff",
-        "C_Seasons"
+        "C_Seasons",
+        "Enum",
+        "GetItemClassInfo",
+        "GetTradeSkillItemLink",
+        "FACTION_BAR_COLORS",
+        "BINDING_HEADER_OTHER",
+        "ExpandAllFactionHeaders",
+        "GetNumFactions",
+        "GetFactionInfo"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"
