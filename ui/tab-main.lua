@@ -61,7 +61,7 @@ function MainTab:printCharacterInfo(player, x, y)
     if not self.cells:isSectionExpanded(L["Info"]) then
         return y
     end
-    self.cells.indent = "  "
+    self.cells:startSection(1)
     local padding = self:getPadding(y, "info")
     y = self.cells(x, y):printOptionalValue(options.player.showLevel, L["Level"], player.level)
     y = self.cells(x, y):printOptionalValue(options.player.showGuild, L["Guild"], player.guild)
@@ -96,6 +96,7 @@ function MainTab:printCharacterInfo(player, x, y)
         y = cell:printSectionTitle(L["World Buffs"])
         if self.cells:isSectionExpanded(L["World Buffs"]) then
             padding = self:getPadding(y, "worldBuffs")
+            self.cells:startSection(2)
             for id, buff in ICT:nspairs(player.worldBuffs or {}) do
                 cell = self.cells(x, y)
                 local name, _, icon = GetSpellInfo(id)
@@ -117,7 +118,7 @@ function MainTab:printCharacterInfo(player, x, y)
                     cell:printValue(title)
                 end)
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
     end
 
@@ -130,6 +131,7 @@ function MainTab:printCharacterInfo(player, x, y)
 
         if self.cells:isSectionExpanded(L["Bags"]) then
             padding = self:getPadding(y, "bags")
+            self.cells:startSection(2)
             local bags = player.bagsTotal or {}
             for k, bag in ICT:nspairs(bags, function(k, v) return v.total > 0 end) do
                 cell = self.cells(x, y)
@@ -145,7 +147,7 @@ function MainTab:printCharacterInfo(player, x, y)
                     tooltip:attach(cell)
                 end
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
     end
 
@@ -156,6 +158,7 @@ function MainTab:printCharacterInfo(player, x, y)
 
         if self.cells:isSectionExpanded("Specs") then
             padding = self:getPadding(y, "specs")
+            self.cells:startSection(2)
             for _, spec in pairs(player:getSpecs()) do
                 if Talents:isValidSpec(spec) then
                     local specColor = Colors:getSelectedColor(spec.id == player.activeSpec)
@@ -174,7 +177,7 @@ function MainTab:printCharacterInfo(player, x, y)
                     end
                 end
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
     end
 
@@ -186,6 +189,7 @@ function MainTab:printCharacterInfo(player, x, y)
 
         if self.cells:isSectionExpanded(L["Professions"]) then
             padding = self:getPadding(y, "professions")
+            self.cells:startSection(2)
             for _, v in pairs(player.professions or {}) do
                 -- We should have already filtered out those without icons but safety check here.
                 local nameWithIcon = v.icon and string.format("|T%s:%s|t%s", v.icon, UI.iconSize, v.name) or v.name
@@ -195,7 +199,7 @@ function MainTab:printCharacterInfo(player, x, y)
                     cell:attachClick(function() CastSpellByID(v.spellId) end)
                 end
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
     end
 
@@ -206,6 +210,7 @@ function MainTab:printCharacterInfo(player, x, y)
 
         if self.cells:isSectionExpanded(L["Cooldowns"]) then
             padding = self:getPadding(y, "cooldowns")
+            self.cells:startSection(2)
             for _, v in ICT:nspairsByValue(player.cooldowns, ICT.Cooldown.isVisible) do
                 cell = self.cells(x, y)
                 y = cell:printTicker(v:getNameWithIcon(), v.expires, v.duration)
@@ -217,11 +222,10 @@ function MainTab:printCharacterInfo(player, x, y)
                     end
                 end
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
     end
-    self.cells.indent = ""
-    return y
+    return self.cells:endSection(x, y)
 end
 
 local function canQueue(player)
@@ -241,6 +245,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
 
     -- If the section is collapsible then short circuit here.
     if self.cells:isSectionExpanded(key) then
+        self.cells:startSection(2)
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
                 local color = Colors:getSelectedColor(instance.locked)
@@ -255,7 +260,7 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
             end
         end
     end
-    return self.cells(x, y):hide()
+    return self.cells:endSection(x, y, y + 1)
 end
 
 function MainTab:printAllInstances(player, x, y)
@@ -279,14 +284,12 @@ function MainTab:printAllInstances(player, x, y)
             y = cell:printSectionTitle(name)
 
             if self.cells:isSectionExpanded(name) then
-                self.cells.indent = "  "
+                self.cells:startSection(1)
                 for k, v in ipairs(subSections) do
                     y = self:printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, y)
                 end
-                self.cells.indent = ""
-            else
-                y = self.cells(x, y):hide()
             end
+            y = self.cells:endSection(x, y)
         end
     end
     return y
@@ -309,11 +312,13 @@ function MainTab:printCurrency(player, x, y)
         y = cell:printSectionTitle(L["Currency"])
         Tooltips:currencySectionTooltip():attach(cell)
         if self.cells:isSectionExpanded(L["Currency"]) then
+            self.cells:startSection(1)
             for _, currency in ipairs(ICT.Currencies) do
                 if currency:isVisible() then
                     y = self:printCurrencyShort(player, currency, x, y)
                 end
             end
+            y = self.cells:endSection(x, y)
         end
     end
     return self.cells(x, y):hide()
@@ -325,6 +330,7 @@ function MainTab:printQuests(player, x, y)
         y = cell:printSectionTitle(L["Quests"])
         Tooltips:questSectionTooltip():attach(cell)
         if self.cells:isSectionExpanded(L["Quests"]) then
+            self.cells:startSection(1)
             local padding = self:getPadding(y, "quests")
             for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player), player:isQuestVisible()) do
                 local color = Colors:getQuestColor(player, quest)
@@ -333,7 +339,7 @@ function MainTab:printQuests(player, x, y)
                 y = cell:printLine(name, color)
                 Tooltips:questTooltip(name, quest):attach(cell)
             end
-            y = self.cells:hideRows(x, y, padding)
+            y = self.cells:endSection(x, y, padding)
         end
         y = self.cells(x, y):hide()
     end

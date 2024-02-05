@@ -94,8 +94,8 @@ function ProfessionsTab:printProfession(player, profession, x, y)
     y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
     if self.cells:isSectionExpanded(profession.name) then
+        self.cells:startSection(1)
         if skills and ICT:size(skills) > 0 then
-            self.cells.indent = "  "
             local expansion, section
             for _, info in ICT:spairsByValue(LibTradeSkillRecipes:GetCategorySpells(skillLine), sort, infoFilter) do
                 if expansion ~= info.expansionId then
@@ -105,6 +105,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
                 end
                 if self.cells:isSectionExpanded(section) then
+                    self.cells:startSection(2)
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.professions.showUnknown then
@@ -116,9 +117,9 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)
                     end
+                    y = self.cells:endSection(x, y)
                 end
             end
-            self.cells.indent = ""
         else
             cell = self.cells(x, y)
             if player:isCurrentPlayer() then
@@ -128,6 +129,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                 y = cell:printLine(L["OpenTradeSkillsOther"], Colors.text)
             end
         end
+        y = self.cells:endSection(x, y)
     end
     return self.cells(x, y):hide()
 end

@@ -8,8 +8,11 @@ local ReputationTab = {}
 ICT.ReputationTab = ReputationTab
 
 function ReputationTab:printReputation(x, y, faction, depth)
-    local cell = self.cells(x, y)
     local name = faction.factionId and GetFactionInfoByID(faction.factionId) or BINDING_HEADER_OTHER
+    if faction.isHeader and y > 2 then
+        y = self.cells(x, y):hide()
+    end
+    local cell = self.cells(x, y)
     y = faction.isHeader and cell:printSectionTitle(name) or cell:printLine(name)
     if faction.hasRep then
         local color = FACTION_BAR_COLORS[faction.standingId]
@@ -28,12 +31,14 @@ function ReputationTab:printReputation(x, y, faction, depth)
     else
         _ = cell.bar and cell.bar:Hide()
     end
-    if faction.isHeader and self.cells:isSectionExpanded(name)  then
-        self.cells.indent = string.rep("  ", depth)
-        for _, v in pairs(faction.children or {}) do
-            y = ReputationTab:printReputation(x, y, v, depth + 1)
+    if faction.isHeader then
+        if self.cells:isSectionExpanded(name) then
+            self.cells:startSection(depth)
+            for _, v in pairs(faction.children or {}) do
+                y = ReputationTab:printReputation(x, y, v, depth + 1)
+            end
+            y = self.cells:endSection(x, y)
         end
-        self.cells.indent = ""
     end
     return y
 end
@@ -41,9 +46,6 @@ end
 function ReputationTab:printPlayer(player, x)
     local y = 1
     y = self.cells(x, y):printPlayerTitle(player)
-    if ICT:size(player.reputationHeaders) == 0 then
-        print("WTF")
-    end
     for _, v in pairs(player.reputationHeaders or {}) do
         y = self:printReputation(x, y, v, 1)
     end

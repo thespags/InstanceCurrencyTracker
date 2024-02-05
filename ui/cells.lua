@@ -30,6 +30,15 @@ function Cells:hideRows(x, startY, endY)
     return startY < endY and endY or startY
 end
 
+function Cells:startSection(depth)
+    self.indent = string.rep("  ", depth)
+end
+
+function Cells:endSection(x, startY, endY)
+    self.indent = string.sub(self.indent, 1, -3)
+    return self:hideRows(x, startY, endY or startY)
+end
+
 function Cells:cellWidth()
     return rawget(self, "width") or UI:getCellWidth()
 end
