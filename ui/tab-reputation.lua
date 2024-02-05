@@ -1,8 +1,6 @@
 local addOnName, ICT = ...
 
 local BAR = LibStub("XLibSimpleBar-1.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
-local log = ICT.log
 local UI = ICT.UI
 local ReputationTab = {}
 ICT.ReputationTab = ReputationTab

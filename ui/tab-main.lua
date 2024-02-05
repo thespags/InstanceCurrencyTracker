@@ -203,7 +203,12 @@ function MainTab:printCharacterInfo(player, x, y)
         end
     end
 
-    if ICT.db.options.player.showCooldowns and ICT:containsAnyValue(ICT.db.options.displayCooldowns) then
+    if ICT.db.options.player.showCooldowns
+    and ICT:containsAnyValue(ICT.db.options.displayCooldowns)
+    and self.paddings.cooldowns > 0 then
+        for k,v in pairs(ICT.db.options.displayCooldowns) do
+            print(k .. tostring(v))
+        end
         y = self.cells(x, y):hide()
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Cooldowns"])
@@ -351,13 +356,13 @@ function MainTab:printResetTimers(x, y)
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Reset"])
         Tooltips:timerSectionTooltip(ICT.Resets):attach(cell)
-
+        self.cells:startSection(1)
         if self.cells:isSectionExpanded(L["Reset"]) then
             for _, v in ICT:nspairsByValue(ICT.Resets, Reset.isVisibleAndActive) do
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
-        y = self.cells(x, y):hide()
+        y = self.cells:endSection(x, y)
     end
     return y
 end
