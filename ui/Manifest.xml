@@ -3,6 +3,7 @@
   <Script file="ui.lua"/>
   <Script file="common.lua"/>
   <Script file="lfd.lua"/>
+  <Script file="cell.lua"/>
   <Script file="cells.lua"/>
   <Script file="tooltip.lua"/>
   <Script file="tooltips.lua"/>

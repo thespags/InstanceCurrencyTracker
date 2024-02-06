@@ -145,7 +145,7 @@ local function createSortList(parent)
             selectedPlayer.order = selectedPlayer.order + 1
             ordered[selectedPlayer.order].order = prev
             setArrowsEnabled(#ordered)
-            ICT:UpdateDisplay()
+            ICT.UpdateDisplay()
         end
         update()
     end)
@@ -155,7 +155,7 @@ local function createSortList(parent)
             selectedPlayer.order = selectedPlayer.order - 1
             ordered[selectedPlayer.order].order = prev
             setArrowsEnabled(#ordered)
-            ICT:UpdateDisplay()
+            ICT.UpdateDisplay()
         end
         update()
     end)
@@ -167,7 +167,7 @@ local function createSortList(parent)
         ICT.db.options.sort.custom = not ICT.db.options.sort.custom
         update()
         setArrowsEnabled(#ordered)
-        ICT:UpdateDisplay()
+        ICT.UpdateDisplay()
     end)
     Tooltips:new(L["Custom Order"], L["CustomOrderTooltip"]):attachFrame(button)
     return update
@@ -215,7 +215,7 @@ local function createSlider(parent, name, x, y, key, min, max)
     frame:HookScript("OnValueChanged", function(self, value)
         ICT.db.options[key] = value
         editBox:SetText(value)
-        ICT:UpdateDisplay()
+        ICT.UpdateDisplay()
     end)
     return frame
 end

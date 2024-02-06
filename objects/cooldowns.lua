@@ -149,7 +149,7 @@ for id, v in pairs(items) do
             v.link = item:GetItemLink()
             -- Make sure function is loaded.
             if ICT.UpdateDisplay then
-                ICT:UpdateDisplay()
+                ICT.UpdateDisplay()
             end
         end)
         ICT.Cooldowns[id] = Cooldown:new(v)

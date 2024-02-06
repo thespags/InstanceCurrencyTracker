@@ -23,14 +23,20 @@ end
 
 -- Called when the addon is loaded to update any fields.
 -- Only for the active player.
+local loaded = false
 function Player:onLoad()
     self.season = C_Seasons.GetActiveSeason()
     self:updateProfessions()
-    -- Talents calls self:updateGear() for us.
-    -- Delay loading talents(specifically gear) until wow has loaded more.
-    ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
-    -- Bank Bag name is sometimes nil.
-    ICT:throttleFunction("onLoad", 2, Player.updateBags, ICT.UpdateDisplay)()
+    if loaded then
+        self:updateTalents()
+        self:updateBags()
+    else
+        -- Talents calls self:updateGear() for us.
+        -- Delay loading talents(specifically gear) until wow has loaded more.
+        ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
+        -- Bank Bag name is sometimes nil.
+        ICT:throttleFunction("onLoad", 2, Player.updateBags, ICT.UpdateDisplay)()
+    end
     self:updateMoney()
     self:updateGuild()
     self:updateXP()
@@ -62,6 +68,7 @@ function Player:onLoad()
         end
     end
     self.battleTag = battleTag
+    loaded = true
 end
 
 function Player:fromSeason(info, size)

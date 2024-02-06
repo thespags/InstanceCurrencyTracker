@@ -165,7 +165,7 @@ function MainTab:printCharacterInfo(player, x, y)
                     cell = self.cells(x, y)
                     local icon = spec.icon and CreateSimpleTextureMarkup(spec.icon, UI.iconSize, UI.iconSize) or ""
                     local name = icon .. (spec.name or "")
-                    y = cell:printValue(name, string.format("%s/%s/%s", spec.tab1, spec.tab2, spec.tab3), specColor)
+                    y = cell:printValue(name, string.format("%s/%s/%s", spec.tab1 or 0, spec.tab2 or 0, spec.tab3 or 0), specColor)
                     local f = function(tooltip)
                         tooltip:printTitle(L["Spec"])
                         :printValue(L["Click"], L["Spec Click"])
