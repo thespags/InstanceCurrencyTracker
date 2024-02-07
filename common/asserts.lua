@@ -8,7 +8,7 @@ end
 function concat(pairs)
     local s = ""
     for _, v in pairs do
-        if s:len() == 0 then
+        if string.len(s) == 0 then
             s = tostring(v)
         else
             s = s .. "" .. v

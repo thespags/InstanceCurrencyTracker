@@ -206,9 +206,6 @@ function MainTab:printCharacterInfo(player, x, y)
     if ICT.db.options.player.showCooldowns
     and ICT:containsAnyValue(ICT.db.options.displayCooldowns)
     and self.paddings.cooldowns > 0 then
-        for k,v in pairs(ICT.db.options.displayCooldowns) do
-            print(k .. tostring(v))
-        end
         y = self.cells(x, y):hide()
         cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Cooldowns"])
@@ -249,8 +246,8 @@ function MainTab:printInstances(player, title, subTitle, size, instances, x, y)
     Tooltips:instanceSectionTooltip():attach(cell)
 
     -- If the section is collapsible then short circuit here.
+    self.cells:startSection(2)
     if self.cells:isSectionExpanded(key) then
-        self.cells:startSection(2)
         for _, instance in ICT:nspairsByValue(instances) do
             if instance:isVisible() then
                 local color = Colors:getSelectedColor(instance.locked)
@@ -293,8 +290,11 @@ function MainTab:printAllInstances(player, x, y)
                 for k, v in ipairs(subSections) do
                     y = self:printInstances(player, expansion, v.name, sizes[k], v.instances(player, expansion), x, y)
                 end
+                -- No need to pad here as loop takes care of it.
+                y = self.cells:endSection(x, y)
+            else
+                y = self.cells(x, y):hide()
             end
-            y = self.cells:endSection(x, y)
         end
     end
     return y
@@ -362,7 +362,7 @@ function MainTab:printResetTimers(x, y)
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
-        y = self.cells:endSection(x, y)
+        y = self.cells:endSection(x, y, y + 1)
     end
     return y
 end

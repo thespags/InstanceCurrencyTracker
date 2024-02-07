@@ -123,7 +123,7 @@ function ICT:throttleFunction(source, time, f, callback)
     return function()
         -- Skip calling if the database/addon isn't initialized.
         -- We set init in the addon initialization event.
-        if ICT.db and ICT.init then
+        if ICT.db and ICT.selectedPlayer then
             local player = ICT.Players:get()
             if time > 0 and not throttles[f] then
                 log.debug("Async: %s", source)

@@ -4,6 +4,7 @@ local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Cooldown = ICT.Cooldown
 local Expansion = ICT.Expansion
+local log = ICT.log
 ICT.Cooldowns = {}
 
 local spells = {
@@ -127,11 +128,11 @@ for id, v in pairs(items) do
         v.id = id
         v.skillLine = v.skillLine or info[1].categoryId
         if not v.skillLine then
-            ICT:print(L["Cooldown missing skillLine: %s"], id)
+            log.error(L["Cooldown missing skillLine: %s"], id)
         end
         v.expansion = v.expansion or info[1].expansionId
         if not v.expansion then
-            ICT:print(L["Cooldown missing expansion: %s"], id)
+            log.error(L["Cooldown missing expansion: %s"], id)
         end
         -- Default values until loaded.
         v.name = id

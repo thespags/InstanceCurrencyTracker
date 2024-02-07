@@ -97,13 +97,6 @@ local function initEvent(self, event, eventAddOn)
         ICT.db.version = version
 
         initMinimap()
-        Players:loadAll()
-        -- If necessary, create the current player. Handled by the function.
-        Players:create()
-        ICT.init = true
-        Players:get():onLoad()
-        ICT.UI:CreateFrame()
-        ICT.selectedPlayer = Players:getCurrentName()
         ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
         ICT:print(L["Blizzard often changes emblem amounts if you notice a boss off please report to discord: %s"], "https://discord.gg/yY6Q6EgNRu")
         if GroupFinderFrame then
@@ -116,6 +109,18 @@ end
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", initEvent)
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", function()
+    Players:loadAll()
+    -- If necessary, create the current player. Handled by the function.
+    Players:create()
+    -- Set this used to initialize throttling.
+    ICT.selectedPlayer = Players:getCurrentName()
+    Players:get():onLoad()
+    ICT.UI:CreateFrame()
+end)
 
 local updateFrame = CreateFrame("Frame")
 -- After the instance info is updated then trigger updates to our representation.

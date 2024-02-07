@@ -203,7 +203,9 @@
         "BINDING_HEADER_OTHER",
         "ExpandAllFactionHeaders",
         "GetNumFactions",
-        "GetFactionInfo"
+        "GetFactionInfo",
+        "GetNumCrafts",
+        "GetCraftInfo"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

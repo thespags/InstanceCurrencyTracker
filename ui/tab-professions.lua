@@ -95,12 +95,12 @@ function ProfessionsTab:printProfession(player, profession, x, y)
     local sort = options.sort.orderByDifficulty and infoDifficultySort(player) or infoSort
     y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
+    self.cells:startSection(1)
     if self.cells:isSectionExpanded(profession.name) then
-        self.cells:startSection(1)                      
         if skills and ICT:size(skills) > 0 then
             local expansion, section
             for _, info in ICT:spairsByValue(LibTradeSkillRecipes:GetCategorySpells(skillLine), sort, infoFilter) do
-                if Expansion.isVanilla then
+                if Expansion.isVanilla() then
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.professions.showUnknown then
@@ -114,8 +114,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     end
                 else
                     if expansion ~= info.expansionId then
-                        self.cells:startSection(1)
-                        y = expansion and self.cells(x, y):hide() or y
+                        y = expansion and self.cells:endSection(x, y + 1) or y
                         expansion = info.expansionId
                         section = skillLine .. ":" .. expansion
                         y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
@@ -136,6 +135,8 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     end
                 end
             end
+            -- Close any remaining expansion.
+            y = expansion and self.cells:endSection(x, y) or y
         else
             cell = self.cells(x, y)
             if player:isCurrentPlayer() then
@@ -145,9 +146,8 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                 y = cell:printLine(L["OpenTradeSkillsOther"], Colors.text)
             end
         end
-        y = self.cells:endSection(x, y)
     end
-    return self.cells(x, y):hide()
+    return self.cells:endSection(x, y, y + 1)
 end
 
 function ProfessionsTab:printPlayer(player, x)

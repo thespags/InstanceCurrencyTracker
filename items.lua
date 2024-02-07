@@ -13,11 +13,11 @@ ICT.CheckSlotEnchant = {
 	[INVSLOT_TABARD] = ICT:returnX(false),
 	[INVSLOT_WRIST] = ICT:returnX(true),
 	[INVSLOT_HAND] = ICT:returnX(true),
-	[INVSLOT_WAIST] = Player.isEngineer,
+	[INVSLOT_WAIST] = function(player) return Expansion.isWOTLK() and player:isEngineer() end,
 	[INVSLOT_LEGS] = ICT:returnX(true),
 	[INVSLOT_FEET] = ICT:returnX(true),
-	[INVSLOT_FINGER1] = Player.isEnchanter,
-	[INVSLOT_FINGER2] = Player.isEnchanter,
+	[INVSLOT_FINGER1] = function(player) return Expansion.active(ICT.TBC) and player:isEnchanter() end,
+	[INVSLOT_FINGER2] = function(player) return Expansion.active(ICT.TBC) and player:isEnchanter() end,
 	[INVSLOT_TRINKET1] = ICT:returnX(false),
 	[INVSLOT_TRINKET2] = ICT:returnX(false),
 	[INVSLOT_MAINHAND] = ICT:returnX(true),
@@ -25,11 +25,11 @@ ICT.CheckSlotEnchant = {
 	[INVSLOT_OFFHAND] = function(_, classId, subClassId) return classId == 4 and subClassId == 6 end,
 }
 
-ICT.CheckSlotSocket = {
+ICT.CheckSlotSocket = Expansion.isWOTLK() and {
 	[INVSLOT_WRIST] = { check = Player.isBlacksmith, icon = 133273 },
 	[INVSLOT_HAND] = { check = Player.isBlacksmith, icon = 132984 },
 	[INVSLOT_WAIST] = { check = ICT:returnX(true), icon = 132525 },
-}
+} or {}
 
 ICT.ItemTypeToSlot = {
 	[INVTYPE_HEAD] = 1,

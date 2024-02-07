@@ -24,21 +24,25 @@ end
 -- Only for the active player.
 local loaded = false
 function Player:onLoad()
+    -- Apparently the guid can change so check it.
+    self.guid = UnitGUID("Player")
     self.season = C_Seasons.GetActiveSeason()
     self:updateProfessions()
     if loaded then
         self:updateTalents()
         self:updateBags()
     else
+        -- Delay loading until wow has loaded more.
         -- Talents calls self:updateGear() for us.
-        -- Delay loading talents(specifically gear) until wow has loaded more.
+        -- updateGear needs time...
         ICT:throttleFunction("onLoad", 1, Player.updateTalents, ICT.UpdateDisplay)()
         -- Bank Bag name is sometimes nil.
         ICT:throttleFunction("onLoad", 2, Player.updateBags, ICT.UpdateDisplay)()
     end
     self:updateMoney()
-    self:updateGuild()
     self:updateXP()
+    self:updateDurability()
+    self:updateGuild()
     self:updateResting()
     self:updateCooldowns()
     self:updatePets()
@@ -50,7 +54,6 @@ function Player:onLoad()
 
     -- If the player did a name change, this attempts to reconcile 
     -- the old player using the guid.
-    self.guid = UnitGUID("Player")
     for k, v in pairs(ICT.db.players) do
         if v.guid == self.guid and self.fullName ~= k then
             ICT.db.players[k] = nil
@@ -396,10 +399,10 @@ function Player:updateGear()
                 item.sockets.blue = stats["EMPTY_SOCKET_BLUE"] or 0
                 item.sockets.yellow = stats["EMPTY_SOCKET_YELLOW"] or 0
                 item.sockets.meta = stats["EMPTY_SOCKET_META"] or 0
+                -- WOTLK has extra slots, while TBC and Vanilla do not.ß
                 item.extraSocket = ICT.CheckSlotSocket[i] and ICT.CheckSlotSocket[i].check(self) or false
                 item.socketTotals = ICT:sum(item.sockets) + (item.extraSocket and 1 or 0)
             end)
-
             items[i] = item
         end
     end

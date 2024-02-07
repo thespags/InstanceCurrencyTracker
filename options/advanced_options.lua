@@ -3,50 +3,51 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local Tooltips = ICT.Tooltips
 local Tabs = ICT.Tabs
-local AdvOptions = {}
+local AdvOptions = {
+    frame = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
+}
 ICT.AdvOptions = AdvOptions
 
 local width = 355
 local height = 300
 
-local options = CreateFrame("Frame", "ICTAdvancedOptions", UIParent, "BasicFrameTemplateWithInset")
-function AdvOptions:createFrame(frame)
-    frame:SetToplevel(true)
-    frame:SetSize(width, height)
-    frame:SetMovable(true)
-	frame:SetScript("OnMouseDown", frame.StartMoving)
-	frame:SetScript("OnMouseUp",  frame.StopMovingOrSizing)
-    frame:SetPoint("CENTER", UIParent, 0, 200)
-    frame:SetFrameStrata("HIGH")
-    table.insert(UISpecialFrames, frame:GetName())
+function AdvOptions:createFrame()
+    self.frame:SetToplevel(true)
+    self.frame:SetSize(width, height)
+    self.frame:SetMovable(true)
+	self.frame:SetScript("OnMouseDown", self.frame.StartMoving)
+	self.frame:SetScript("OnMouseUp",  self.frame.StopMovingOrSizing)
+    self.frame:SetPoint("CENTER", UIParent, 0, 200)
+    self.frame:SetFrameStrata("HIGH")
+    table.insert(UISpecialFrames, self.frame:GetName())
 
-    Tabs:mixin(frame, ICT.db.options, "selectedTab")
-    frame.update = function()
+    Tabs:mixin(self.frame, ICT.db.options, "selectedTab")
+    self.frame.update = function()
         ICT.MainOptions:prePrint()
     end
-    Tabs:add(frame, ICT.MainOptions, L["Main"])
-    PanelTemplates_SetTab(frame, frame:getSelectedTab())
-    frame.CloseButton:HookScript("OnClick", function()
+    Tabs:add(self.frame, ICT.MainOptions, L["Main"])
+    PanelTemplates_SetTab(self.frame, self.frame:getSelectedTab())
+    self.frame.CloseButton:HookScript("OnClick", function()
         ICT.MainOptions.resetConfirm:Hide()
     end)
 
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local title = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetText(L["Options"])
     title:SetPoint("TOP", -10, -6)
 end
 
 local showOptions = true
-local function openOptionsFrame()
+function AdvOptions:openOptionsFrame()
     return function()
         showOptions = not showOptions
         if showOptions then
-            options:Hide()
+            self.frame:Hide()
             ICT.MainOptions.resetConfirm:Hide()
             return
         end
-        options:Show()
+        self.frame:Show()
         -- Refresh any information
-        options.update()
+        self.frame.update()
     end
 end
 
@@ -58,11 +59,12 @@ function AdvOptions:createButton()
     button:SetIgnoreParentAlpha(true)
     button:SetText("|TInterface\\Buttons\\UI-OptionsButton:12|t")
     button:SetPoint("TOPLEFT", ICT.frame, "TOPLEFT", 1, -1)
-    button:SetScript("OnClick", openOptionsFrame())
+    button:SetScript("OnClick", self:openOptionsFrame())
     Tooltips:new(L["AdvancedOptionsTooltip"], L["AdvancedOptionsTooltipBody"]):attachFrame(button)
 end
 
 function AdvOptions:create()
     self:createButton()
-    self:createFrame(options)
+    self:createFrame()
+    self.frame:Hide()
 end
