@@ -4,7 +4,9 @@ local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Colors = ICT.Colors
 local Expansion = ICT.Expansion
+local log = ICT.log
 local Tooltips = ICT.Tooltips
+local TradeSkills = ICT.TradeSkills
 local UI = ICT.UI
 local ProfessionsTab = {
 }
@@ -34,7 +36,7 @@ local getDifficultyColor = function(difficulty)
     elseif difficulty ==  "trivial" then
         return "FFFFFFFF"
     else
-        ICT:print("Unknown difficulty %s", difficulty or "")
+        log.error("Unknown difficulty %s", difficulty or "")
         return "FFFFFFFF"
     end
 end
@@ -94,37 +96,51 @@ function ProfessionsTab:printProfession(player, profession, x, y)
     y = cell:printSectionTitleValue(profession.name, string.format("%s/%s", profession.rank, profession.max))
 
     if self.cells:isSectionExpanded(profession.name) then
-        self.cells:startSection(1)
+        self.cells:startSection(1)                      
         if skills and ICT:size(skills) > 0 then
             local expansion, section
             for _, info in ICT:spairsByValue(LibTradeSkillRecipes:GetCategorySpells(skillLine), sort, infoFilter) do
-                if expansion ~= info.expansionId then
-                    y = expansion and self.cells(x, y):hide() or y
-                    expansion = info.expansionId
-                    section = skillLine .. ":" .. expansion
-                    y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
-                end
-                if self.cells:isSectionExpanded(section) then
-                    self.cells:startSection(2)
+                if Expansion.isVanilla then
                     local skill = skills[info.spellId]
                     local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
                     if skill or options.professions.showUnknown then
                         cell = self.cells(x, y)
-                        -- Vanilla doesn't have sharing spell links.
-                        local link =  Expansion.isVanilla() and ICT:getColoredItemLink(info.itemId, color)
+                        -- Vanilla doesn't have sharing spell links unless it's enchantment.
+                        local link = info.itemId and ICT:getColoredItemLink(info.itemId, color)
                             or ICT:getColoredSpellLink(info.spellId, color)
                         y = cell:printLine(link)
                         local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
                         cell:attachHyperLink(func)
                     end
-                    y = self.cells:endSection(x, y)
+                else
+                    if expansion ~= info.expansionId then
+                        self.cells:startSection(1)
+                        y = expansion and self.cells(x, y):hide() or y
+                        expansion = info.expansionId
+                        section = skillLine .. ":" .. expansion
+                        y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
+                        self.cells:startSection(2)
+                    end
+                    if self.cells:isSectionExpanded(section) then
+                        local skill = skills[info.spellId]
+                        local color = skill and getDifficultyColor(skill.difficulty) or "FF787878"
+                        if skill or options.professions.showUnknown then
+                            cell = self.cells(x, y)
+                            -- Vanilla doesn't have sharing spell links.
+                            local link = Expansion.isVanilla() and info.itemId and ICT:getColoredItemLink(info.itemId, color)
+                                or ICT:getColoredSpellLink(info.spellId, color)
+                            y = cell:printLine(link)
+                            local func = skill and player:isCurrentPlayer() and function() ICT:castTradeSkill(player, skillLine, GetSpellInfo(info.spellId)) end
+                            cell:attachHyperLink(func)
+                        end
+                    end
                 end
             end
         else
             cell = self.cells(x, y)
             if player:isCurrentPlayer() then
                 y = cell:printLine(L["OpenTradeSkills"], Colors.text)
-                cell:attachClick(function() self:updateSkills(player, skillLine) end)
+                cell:attachClick(function() TradeSkills:openAndLoad(player, skillLine) end)
             else
                 y = cell:printLine(L["OpenTradeSkillsOther"], Colors.text)
             end
@@ -132,35 +148,6 @@ function ProfessionsTab:printProfession(player, profession, x, y)
         y = self.cells:endSection(x, y)
     end
     return self.cells(x, y):hide()
-end
-
-function ProfessionsTab:updateSkills(player, skillLine)
-    player.skills = player.skills or {}
-    for _, p in pairs(player.professions or {}) do
-        if p.skillLine == skillLine and p.spellId then
-            CastSpellByID(p.spellId)
-            for i=1,GetNumTradeSkills() do
-                local name, difficulty = GetTradeSkillInfo(i)
-                if name and difficulty ~= "header" then
-                    local spellLink = GetTradeSkillRecipeLink(i)
-                    local itemLink = GetTradeSkillItemLink(i)
-                    local id = spellLink and ICT:enchantLinkSplit(spellLink)[1]
-                    or itemLink and ICT:itemLinkSplit(itemLink)[1]
-                    id = tonumber(id)
-                    if id then
-                        -- error handle this
-                        local result = spellLink and LibTradeSkillRecipes:GetInfoBySpellId(id) or LibTradeSkillRecipes:GetInfoByItemId(id)[1]
-                        spellLink = spellLink or GetSpellLink(result.spellId)
-                        local categoryId = result.categoryId
-                        player.skills[categoryId] = player.skills[categoryId] or {}
-                        player.skills[categoryId][result.spellId] = { link = spellLink, difficulty = difficulty }
-                    end
-                end
-            end
-            CloseTradeSkill()
-            return
-        end
-    end
 end
 
 function ProfessionsTab:printPlayer(player, x)

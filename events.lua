@@ -144,6 +144,7 @@ skillFrame:SetScript("OnEvent", ICT:throttleFunction("Professions", 3, Player.up
 
 local skillShowFrame = CreateFrame("Frame")
 skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
+skillShowFrame:RegisterEvent("CRAFT_SHOW")
 skillShowFrame:SetScript("OnEvent", ICT:throttleFunction("Skills", 0.5, Player.updateSkills, ICT.UpdateDisplay))
 
 -- Delay update for new level, or using points until player is finished.

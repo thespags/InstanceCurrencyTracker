@@ -3,7 +3,6 @@ local addOnName, ICT = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
-local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Expansion = ICT.Expansion
 local Instance = ICT.Instance
 local Instances = ICT.Instances
@@ -314,20 +313,7 @@ function Player:updateProfessions()
 end
 
 function Player:updateSkills()
-    self.skills = self.skills or {}
-    local numTradeskills = GetNumTradeSkills()
-    for i=1,numTradeskills do
-        local name, difficulty = GetTradeSkillInfo(i)
-        if name and difficulty ~= "header" then
-            local spellLink = GetTradeSkillRecipeLink(i)
-            local id = tonumber(ICT:enchantLinkSplit(spellLink)[1])
-            if id then
-                local categoryId = LibTradeSkillRecipes:GetInfoBySpellId(id).categoryId
-                self.skills[categoryId] = self.skills[categoryId] or {}
-                self.skills[categoryId][id] = { link = spellLink, difficulty = difficulty }
-            end
-        end
-    end
+    ICT.TradeSkills:update(self)
 end
 
 function Player:getSpec(id)

@@ -2,6 +2,7 @@
   <Script file="expansions.lua"/>
   <Script file="cooldown.lua"/>
   <Script file="cooldowns.lua"/>
+  <Script file="tradeskills.lua"/>
   <Script file="currency.lua"/>
   <Script file="currencies.lua"/>
   <Script file="instance.lua"/>
