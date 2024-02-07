@@ -141,7 +141,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
             cell = self.cells(x, y)
             if player:isCurrentPlayer() then
                 y = cell:printLine(L["OpenTradeSkills"], Colors.text)
-                cell:attachClick(function() TradeSkills:openAndLoad(player, skillLine) end)
+                cell:attachClick(function() TradeSkills:openAndUpdate(player, skillLine) end)
             else
                 y = cell:printLine(L["OpenTradeSkillsOther"], Colors.text)
             end
