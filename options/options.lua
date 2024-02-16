@@ -47,7 +47,7 @@ for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
 end
 
 Options.messages = {
-    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], },
+    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], defaultFalse = true, },
 }
 
 Options.quests = {
