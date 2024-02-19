@@ -46,7 +46,7 @@ end
 
 local pvpWeekend = {}
 if Expansion.isVanilla() then
-    Expansion.MaxLevel = 25
+    Expansion.MaxLevel = C_Seasons.GetActiveSeason() == 2 and 40 or 60
     for id, info in pairs(LibInstances:GetInfos()) do
         -- Hack to handle hardcore
         tinsert(info.sizes, 5)
@@ -54,7 +54,7 @@ if Expansion.isVanilla() then
         info.seasons = {}
         info.seasons[5] = hasHardcoreLock
         -- Hack to handle Season of Discovery.
-        if id == 48 then
+        if id == 48 or id == 90 then
             tinsert(info.sizes, 10)
             info.resets[10] = 3
             info.seasons[10] = Expansion.isSod
