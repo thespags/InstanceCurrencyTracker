@@ -77,14 +77,10 @@ local function initEvent(self, event, eventAddOn)
         end
 
         local semVer = ICT.semver(ICT.db.version or "0.0.0")
-        if semVer <= ICT.semver("v1.1.29") then
-            ICT:print("Updating currencies and instances...")
-            ICT.db.options.currency[ICT.Frost.id] = true
-            ICT.db.options.currency[ICT.DefilersScourgeStone.id] = true
-            ICT.db.options.displayInstances[2][632] = true
-            ICT.db.options.displayInstances[2][658] = true
-            ICT.db.options.displayInstances[2][668] = true
-            ICT.db.options.displayInstances[2][631] = true
+        if semVer <= ICT.semver("v1.3.30") then
+            ICT:print("Updating instances")
+            ICT.db.options.displayInstances[0][48] = true
+            ICT.db.options.displayInstances[0][90] = true
         end
         if semVer <= ICT.semver("v1.1.3") then
             ICT:print("Old version detected, reseting options to default...")
