@@ -205,6 +205,7 @@ local worldBuffs = {
     [23737] = { type = 25, slot = 24 },
     [23735] = { type = 25, slot = 24 },
     [430947] = { slot = 26 },
+    [438536] = { slot = 27 },
     -- Not boonable "world buffs".
     [430352] = {},
 }
