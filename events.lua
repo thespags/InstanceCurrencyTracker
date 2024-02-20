@@ -1,8 +1,8 @@
 local addOnName, ICT = ...
 
-ICT.LDBIcon = LibStub("LibDBIcon-1.0")
+local LDBIcon = LibStub("LibDBIcon-1.0")
 local LDBroker = LibStub("LibDataBroker-1.1")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local Expansion = ICT.Expansion
 local log = ICT.log
 local Player = ICT.Player
@@ -45,7 +45,7 @@ end
 local function initMinimap()
     local miniButton = LDBroker:NewDataObject(addOnName, {
         type = "launcher",
-        text = addOnName,
+        text = L["AddOnName"],
         -- Gold Coin
         icon = "237281",
         OnClick = function(self, button)
@@ -53,11 +53,11 @@ local function initMinimap()
         end,
         OnTooltipShow = function(tooltip)
             if not tooltip or not tooltip.AddLine then return end
-            tooltip:AddLine(addOnName)
+            tooltip:AddLine(L["AddOnName"])
         end,
     })
     ICT.db.minimap = ICT.db.minimap or {}
-    ICT.LDBIcon:Register(addOnName, miniButton, ICT.db.minimap)
+    LDBIcon:Register(addOnName, miniButton, ICT.db.minimap)
     Options:FlipMinimapIcon()
 end
 
@@ -97,8 +97,8 @@ local function initEvent(self, event, eventAddOn)
         ICT.db.version = version
 
         initMinimap()
-        ICT:print(L["Initialized Instance Currency Tracker: %s..."], version)
-        ICT:print(L["Blizzard often changes emblem amounts if you notice a boss off please report to discord: %s"], "https://discord.gg/yY6Q6EgNRu")
+        ICT:print(L["Welcome"], version)
+        ICT:print(L["Discord"])
         if GroupFinderFrame then
             GroupFinderFrame:HookScript("OnShow", function() if ICT.db.options.frame.anchorLFG then UI:PrintPlayers() ICT.frame:Show() end end)
             GroupFinderFrame:HookScript("OnHide", function() if ICT.db.options.frame.anchorLFG then ICT.frame:Hide() end end)

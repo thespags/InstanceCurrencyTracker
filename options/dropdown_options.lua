@@ -1,7 +1,7 @@
-local addOnName, ICT = ...
+local _, ICT = ...
 
 local DDM = LibStub("LibUIDropDownMenu-4.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local Expansion = ICT.Expansion
 local Instances = ICT.Instances
 local log = ICT.log

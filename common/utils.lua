@@ -1,6 +1,6 @@
 local addOn, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local log = ICT.log
 ICT.ClassIcons = {
     ["WARRIOR"] = 626008,

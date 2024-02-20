@@ -1,6 +1,6 @@
-local addOnName, ICT = ...
+local _, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local LibAddonCompat = LibStub("LibAddonCompat-1.0")
 local LibInstances = LibStub("LibInstances")
 local Expansion = ICT.Expansion

@@ -1,7 +1,7 @@
 ## Interface: 30403
 ## Interface-Classic: 11501
 ## Interface-Wrath: 30403
-## Title: InstanceCurrencyTracker
+## Title: Alt Anon (Instance Currency Tracker)
 ## Version: @project-version@
 ## X-Date: @project-date-iso@
 ## Author: spags

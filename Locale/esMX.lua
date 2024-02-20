@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "esMX")
+local L = LibStub("AceLocale-3.0"):NewLocale("AltAnon", "esMX")
 if not L then return end
 
 --- Professions

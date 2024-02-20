@@ -1,6 +1,7 @@
 local addOnName, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local LDBIcon = LibStub("LibDBIcon-1.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Expansion = ICT.Expansion
 local Instances = ICT.Instances
@@ -47,7 +48,7 @@ for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
 end
 
 Options.messages = {
-    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], defaultFalse = true, },
+    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], },
 }
 
 Options.quests = {
@@ -156,9 +157,9 @@ end
 
 function Options:FlipMinimapIcon()
     if ICT.db.options.frame.showMinimapIcon then
-        ICT.LDBIcon:Show(addOnName)
+        LDBIcon:Show(addOnName)
     else
-        ICT.LDBIcon:Hide(addOnName)
+        LDBIcon:Hide(addOnName)
     end
 end
 

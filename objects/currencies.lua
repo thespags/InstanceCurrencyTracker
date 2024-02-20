@@ -1,5 +1,5 @@
 
-local addOnName, ICT = ...
+local _, ICT = ...
 
 local Currency = ICT.Currency
 

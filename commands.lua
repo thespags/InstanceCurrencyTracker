@@ -1,7 +1,6 @@
-local addOnName, ICT = ...
+local _, ICT = ...
 
-ICT.LDBIcon = LibStub("LibDBIcon-1.0")
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local Players = ICT.Players
 
 SLASH_InstanceCurrencyTracker1 = "/ict";

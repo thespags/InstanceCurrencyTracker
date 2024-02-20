@@ -1,5 +1,5 @@
 
-local addOnName, ICT = ...
+local _, ICT = ...
 
 local Colors = ICT.Colors
 local UI = ICT.UI

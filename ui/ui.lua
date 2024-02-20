@@ -1,6 +1,6 @@
-local addOnName, ICT = ...
+local _, ICT = ...
 
-local L = LibStub("AceLocale-3.0"):GetLocale("InstanceCurrencyTracker")
+local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
 local Expansion = ICT.Expansion
 local Players = ICT.Players
 local Tabs = ICT.Tabs
@@ -73,7 +73,7 @@ function UI:CreateFrame()
     local resetSizeButton = self:resetFrameButton()
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetText(addOnName)
+    title:SetText(L["AddOnName"])
     title:SetAlpha(1)
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)

@@ -1,6 +1,8 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("InstanceCurrencyTracker", "enUS", true, true)
+local L = LibStub("AceLocale-3.0"):NewLocale("AltAnon", "enUS", true, true)
 
-L["Initialized Instance Currency Tracker: %s..."] = "Initialized Instance Currency Tracker: %s..."
+L["AddOnName"] = "Alt Anon (Instance Currency Tracker)"
+L["Welcome"] = "Initialized Alt Anon (Instance Currency Tracker): %s..."
+L["Discord"] = "For feedback, bugs, help, or emblem amounts reach out on discord: https://discord.gg/yY6Q6EgNRu"
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
 L["No Currency"] = "No Currency"
