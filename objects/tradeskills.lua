@@ -6,12 +6,11 @@ local TradeSkills = {}
 ICT.TradeSkills = TradeSkills
 
 local function peel(itemLink, t)
-    if t or {} == {} then
+    if (t or {}) == nil then
         log.error("Missing item %s", itemLink)
         return nil
-    else
-        return t[1]
     end
+    return t[1]
 end
 
 local function getSkillId(i)
