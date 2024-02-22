@@ -1,15 +1,24 @@
 local _, ICT = ...
 
 local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
+local log = ICT.log
 local TradeSkills = {}
 ICT.TradeSkills = TradeSkills
 
+local function peel(itemLink, t)
+    if t or {} == {} then
+        log.error("Missing item %s", itemLink)
+        return nil
+    else
+        return t[1]
+    end
+end
 
 local function getSkillId(i)
     local spellLink = GetTradeSkillRecipeLink(i)
     local itemLink = GetTradeSkillItemLink(i)
     return spellLink and LibTradeSkillRecipes:GetInfoBySpellId(ICT:enchantLinkSplit(spellLink)[1])
-    or itemLink and LibTradeSkillRecipes:GetInfoByItemId(ICT:itemLinkSplit(itemLink)[1])[1]
+    or itemLink and peel(itemLink, LibTradeSkillRecipes:GetInfoByItemId(ICT:itemLinkSplit(itemLink)[1]))
 end
 
 local function getCraftId(i)
