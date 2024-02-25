@@ -352,7 +352,7 @@ function MainTab:printQuests(player, x, y)
 end
 
 function MainTab:printResetTimers(x, y)
-    if not ICT.db.options.multiPlayerView then
+    if not ICT.db.options.frame.multiPlayerView then
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Reset"])
         Tooltips:timerSectionTooltip(ICT.Resets):attach(cell)
@@ -394,7 +394,7 @@ end
 
 function MainTab:postPrint()
     local selected = ICT.frame:getSelectedTab() == self.button:GetID()
-    if selected and ICT.db.options.multiPlayerView then
+    if selected and ICT.db.options.frame.multiPlayerView then
         local count = ICT:sum(ICT.Resets, function(v) return v:isVisibleAndActive() and 1 or 0 end)
         local tooltip = Tooltips:timerSectionTooltip(ICT.Resets)
         local fontSize = math.min(16, UI:getFontSize())

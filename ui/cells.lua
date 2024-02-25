@@ -65,9 +65,7 @@ function Cells:__call(x, y)
 
         -- Create the string if necessary.
         cell.left = cell.frame:CreateFontString()
-        cell.left:SetPoint("LEFT")
         cell.left:SetJustifyH("LEFT")
-
         cell.right = cell.frame:CreateFontString()
         cell.right:SetPoint("RIGHT", 4, 0)
         cell.right:SetJustifyH("RIGHT")
@@ -83,6 +81,8 @@ function Cells:__call(x, y)
             end
         )
     end
+    -- Reset the position if a section title.
+    cell.left:SetPoint("LEFT")
     -- I'm setting the table to the metatable, there's probably a better practice.
     -- Instead, I have to use rawget to avoid a loop.
     local width = self:cellWidth()

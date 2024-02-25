@@ -145,9 +145,12 @@ end
 
 function Cell:printSectionTitleValue(title, value, key, color)
     key = self.parent.frame:GetName() .. (key or title)
-    title = string.format("    %s", title)
+    local button = self:attachSectionButton(key)
+    self.left:SetPoint("LEFT", button, "RIGHT")
+    local old = self.parent.indent
+    self.parent.indent = ""
     self:printValue(title, value, color or Colors.section)
-    self:attachSectionButton(key)
+    self.parent.indent = old
     return self.y + 1
 end
 
@@ -186,21 +189,32 @@ end
 function Cell:deletePlayerButton(player)
     local f = UI:openDeleteFrame(player)
     local tooltip = function(tooltip) tooltip:printTitle(L["Delete Player"]):printPlain(L["Delete Player Body"]) end
-    local button = self:attachButton("ICTDeletePlayer", tooltip, f)
+    local button = self:attachRightButton("ICTDeletePlayer", f)
+    ICT.Tooltip:new(tooltip):attachFrame(button)
     button:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7")
     return button
 end
 
-function Cell:attachButton(key, tooltip, click, shiftClick)
+function Cell:attachLeftButton(key, click, shiftClick)
+    local button = self:attachButton(key, click, shiftClick)
+    button:SetPoint("LEFT", self.frame, "LEFT")
+    return button
+end
+
+function Cell:attachRightButton(key, click, shiftClick)
+    local button = self:attachButton(key, click, shiftClick)
+    button:SetPoint("RIGHT", self.frame, "RIGHT")
+    return button
+end
+
+function Cell:attachButton(key, click, shiftClick)
     local name = string.format("%s(%s, %s)", key, self.x, self.y)
     local button = self.buttons[name]
     if not button then
         button = CreateFrame("Button", name, self.frame, "UIPanelButtonTemplate")
-        self.buttons[name] = button 
+        self.buttons[name] = button
         button:SetParent(self.frame)
-        button:SetPoint("RIGHT", self.frame, "RIGHT")
         button:SetNormalTexture(134396)
-        ICT.Tooltip:new(tooltip):attachFrame(button)
     end
     button:SetSize(UI:getFontSize(), UI:getFontSize())
     button:SetScript("OnClick",
@@ -211,6 +225,8 @@ function Cell:attachButton(key, tooltip, click, shiftClick)
                 click()
             end
         end)
+    local font = self.parent:fontSize()
+    button:SetSize(font, font)
     button:Show()
     return button
 end

@@ -219,7 +219,7 @@ function UI:PrintPlayers()
             local y = 0
             tab.cells:hide()
             _ = tab.prePrint and tab:prePrint()
-            if ICT.db.options.multiPlayerView then
+            if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
                     x = x + 1
                     y = math.max(tab:printPlayer(player, x), y)

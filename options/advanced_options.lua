@@ -8,7 +8,7 @@ local AdvOptions = {
 }
 ICT.AdvOptions = AdvOptions
 
-local width = 355
+local width = 360
 local height = 300
 
 function AdvOptions:createFrame()
@@ -26,6 +26,7 @@ function AdvOptions:createFrame()
         ICT.MainOptions:prePrint()
     end
     Tabs:add(self.frame, ICT.MainOptions, L["Main"])
+    Tabs:add(self.frame, ICT.DisplayOptions, L["Display"])
     PanelTemplates_SetTab(self.frame, self.frame:getSelectedTab())
     self.frame.CloseButton:HookScript("OnClick", function()
         ICT.MainOptions.resetConfirm:Hide()

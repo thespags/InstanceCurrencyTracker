@@ -65,7 +65,6 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
-        ICT.Options:setDefaultOptions()
         -- Preserve this option if necessary, remove in future versions.
         if ICT.db.options.frame.orderLockLast then
             ICT.db.options.sort.orderLockLast = ICT.db.options.frame.orderLockLast
@@ -75,6 +74,11 @@ local function initEvent(self, event, eventAddOn)
             ICT.db.options.fontSize = ICT.db.fontSize
             ICT.db.fontSize = nil
         end
+        -- If necessary, create the current player. Handled by the function.
+        -- Do this here to ensure the player is created before expansion information is initiated and options are created.
+        Players:create()
+        ICT.Expansion.init()
+        ICT.Options:setDefaultOptions()
 
         local semVer = ICT.semver(ICT.db.version or "0.0.0")
         if semVer <= ICT.semver("v1.3.30") then
@@ -110,8 +114,6 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", function()
     Players:loadAll()
-    -- If necessary, create the current player. Handled by the function.
-    Players:create()
     -- Set this used to initialize throttling.
     ICT.selectedPlayer = Players:getCurrentName()
     Players:get():onLoad()

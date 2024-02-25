@@ -62,12 +62,21 @@ for k, v in pairs(ICT.Quests) do
     end
 end
 
+function Options.flipPlayerDropdown()
+    if ICT.db.options.frame.multiPlayerView then
+        ICT.frame.playerDropdown:Hide()
+    else
+        ICT.frame.playerDropdown:Show()
+    end
+end
+
 function Options.minimap()
     ICT.db.minimap.hide = not ICT.db.options.frame.showMinimapIcon
     Options:FlipMinimapIcon()
 end
 
 Options.frame = {
+    { name = L["Multi Character View"], key = "multiPlayerView", tooltip = L["MultiCharacterViewTooltip"], func = Options.flipPlayerDropdown },
     { name = L["Anchor to LFG"], key = "anchorLFG", tooltip = L["AnchorToLFGTooltip"], },
     { name = L["Show Minimap Icon"], key = "showMinimapIcon", tooltip = L["ShowMinimapIconTooltip"], func = Options.minimap },
     { name = L["Verbose Currency Tooltip"], key = "verboseCurrencyTooltip", tooltip = L["VerboseCurrencyTooltipTooltip"], },

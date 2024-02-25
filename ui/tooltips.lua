@@ -247,7 +247,7 @@ function Tooltips:questSectionTooltip()
     return Tooltip:new(f)
 end
 
-function Tooltips:timerSectionTooltip(resets)
+function Tooltips:timerSectionTooltip()
     local f = function(tooltip)
         tooltip:printTitle(L["Reset Timers"])
         :printPlain("Countdown to the next reset respectively for 1, 3, 5 and 7 days.")
