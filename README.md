@@ -1,11 +1,7 @@
-# Instance and Currency Tracker
-Tracks instance and currency information across all characters and realms on your account.
-As well as other character information, such as gear, professions, cooldowns.
-Useful way to see missing enchants, gems, glyphs or ready cooldowns.
-
-By default shows a single character view with tooltips to compare, this can be changed
-under 'Options' to show multiple characters. See additional configuritions under [Options] for more details.
-Be sure to hover over items to see tooltips for more details.
+# Alt Anon (Instance Currency Tracker)
+Originally designed to track instance lockouts and currency information across all your characters and realms on multiple accounts, specifically for WOTLK.
+The addon has now expanded to include much more information such as gear, professions, cooldowns, hence Alt Anon.
+Also it provides a useful way to see missing enchants, gems, glyphs or ready cooldowns.
 
 The addon uses IDs so should work in any language however labels are not localized.
 
@@ -13,17 +9,15 @@ Feel free to comment for additional features or suggestions.
 Or visit my dev discord: https://discord.gg/yY6Q6EgNRu
 
 ## Viewing Frame
-By default the addon window is anchored to the Looking For Group Frame (`i` by default).  
+You can view either via the mini icon or via the Looking For Group Frame (`i` by default) if available in the version of the game.
 This can be disabled in the options menu, and replaced with a minimap icon.  
 Otherwise `/ict` will bring up the window.  
 
-## Multiple Accounts (Beta)
+## Multiple Accounts
 You can link your account to share character data. Accounts must be BNet friends with each other.
 Click the cogwheel in the lower, then on both accounts select the other to link. This will enable
 cross character communication while both accounts are on the same realm and faction to share data. Blizzard
 doesn't allow addon's to communicate across realms or faction.
-
-This is a beta feature and needs more testing, so please help me by reaching out on my discord.
 
 ## Information Collected
 + Character
