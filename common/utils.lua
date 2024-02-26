@@ -104,16 +104,6 @@ function ICT:print(text, ...)
     print(string.format("|c%s[ICT] %s|r", ICT.Colors.text, text))
 end
 
---- Prints the string if the option is set to print.
----@param text string
----@param key string
----@param ... string
-function ICT:oprint(text, key, ...)
-    if ICT.db.options.messages[key] then
-        self:print(text, ...)
-    end
-end
-
 local throttle = true
 local throttles = {}
 -- Aggregates calls, f, within a certain time span.

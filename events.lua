@@ -260,9 +260,7 @@ local function messageResults(player, instance)
                 local available = instance:availableCurrency(currency)
                 local collected = max - available
                 local total = player:totalCurrency(currency)
-                -- I don't know or I can't put an icon into chat.
-                local text = string.format("[%s] %s, collected %s of %s [%s]", addOnName, currency:getName(), collected, max, total)
-                Options:PrintMessage(text)
+                ICT:print("%s, collected %s of %s [%s]", currency:getName(), collected, max, total)
             end
         end
     elseif instance then

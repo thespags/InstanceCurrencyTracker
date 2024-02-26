@@ -47,10 +47,6 @@ for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
     tinsert(Options.professions, { name = L[profession.name], key = "showProfession" .. i, defaultFalse = profession.isSecondary })
 end
 
-Options.messages = {
-    { name = L["Send Group Messages"], key = "group", tooltip = L["SendGroupMessagesTooltip"], },
-}
-
 Options.quests = {
     { name = L["Hide Unavailable Quests"], key = "hideUnavailable", },
     { name = L["Show Quests"], key = "show", },
@@ -154,7 +150,6 @@ function Options:setDefaultOptions(override)
     setDefaults("player")
     setDefaults("gear")
     setDefaults("professions")
-    setDefaults("messages")
     setDefaults("frame")
     setDefaults("quests")
     setDefaults("sort")
@@ -169,14 +164,5 @@ function Options:FlipMinimapIcon()
         LDBIcon:Show(addOnName)
     else
         LDBIcon:Hide(addOnName)
-    end
-end
-
-function Options:PrintMessage(text)
-    if IsInGroup() and ICT.db.options.messages.group then
-        local type = IsInRaid() and "RAID" or "PARTY"
-        SendChatMessage(text, type)
-    else
-        print(text)
     end
 end
