@@ -76,12 +76,13 @@ local spells = {
 }
 local items = {
     -- Start Vanilla
-    -- [19567] = { duration = 259200 }, -- Salt Shaker (no cooldown in WOTLK)
+    [15846] = { skillLine = 0, expansion = 0, maxExpansion = 1}, -- Salt Shaker (CD removed in WOTLK)
     -- End Vanilla/Start WOTLK
+    [211527] =  { skillLine = 0, expansion = 0 },
     [40768] = { toy = true }, -- MollE
     [48933] = { toy = true }, -- Wormhole
     [49040] = {}, -- Jeeves
-    [39878] = { skillLine = 0, expansion = 2 }, -- Mysterious Egg
+    [39878] = { skillLine = 0, expansion = 2 }, -- Mysterious Egg, doesn't work because it's a tooltip.
     -- [43499] = { skillLine = 0, expansion = 2 }, -- Iron Boot Flask
     -- End WOTLK
 }
@@ -124,7 +125,7 @@ end
 
 for id, v in pairs(items) do
     local info = LibTradeSkillRecipes:GetInfoByItemId(id)
-    if inExpansion(info) then
+    if inExpansion(info) or (Expansion.active(v.expansion) and Expansion.max(v.maxExpansion)) then
         v.id = id
         v.skillLine = v.skillLine or info[1].categoryId
         if not v.skillLine then
@@ -138,6 +139,7 @@ for id, v in pairs(items) do
         v.name = id
         v.icon = "134400"
         v.link = id
+        print(GetItemCooldown(id))
         local item = Item:CreateFromItemID(id)
         item:ContinueOnItemLoad(function()
             v.name = item:GetItemName()

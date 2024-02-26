@@ -27,7 +27,11 @@ end
 
 -- Whether or not the value was released, e.g. false if value is Vanilla and current is WOTLK.
 function Expansion.active(value)
-    return value <= Expansion.value
+    return value and value <= Expansion.value
+end
+
+function Expansion.max(value)
+    return not value or Expansion.value <= value
 end
 
 -- Whether the value is for the current expansion.
