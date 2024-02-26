@@ -353,7 +353,7 @@ end
 
 function MainTab:printResetTimers(x, y)
     if not ICT.db.options.frame.multiPlayerView then
-        local cell = self.cells(x, y)
+        local cell = self.cells(x, y + 1)
         y = cell:printSectionTitle(L["Reset"])
         Tooltips:timerSectionTooltip(ICT.Resets):attach(cell)
         self.cells:startSection(1)
@@ -362,7 +362,7 @@ function MainTab:printResetTimers(x, y)
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
-        y = self.cells:endSection(x, y, y + 1)
+        y = self.cells:endSection(x, y, y)
     end
     return y
 end

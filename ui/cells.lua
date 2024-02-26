@@ -6,7 +6,7 @@ setmetatable(Cells, Cells)
 ICT.Cells = Cells
 
 function Cells:new(frame, font, width, height)
-    local t = { indent = "", cells = {}, frame = frame, font = font, width = width, height = height}
+    local t = { indent = 0, cells = {}, frame = frame, font = font, width = width, height = height}
     setmetatable(t, self)
     self.__index = self
     return t
@@ -27,11 +27,11 @@ function Cells:hideRows(x, startY, endY)
 end
 
 function Cells:startSection(depth)
-    self.indent = string.rep("  ", depth)
+    self.indent = depth
 end
 
 function Cells:endSection(x, startY, endY)
-    self.indent = string.sub(self.indent, 1, -3)
+    self.indent = self.indent - 1
     return self:hideRows(x, startY, endY or startY)
 end
 
@@ -82,7 +82,7 @@ function Cells:__call(x, y)
         )
     end
     -- Reset the position if a section title.
-    cell.left:SetPoint("LEFT")
+    cell.left:SetPoint("LEFT", self.indent * 6, 0)
     -- I'm setting the table to the metatable, there's probably a better practice.
     -- Instead, I have to use rawget to avoid a loop.
     local width = self:cellWidth()

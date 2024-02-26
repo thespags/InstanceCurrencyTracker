@@ -30,16 +30,12 @@ end
 
 -- Gradient goes from sad to happy.
 function Cell:printTicker(title, expires, duration, startColor, endColor)
-    local indent = self.parent.indent
     local update = function(ticker)
         ICT:cancelTicker(ticker)
         startColor = startColor or Colors.red
         endColor = endColor or Colors.green
         local time, color = ICT:countdown(expires, duration, startColor, endColor)
-        local old = self.parent.indent
-        self.parent.indent = indent
         local y = self:printValue(title, time, nil, color)
-        self.parent.indent = old
         return y
     end
     self.ticker = C_Timer.NewTicker(1, update)
@@ -57,7 +53,7 @@ function Cell:printValue(leftText, rightText, leftColor, rightColor)
     self.leftColor = leftColor or Colors.subtitle
     -- Handle if we were rewriting the cell while hovering over it.
     local remap = self.hover and Colors:flipHex(self.leftColor) or self.leftColor
-    leftText = string.format("%s|c%s%s|r", self.parent.indent, remap, self.leftText)
+    leftText = string.format("|c%s%s|r", remap, self.leftText)
     self.left:SetText(leftText)
     self.left:Show()
     self.rightText = rightText or ""
@@ -89,25 +85,6 @@ function Cell:attachHyperLink(f)
     self.frame:SetScript("OnHyperlinkLeave", function()
         GameTooltip:Hide()
         _ = f and self.frame:SetNormalTexture("groupfinder-button-cover")
-    end)
-end
-
--- Deprecating. It can make some colors unpredictable.
-function Cell:attachClickHover()
-    local indent = self.parent.indent
-    self.frame:HookScript("OnEnter", function()
-        local old = self.parent.indent
-        self.parent.indent = indent
-        self.hover = true
-        self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
-        self.parent.indent = old
-    end)
-    self.frame:HookScript("OnLeave", function()
-        local old = self.parent.indent
-        self.parent.indent = indent
-        self.hover = false
-        self:printValue(self.leftText, self.rightText, self.leftColor, self.rightColor)
-        self.parent.indent = old
     end)
 end
 
@@ -147,10 +124,7 @@ function Cell:printSectionTitleValue(title, value, key, color)
     key = self.parent.frame:GetName() .. (key or title)
     local button = self:attachSectionButton(key)
     self.left:SetPoint("LEFT", button, "RIGHT")
-    local old = self.parent.indent
-    self.parent.indent = ""
     self:printValue(title, value, color or Colors.section)
-    self.parent.indent = old
     return self.y + 1
 end
 
@@ -237,8 +211,7 @@ function Cell:attachSectionButton(key, tooltip)
         button = CreateFrame("Button", key, self.frame)
         self.buttons[key] = button
         button:SetParent(self.frame)
-        local x = string.len(self.parent.indent)
-        button:SetPoint("LEFT", self.frame, "LEFT", x * 3, 0)
+        button:SetPoint("LEFT", self.parent.indent * 6, 0)
         button:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight")
         _ = tooltip and ICT.Tooltip:new(tooltip):attachFrame(button)
     end
