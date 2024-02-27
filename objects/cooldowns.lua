@@ -77,8 +77,8 @@ local spells = {
 local items = {
     -- Start Vanilla
     [15846] = { skillLine = 0, expansion = 0, maxExpansion = 1}, -- Salt Shaker (CD removed in WOTLK)
+    [211527] =  { skillLine = 0, expansion = 0, maxExpansion = 0}, -- Sleeping Bag only SOD
     -- End Vanilla/Start WOTLK
-    [211527] =  { skillLine = 0, expansion = 0 },
     [40768] = { toy = true }, -- MollE
     [48933] = { toy = true }, -- Wormhole
     [49040] = {}, -- Jeeves

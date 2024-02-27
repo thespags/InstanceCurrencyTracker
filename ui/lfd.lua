@@ -70,9 +70,7 @@ function LFD:selectSpecific(parent, instance, v, value)
         end
         SetLFGDungeonEnabled(v, LFGEnabledList[v])
         LFDQueueFrameSpecificList_Update()
-        parent.parent.indent = "  "
         parent:printLFDInstance(instance)
-        parent.parent.indent = ""
     end
 end
 

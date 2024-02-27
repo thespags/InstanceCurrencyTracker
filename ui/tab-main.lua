@@ -268,12 +268,15 @@ end
 function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
 
-    if canQueue(player) then
-        local cell = self.cells(x, y)
-        y = cell:printLFDType(LFDQueueFrame.type)
-        cell:attachClick(LFD:queue(cell), LFD:randomDropdown(cell))
-    else
-        y = self.cells(x, y):hide()
+    y = self.cells(x, y):hide()
+    if Expansion.isWOTLK() then
+        if canQueue(player) then
+            local cell = self.cells(x, y)
+            y = cell:printLFDType(LFDQueueFrame.type)
+            cell:attachClick(LFD:queue(cell), LFD:randomDropdown(cell))
+        else
+            y = self.cells(x, y):hide()
+        end
     end
 
     for expansion, name in ICT:rspairs(ICT.Expansions) do
@@ -362,7 +365,7 @@ function MainTab:printResetTimers(x, y)
                 y = self.cells(x, y):printTicker(v:getName(), v:expires(), v:duration())
             end
         end
-        y = self.cells:endSection(x, y, y)
+        y = self.cells:endSection(x, y)
     end
     return y
 end

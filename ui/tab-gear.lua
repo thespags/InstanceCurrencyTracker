@@ -98,7 +98,7 @@ function GearTab:printSpec(player, x, y, spec)
         return self.cells(x, y):hide()
     end
 
-    self.cells.indent = "  "
+    self.cells:startSection(1)
 
     local tooltip = Tooltips:specsSectionTooltip()
     cell = self.cells(x, y)
@@ -160,9 +160,7 @@ function GearTab:printSpec(player, x, y, spec)
         end
         y = self.cells:hideRows(x, y, padding)
     end
-    y = self.cells(x, y):hide()
-    self.cells.indent = ""
-    return y
+    return self.cells:endSection(x, y)
 end
 
 function GearTab:printPlayer(player, x)
