@@ -136,10 +136,9 @@ for id, v in pairs(items) do
             log.error(L["Cooldown missing expansion: %s"], id)
         end
         -- Default values until loaded.
-        v.name = id
+        v.name = tostring(id)
         v.icon = "134400"
         v.link = id
-        print(GetItemCooldown(id))
         local item = Item:CreateFromItemID(id)
         item:ContinueOnItemLoad(function()
             v.name = item:GetItemName()
