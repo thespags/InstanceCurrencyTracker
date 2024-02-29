@@ -48,6 +48,10 @@ doesn't allow addon's to communicate across realms or faction.
     + Quest completed per character
     + Prerequisites met per character
     + Quests are viewed by currency unless no currency associated.
++ Reputation
++ Professions
++ Runes
++ Weapon Skills
 
 ## Options
 + Show Realm Name  

@@ -22,12 +22,10 @@ function ReputationTab:printReputation(x, y, faction, depth)
         cell.bar:SetColor(color.r, color.g, color.b)
         cell.bar.fontString = cell.bar.fontString or cell.bar:CreateFontString()
         cell.bar.fontString:SetPoint("CENTER")
-        cell.bar.fontString:SetFont(UI.font,  UI:getFontSize() * .9)
+        cell.bar.fontString:SetFont(UI.font, UI:getFontSize() * .9)
         cell.bar.fontString:SetJustifyH("CENTER")
         cell.bar.fontString:SetText(string.format("%s / %s", value, cap))
         cell.bar:Show()
-    else
-        _ = cell.bar and cell.bar:Hide()
     end
     if faction.isHeader then
         if self.cells:isSectionExpanded(name) then

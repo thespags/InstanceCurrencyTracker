@@ -31,7 +31,7 @@ function Cells:startSection(depth)
 end
 
 function Cells:endSection(x, startY, endY)
-    self.indent = self.indent - 1
+    self.indent = math.max(self.indent - 1, 0)
     return self:hideRows(x, startY, endY or startY)
 end
 
@@ -83,6 +83,9 @@ function Cells:__call(x, y)
     end
     -- Reset the position if a section title.
     cell.left:SetPoint("LEFT", self.indent * 6, 0)
+    cell.frame:SetAlpha(1)
+    _ = cell.bar and cell.bar:Hide()
+
     -- I'm setting the table to the metatable, there's probably a better practice.
     -- Instead, I have to use rawget to avoid a loop.
     local width = self:cellWidth()

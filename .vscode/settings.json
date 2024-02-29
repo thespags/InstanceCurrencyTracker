@@ -205,7 +205,10 @@
         "GetNumFactions",
         "GetFactionInfo",
         "GetNumCrafts",
-        "GetCraftInfo"
+        "GetCraftInfo",
+        "C_Engraving",
+        "tInvert",
+        "WEAPON"
     ],
     "Lua.diagnostics.disable": [
         "unused-function"

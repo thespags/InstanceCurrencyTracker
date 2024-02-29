@@ -110,14 +110,35 @@ local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:SetScript("OnEvent", initEvent)
 
+local function loadClassRunes(class)
+    -- Loads this character's class runes into our database. 
+    local categories = C_Engraving.GetRuneCategories(false, false)
+    ICT.db.runes = ICT.db.runes or {}
+    for _, category in ipairs(categories) do
+        -- C_Engraving.ClearCategoryFilter(category)
+        local allRunes = C_Engraving.GetRunesForCategory(category, false)
+        for _, rune in ipairs(allRunes) do
+            local classRunes = ICT.db.runes[class] or {}
+            ICT.db.runes[class] = classRunes
+            classRunes[rune.skillLineAbilityID] = {
+                name = rune.name,
+                category = category,
+                icon = rune.iconTexture
+            }
+        end
+    end
+end
+
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", function()
     Players:loadAll()
     -- Set this used to initialize throttling.
     ICT.selectedPlayer = Players:getCurrentName()
-    Players:get():onLoad()
+    local player = Players:get():onLoad()
     ICT.UI:CreateFrame()
+
+    _ = Expansion.isVanilla() and loadClassRunes(player.class)
 end)
 
 local updateFrame = CreateFrame("Frame")
@@ -138,17 +159,24 @@ local moneyFrame = CreateFrame("Frame")
 moneyFrame:RegisterEvent("PLAYER_MONEY")
 moneyFrame:SetScript("OnEvent", ICT:throttleFunction("Money", 2, Player.updateMoney, ICT.UpdateDisplay))
 
-local skillFrame = CreateFrame("Frame")
+local professionFrame = CreateFrame("Frame")
 -- Individual skill ups.
-skillFrame:RegisterEvent("CHAT_MSG_SKILL")
+professionFrame:RegisterEvent("CHAT_MSG_SKILL")
 -- Learning a new skill or raising a skill from Journeyman to Master. 
-skillFrame:RegisterEvent("SKILL_LINES_CHANGED")
-skillFrame:SetScript("OnEvent", ICT:throttleFunction("Professions", 3, Player.updateProfessions, ICT.UpdateDisplay))
+professionFrame:RegisterEvent("SKILL_LINES_CHANGED")
+professionFrame:SetScript("OnEvent", ICT:throttleFunction("Professions", 3, Player.updateProfessions, ICT.UpdateDisplay))
 
-local skillShowFrame = CreateFrame("Frame")
-skillShowFrame:RegisterEvent("TRADE_SKILL_SHOW")
-skillShowFrame:RegisterEvent("CRAFT_SHOW")
-skillShowFrame:SetScript("OnEvent", ICT:throttleFunction("Skills", 0.5, Player.updateSkills, ICT.UpdateDisplay))
+local weaponSkillFrame = CreateFrame("Frame")
+-- Individual skill ups.
+weaponSkillFrame:RegisterEvent("CHAT_MSG_SKILL")
+-- Learning a new skill.
+weaponSkillFrame:RegisterEvent("SKILL_LINES_CHANGED")
+weaponSkillFrame:SetScript("OnEvent", ICT:throttleFunction("Professions", 3, Player.updateWeaponSkills, ICT.UpdateDisplay))
+
+local tradeSkillFrame = CreateFrame("Frame")
+tradeSkillFrame:RegisterEvent("TRADE_SKILL_SHOW")
+tradeSkillFrame:RegisterEvent("CRAFT_SHOW")
+tradeSkillFrame:SetScript("OnEvent", ICT:throttleFunction("Skills", 0.5, Player.updateTradeSkills, ICT.UpdateDisplay))
 
 -- Delay update for new level, or using points until player is finished.
 local talentFrame = CreateFrame("Frame")
@@ -229,6 +257,10 @@ reputationFrame:RegisterEvent("UPDATE_FACTION")
 reputationFrame:SetScript("OnEvent", ICT:throttleFunction("Reputation", 5, Player.updateReputation, ICT.UpdateDisplay))
 
 if Expansion.isVanilla() then
+    local runesFrame = CreateFrame("Frame")
+    runesFrame:RegisterEvent("RUNE_UPDATED")
+    runesFrame:SetScript("OnEvent", ICT:throttleFunction("Runes", 1, Player.updateRunes, ICT.UpdateDisplay))
+
     local buffFrame = CreateFrame("Frame")
     buffFrame:RegisterEvent("UNIT_AURA")
     buffFrame:SetScript("OnEvent", function(self, event, unit, info)

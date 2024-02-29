@@ -28,6 +28,7 @@ function Player:onLoad()
     self.guid = UnitGUID("Player")
     self.season = C_Seasons.GetActiveSeason()
     self:updateProfessions()
+    self:updateWeaponSkills()
     if loaded then
         self:updateTalents()
         self:updateBags()
@@ -49,6 +50,7 @@ function Player:onLoad()
     self:updateWorldBuffs()
     self:updateConsumes()
     self:updateReputation()
+    self:updateRunes()
     -- This may require previous info, e.g. skills and level, so calculate instance/currency 
     self:update()
 
@@ -71,6 +73,7 @@ function Player:onLoad()
     end
     self.battleTag = battleTag
     loaded = true
+    return self
 end
 
 function Player:fromSeason(info, size)
@@ -228,7 +231,8 @@ function Player:updateWorldBuffs()
         if buffId == boonId then
             for k, v in ICT:fpairsByValue(worldBuffs, function(v) return v.slot end) do
                 local duration = buff[v.slot]
-                if (not v.type or buff[v.type] == k) and duration > 0 then
+                -- Apparently if you boon with a new world buff added the duration is nil.
+                if (not v.type or buff[v.type] == k) and (duration or 0) > 0 then
                     buffs[k] = { duration = duration, booned = true }
                 end
             end
@@ -313,11 +317,25 @@ function Player:updateProfessions()
     self:addProfession(cooking, true)
     self:addProfession(firstAid, true)
     self:addProfession(fishing, true)
-    self:updateSkills()
+    self:updateTradeSkills()
 end
 
-function Player:updateSkills()
+function Player:updateTradeSkills()
     ICT.TradeSkills:update(self)
+end
+
+function Player:updateWeaponSkills()
+    self.weaponSkills = {}
+    local weapons
+	for skillIndex = 1, GetNumSkillLines() do
+		local skillName, isHeader, _, rank, _, _, max = GetSkillLineInfo(skillIndex)
+
+        if isHeader then
+            weapons = string.find(skillName, WEAPON)
+        elseif weapons then
+            tinsert(self.weaponSkills, {name = skillName, rank = rank, max = max, })
+        end
+    end
 end
 
 function Player:getSpec(id)
@@ -556,6 +574,20 @@ function Player:updateReputation()
         end
     end
     self.reputationHeaders = reputationHeaders
+end
+
+function Player:updateRunes()
+    if Expansion.isVanilla() then
+        self.knownRunes = self.knownRunes or {}
+        local categories = C_Engraving.GetRuneCategories(false, false)
+        for _, category in ipairs(categories) do
+            C_Engraving.ClearCategoryFilter(category)
+            local allRunes = C_Engraving.GetRunesForCategory(category, true)
+            for _, rune in ipairs(allRunes) do
+                self.knownRunes[rune.skillLineAbilityID] = true
+            end
+        end
+    end
 end
 
 function Player:recreateCooldowns()

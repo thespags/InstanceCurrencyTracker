@@ -53,6 +53,7 @@ ICT.ItemTypeToSlot = {
     [INVTYPE_THROWN] = 16,
     [INVTYPE_TABARD] = 19,
 }
+ICT.SlotToItemType = tInvert(ICT.ItemTypeToSlot)
 
 -- From https://wowdev.wiki/DB/ItemBagFamily
 -- Values align with 2^(n - 1), except for the 0 case.

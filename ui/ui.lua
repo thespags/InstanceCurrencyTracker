@@ -82,6 +82,7 @@ function UI:CreateFrame()
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
     Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
+    Tabs:addPanel(frame, ICT.SkillsTab, L["Skills"])
     Tabs:addPanel(frame, ICT.ReputationTab, L["Reputation"])
     if Expansion.isWOTLK() then
         Tabs:addPanel(frame, ICT.GearTab, L["Gear"])

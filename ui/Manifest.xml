@@ -11,6 +11,7 @@
   <Script file="tab-main.lua"/>
   <Script file="tab-gear.lua"/>
   <Script file="tab-professions.lua"/>
+  <Script file="tab-skills.lua"/>
   <Script file="tab-reputation.lua"/>
   <!-- <Script file="tab-inventory.lua"/> -->
 </Ui>

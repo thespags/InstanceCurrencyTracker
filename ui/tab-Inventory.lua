@@ -33,7 +33,7 @@ end
 
 local function sort(a, b)
     if a.type and b.type and a.type ~= b.type then
-        return a.type < b.type 
+        return a.type < b.type
     else
         return a.name < b.name
     end

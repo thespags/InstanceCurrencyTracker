@@ -240,6 +240,10 @@ L["OpenTradeSkillsOther"] = "Log in to this character to load recipes."
 L["Search Trade Skills"] = "Search Trade Skills"
 L["SearchTradeSkillsTooltip"] =  "Performs a fuzzy search for matching trade skills."
 
+-- Skills Tab
+L["Weapon Skills"] = "Weapon Skills"
+L["Runes"] = "Runes"
+
 -- Slash Commands
 L["Invalid command"] = "Invalid command"
 L["Unknown character: %s"] = "Unknown character: %s"
