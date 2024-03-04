@@ -65,15 +65,6 @@ local function initEvent(self, event, eventAddOn)
     -- After the LFG addon is loaded, attach our frame.
     if eventAddOn == "InstanceCurrencyTracker" then
         ICT.db = getOrCreateDb()
-        -- Preserve this option if necessary, remove in future versions.
-        if ICT.db.options.frame.orderLockLast then
-            ICT.db.options.sort.orderLockLast = ICT.db.options.frame.orderLockLast
-            ICT.db.options.frame.orderLockLast = nil
-        end
-        if ICT.db.fontSize then
-            ICT.db.options.fontSize = ICT.db.fontSize
-            ICT.db.fontSize = nil
-        end
         -- If necessary, create the current player. Handled by the function.
         -- Do this here to ensure the player is created before expansion information is initiated and options are created.
         Players:create()
