@@ -409,7 +409,7 @@ function MainTab:postPrint()
             tooltip:attachFrame(frame)
         end
     end
-end
+    end
 
 function MainTab:printMultiViewResetTicker(x, fontSize, title, expires, duration)
     local frame = self.tickers[title] and self.tickers[title].frame
@@ -448,7 +448,7 @@ end
 function MainTab:hideTickers()
     for _, v in pairs(self.tickers or {}) do
         v.ticker:Cancel()
-        if v.frame then v.frame:Hide() end
+        _ = v.frame and v.frame:Hide()
     end
 end
 

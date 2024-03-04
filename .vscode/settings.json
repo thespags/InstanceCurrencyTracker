@@ -210,7 +210,4 @@
         "tInvert",
         "WEAPON"
     ],
-    "Lua.diagnostics.disable": [
-        "unused-function"
-    ]
 }

@@ -44,13 +44,14 @@ end
 function Tabs:add(parent, tab, name)
     tab.parent = parent
     _ = tab.init and tab:init(parent)
-	local frameName = parent:GetName()
 	parent.numTabs = parent.numTabs and parent.numTabs + 1 or 1
     parent.tabs = parent.tabs or {}
-	local tabButton = CreateFrame("Button", frameName.."Tab"..parent.numTabs, parent, "CharacterFrameTabButtonTemplate")
+    parent.tabs[parent.numTabs] = tab
+
+	local frameName = parent:GetName()
+    local tabButton = CreateFrame("Button", frameName.."Tab"..parent.numTabs, parent, "CharacterFrameTabButtonTemplate")
     tabButton:SetAlpha(1)
     tabButton:SetIgnoreParentAlpha(true)
-    parent.tabs[parent.numTabs] = tab
 	tabButton:SetID(parent.numTabs)
 	tabButton:SetText(name)
 	tabButton:SetScript("OnClick", self:select(tab))

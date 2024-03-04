@@ -80,20 +80,20 @@ function UI:CreateFrame()
 
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
-    Tabs:addPanel(frame, ICT.MainTab, L["Main"])
+        Tabs:addPanel(frame, ICT.MainTab, L["Main"])
     Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     Tabs:addPanel(frame, ICT.SkillsTab, L["Skills"])
     Tabs:addPanel(frame, ICT.ReputationTab, L["Reputation"])
     if Expansion.isWOTLK() then
         Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
     end
-    -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
+-- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, frame:getSelectedTab())
 
     ICT.DropdownOptions:createPlayer()
     ICT.AdvOptions:create()
 
-    local minimizeButton = CreateFrame("Button", nil, frame, "MaximizeMinimizeButtonFrameTemplate")
+    local minimizeButton = CreateFrame("Button", "ICTMinButton", frame, "MaximizeMinimizeButtonFrameTemplate")
     minimizeButton:SetPoint("RIGHT", frame.CloseButton, "LEFT", 10, 0)
     minimizeButton:SetAlpha(1)
     minimizeButton:SetIgnoreParentAlpha(true)
@@ -102,8 +102,8 @@ function UI:CreateFrame()
         resetSizeButton:Show()
         for i=1,frame.numTabs do
             frame.tabs[i].button:Show()
-            frame.tabs[i]:show()
         end
+        frame.tabs[frame:getSelectedTab()]:show()
         PanelTemplates_SetTab(frame, frame:getSelectedTab())
         self:drawFrame(ICT.db.X, ICT.db.Y, ICT.db.width, ICT.db.height)
         ICT.frame.minimized = false

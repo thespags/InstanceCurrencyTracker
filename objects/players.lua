@@ -38,7 +38,7 @@ end
 function Players:create()
     local fullName = self:getCurrentName()
     if ICT.db.players[fullName] then
-        return
+        return ICT.db.players[fullName]
     end
     ICT:print(L["Creating player: %s"], fullName)
     local player = Player:new()
@@ -64,8 +64,6 @@ function Players:create()
     -- Set transient information after copying main tables.
     player:dailyReset()
     player:weeklyReset()
-    player:onLoad()
-
     return player
 end
 
