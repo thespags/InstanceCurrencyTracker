@@ -78,16 +78,19 @@ function UI:CreateFrame()
     title:SetIgnoreParentAlpha(true)
     title:SetPoint("TOP", -10, -6)
 
+    -- For whatever reason, new users with Questie can't seem to load the first panel.
+    -- If we call this this creates a dummy panel that takes the failure.
+    UI:createDoubleScrollFrame(frame, "ICTDummy")
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
-        Tabs:addPanel(frame, ICT.MainTab, L["Main"])
+    Tabs:addPanel(frame, ICT.MainTab, L["Main"])
     Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     Tabs:addPanel(frame, ICT.SkillsTab, L["Skills"])
     Tabs:addPanel(frame, ICT.ReputationTab, L["Reputation"])
     if Expansion.isWOTLK() then
         Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
     end
--- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
+    -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, frame:getSelectedTab())
 
     ICT.DropdownOptions:createPlayer()

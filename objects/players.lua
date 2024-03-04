@@ -44,6 +44,7 @@ function Players:create()
     local player = Player:new()
     player.fullName = fullName
     player.name = UnitName("Player")
+    player.season = C_Seasons.GetActiveSeason()
     player.realm = GetRealmName()
     player.class = select(2, UnitClass("Player"))
     player.faction = select(1, UnitFactionGroup("Player"))
