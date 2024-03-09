@@ -80,7 +80,7 @@ function UI:CreateFrame()
 
     -- For whatever reason, new users with Questie can't seem to load the first panel.
     -- If we call this this creates a dummy panel that takes the failure.
-    UI:createDoubleScrollFrame(frame, "ICTDummy")
+    UI:createDoubleScrollFrame(frame, "ICTDummy"):Hide()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
@@ -201,6 +201,9 @@ function UI:updateFrameSizes(frame, x, y)
     local newWidth = self:calculateWidth(x) + 5
     frame.hScrollBox:SetHeight(newHeight)
     frame.content:SetSize(newWidth, newHeight)
+    frame.headerScrollBox:SetHeight( self:getCellHeight())
+    frame.header:SetSize(newWidth, self:getCellHeight())
+    frame.headerScrollBox:FullUpdate()
     frame.hScrollBox:FullUpdate()
     frame.vScrollBox:FullUpdate()
     return newWidth, newHeight
@@ -222,10 +225,12 @@ function UI:PrintPlayers()
             local x = 0
             local y = 0
             tab.cells:hide()
+            -- tab.header:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
                     x = x + 1
+                    tab.header(x, 0):printPlayerTitle(player)
                     y = math.max(tab:printPlayer(player, x), y)
                 end
             else
