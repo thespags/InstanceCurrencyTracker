@@ -230,7 +230,7 @@ function UI:PrintPlayers()
             if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
                     x = x + 1
-                    tab.header(x, 0):printPlayerTitle(player)
+                    tab.header(x, 1):printPlayerTitle(player)
                     y = math.max(tab:printPlayer(player, x), y)
                 end
             else

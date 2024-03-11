@@ -233,7 +233,7 @@ local function createResetButton(frame)
 end
 
 local function checkedOptions(parent)
-    local frame = CreateFrame("Frame", nil, parent)
+    local frame = CreateFrame("Frame", parent:GetName() .. "Inset", parent)
     frame:SetSize(scrollWidth, 100)
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 180, -165)
     local cells = ICT.Cells:new(frame, fontSize, scrollWidth, scrollHeight)

@@ -41,7 +41,6 @@ end
 
 function ReputationTab:printPlayer(player, x)
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     for _, v in pairs(player.reputationHeaders or {}) do
         y = self:printReputation(x, y, v, 1)
     end

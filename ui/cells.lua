@@ -54,7 +54,7 @@ end
 
 -- Gets the associated cell or create it if it doesn't exist yet.
 function Cells:__call(x, y)
-    local name = string.format("ICTCell(%s, %s)", x, y)
+    local name = string.format("%sCell(%s, %s)", self.frame:GetName(), x, y)
     local cell = self.cells[name]
 
     if not cell then

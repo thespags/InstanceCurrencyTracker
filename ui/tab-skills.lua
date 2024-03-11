@@ -56,7 +56,6 @@ end
 
 function SkillsTab:printPlayer(player, x)
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     y = Expansion.isVanilla() and self:printRunes(player, x, y) or y
     y = self:printWeaponSkills(player, x, y)
     return y

@@ -41,7 +41,6 @@ end
 
 function InventoryTab:printPlayer(player, x)
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     player.skills = player.skills or {}
 
     local data = getBaganatorData(player) or {}

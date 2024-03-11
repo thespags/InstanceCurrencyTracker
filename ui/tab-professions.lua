@@ -153,7 +153,6 @@ end
 function ProfessionsTab:printPlayer(player, x)
     local options = ICT.db.options.professions
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     player.skills = player.skills or {}
 
     for _, profession in pairs(player.professions or {}) do

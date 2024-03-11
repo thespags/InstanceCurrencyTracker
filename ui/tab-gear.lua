@@ -165,7 +165,6 @@ end
 
 function GearTab:printPlayer(player, x)
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     if ICT.db.options.gear.showSpecs then
         for _, spec in pairs(player:getSpecs()) do
             y = self:printSpec(player, x, y, spec)

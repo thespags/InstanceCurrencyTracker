@@ -137,16 +137,15 @@ function UI:createDoubleScrollFrame(parent, name)
     UI:setBackdrop(inset)
 
     local top = CreateFrame("Frame", name .. "Top", inset, "BackdropTemplate")
-    -- Slightly smaller to avoid clipping the backdrop.
-    top:SetPoint("TOPLEFT", inset, "TOPLEFT", 1, 0)
-    top:SetPoint("BOTTOMRIGHT", inset, "TOPRIGHT", -1, -self:getCellHeight() + 1)
+    top:SetPoint("TOPLEFT", inset, "TOPLEFT", 0, 1)
+    -- Allow enough space for letters that go below the line.
+    top:SetPoint("BOTTOMRIGHT", inset, "TOPRIGHT", 0, -self:getCellHeight() - 5)
+    UI:setBackdrop(top)
     inset.top = top
-    UI:setBackdrop(top, 1, 0, 0)
-    print(top)
 
     local bottom = CreateFrame("Frame", name .. "Bottom", inset, "BackdropTemplate")
     -- Slightly smaller to avoid clipping the backdrop.
-    bottom:SetPoint("TOPLEFT", inset, "TOPLEFT", 1, -self:getCellHeight() + 1)
+    bottom:SetPoint("TOPLEFT", inset, "TOPLEFT", 1, -self:getCellHeight() - 5)
     bottom:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -1, 1)
     inset.bottom = bottom
 
@@ -193,13 +192,13 @@ function UI:createDoubleScrollFrame(parent, name)
     header:SetPoint("BOTTOMRIGHT", headerScrollBox, "BOTTOMRIGHT", -1, 0)
     inset.header = header
     header.scrollable = true
-    
+
     local headerView = CreateScrollBoxLinearView()
     headerView:SetPanExtent(50)
     headerView:SetHorizontal(true)
 
     ScrollUtil.InitScrollBoxWithScrollBar(hScrollBox, hScrollBar, hView)
-    -- ScrollUtil.InitScrollBoxWithScrollBar(headerScrollBox, hScrollBar, headerView)
+    ScrollUtil.InitScrollBoxWithScrollBar(headerScrollBox, hScrollBar, headerView)
     ScrollUtil.InitScrollBoxWithScrollBar(vScrollBox, vScrollBar, vView)
     return inset
 end
