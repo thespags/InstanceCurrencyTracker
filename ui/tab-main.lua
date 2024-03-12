@@ -372,7 +372,6 @@ end
 
 function MainTab:printPlayer(player, x)
     local y = 1
-    y = self.cells(x, y):printPlayerTitle(player)
     if ICT:sumNonNil(ICT.db.options.player) > 0 then
         y = self:printCharacterInfo(player, x, y)
     end

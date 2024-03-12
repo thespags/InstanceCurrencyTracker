@@ -80,7 +80,7 @@ function UI:CreateFrame()
 
     -- For whatever reason, new users with Questie can't seem to load the first panel.
     -- If we call this this creates a dummy panel that takes the failure.
-    UI:createDoubleScrollFrame(frame, "ICTDummy")
+    UI:createDoubleScrollFrame(frame, "ICTDummy"):Hide()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
@@ -201,6 +201,9 @@ function UI:updateFrameSizes(frame, x, y)
     local newWidth = self:calculateWidth(x) + 5
     frame.hScrollBox:SetHeight(newHeight)
     frame.content:SetSize(newWidth, newHeight)
+    frame.headerScrollBox:SetHeight( self:getCellHeight())
+    frame.header:SetSize(newWidth, self:getCellHeight())
+    frame.headerScrollBox:FullUpdate()
     frame.hScrollBox:FullUpdate()
     frame.vScrollBox:FullUpdate()
     return newWidth, newHeight
@@ -217,15 +220,20 @@ end
 function UI:PrintPlayers()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do
+        tab.frame.top:SetPoint("BOTTOMRIGHT", tab.frame, "TOPRIGHT", 0, -self:getCellHeight() - 5)
+        tab.frame.bottom:SetPoint("TOPLEFT", tab.frame, "TOPLEFT", 1, -self:getCellHeight() - 5)
+
         -- Only update the viewed Tab.
         if ICT.frame:getSelectedTab() == tab.button:GetID() then
             local x = 0
             local y = 0
             tab.cells:hide()
+            -- tab.header:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
                     x = x + 1
+                    tab.header(x, 1):printPlayerTitle(player)
                     y = math.max(tab:printPlayer(player, x), y)
                 end
             else

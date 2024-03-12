@@ -36,6 +36,7 @@ end
 function Tabs:addPanel(parent, tab, name)
     local tabFrame = ICT.UI:createDoubleScrollFrame(parent, "ICT" .. name)
     tab.frame = tabFrame
+    tab.header = ICT.Cells:new(tabFrame.header)
     tab.cells = ICT.Cells:new(tabFrame.content)
     return self:add(parent, tab, name)
 end

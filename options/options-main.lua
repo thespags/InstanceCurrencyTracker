@@ -116,7 +116,7 @@ local function createSortList(parent)
             cell:printLine(player:getShortName(), player:getClassColor())
             cell:attachClick(function()
                 for j=1,i do
-                    cells:get(1, j):setClicked(false)
+                    cells(1, j):setClicked(false)
                 end
                 if selectedPlayer ~= player then
                     -- Unselect if already selected.
@@ -233,7 +233,7 @@ local function createResetButton(frame)
 end
 
 local function checkedOptions(parent)
-    local frame = CreateFrame("Frame", nil, parent)
+    local frame = CreateFrame("Frame", parent:GetName() .. "Inset", parent)
     frame:SetSize(scrollWidth, 100)
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", 180, -165)
     local cells = ICT.Cells:new(frame, fontSize, scrollWidth, scrollHeight)
