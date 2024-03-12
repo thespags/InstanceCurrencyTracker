@@ -116,7 +116,7 @@ local function createSortList(parent)
             cell:printLine(player:getShortName(), player:getClassColor())
             cell:attachClick(function()
                 for j=1,i do
-                    cells:get(1, j):setClicked(false)
+                    cells(1, j):setClicked(false)
                 end
                 if selectedPlayer ~= player then
                     -- Unselect if already selected.
