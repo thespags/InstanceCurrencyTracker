@@ -220,6 +220,9 @@ end
 function UI:PrintPlayers()
     local maxX, maxY = 0, 0
     for _, tab in pairs(ICT.frame.tabs) do
+        tab.frame.top:SetPoint("BOTTOMRIGHT", tab.frame, "TOPRIGHT", 0, -self:getCellHeight() - 5)
+        tab.frame.bottom:SetPoint("TOPLEFT", tab.frame, "TOPLEFT", 1, -self:getCellHeight() - 5)
+
         -- Only update the viewed Tab.
         if ICT.frame:getSelectedTab() == tab.button:GetID() then
             local x = 0
