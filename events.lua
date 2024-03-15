@@ -139,7 +139,9 @@ updateFrame:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
 -- Level 80 characters will appear.
 updateFrame:RegisterEvent("PLAYER_LEVEL_UP")
 -- Added for updating prerequisites and marking dailies done.
+-- Quest Finished seems to be just like Quest Complete and fires before Accept.
 updateFrame:RegisterEvent("QUEST_FINISHED")
+updateFrame:RegisterEvent("QUEST_LOG_UPDATE")
 updateFrame:SetScript("OnEvent", ICT:throttleFunction("Instance/Currency", 0, Player.update, ICT.UpdateDisplay))
 
 local moneyFrame = CreateFrame("Frame")
