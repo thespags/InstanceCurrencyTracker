@@ -618,13 +618,13 @@ local restedPerSecond = .05 / ( 8 * 60 * 60)
 -- If you aren't resting you gain at a quarter of the rate, so divided by 4.
 local notRestedPerSecond = restedPerSecond / 4
 function Player:getRestedXP()
-    -- This was added in later so safety check here.
-    if self.resting == nil or not self.timestamp or not self.restedXP or not self.maxXP then
+    -- This was added in later so safety check here that these valuse are present.
+    if self.resting == nil or not self.timestamp or not self.maxXP then
         return 0
     end
     local percentPerSecond = self.resting and restedPerSecond or notRestedPerSecond
     local timeElapsed = GetServerTime() - self.timestamp
-    local percent = timeElapsed * percentPerSecond + (self.restedXP / self.maxXP)
+    local percent = timeElapsed * percentPerSecond + (self.restedXP or 0) / self.maxXP
     if percent > 1.5 then
         percent = 1.5
     end
