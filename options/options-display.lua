@@ -55,7 +55,7 @@ function DisplayOptions:addDropdown(cell, dropdown)
     DDM:UIDropDownMenu_Initialize(frame, dropdown.func)
     _ = dropdown.tooltip and dropdown.tooltip:attachFrame(frame)
     if dropdown.flip then
-        local button = cell:attachCheckButton("FlipOptions")
+        local button = cell:attachCheckButton("ICT" .. dropdown.name .. "FlipOptions")
         _ = dropdown.isChecked and button:SetChecked(dropdown.isChecked())
         button:SetScript("OnClick", dropdown.flip)
     end
