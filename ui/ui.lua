@@ -12,7 +12,7 @@ local UI = {
     maxY = 0,
     --font = "Fonts\\FRIZQT__.TTF"
     font = "Fonts\\ARIALN.ttf",
-    fontSize = 12,
+    fontSize = 14,
     iconSize = 12,
 }
 ICT.UI = UI
@@ -42,7 +42,7 @@ function UI:getCellHeight(fontSize)
 end
 
 function UI:getMinWidth()
-    return UI:getCellWidth() + 5
+    return math.max(UI:getCellWidth() + 5, 290)
 end
 
 function UI:getMinHeight()
@@ -84,12 +84,10 @@ function UI:CreateFrame()
     Tabs:mixin(frame, ICT.db, "selectedTab")
     frame.update = function() return self:PrintPlayers() end
     Tabs:addPanel(frame, ICT.MainTab, L["Main"])
+    Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
     Tabs:addPanel(frame, ICT.ProfessionsTab, L["Professions"])
     Tabs:addPanel(frame, ICT.SkillsTab, L["Skills"])
     Tabs:addPanel(frame, ICT.ReputationTab, L["Reputation"])
-    if Expansion.isWOTLK() then
-        Tabs:addPanel(frame, ICT.GearTab, L["Gear"])
-    end
     -- self:addTab(frame, ICT.InventoryTab, L["Inventory"])
     PanelTemplates_SetTab(frame, frame:getSelectedTab())
 
@@ -228,7 +226,6 @@ function UI:PrintPlayers()
             local x = 0
             local y = 0
             tab.cells:hide()
-            -- tab.header:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do

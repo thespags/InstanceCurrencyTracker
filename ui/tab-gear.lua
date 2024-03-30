@@ -1,7 +1,9 @@
 local _, ICT = ...
 
 local L = LibStub("AceLocale-3.0"):GetLocale("AltAnon")
+local LibTradeSkillRecipes = LibStub("LibTradeSkillRecipes-1")
 local Colors = ICT.Colors
+local log = ICT.log
 local Player = ICT.Player
 local Talents = ICT.Talents
 local Tooltip = ICT.Tooltip
@@ -54,7 +56,7 @@ end
 function GearTab:printGlyphs(player, spec, x, y)
     local cell = self.cells(x, y)
     y = cell:printSectionTitle(L["Glyphs"])
-    if player:isCurrentPlayer() then
+    if player:isCurrentPlayer() and Expansion:isWOTLK() then
         cell:attachClick(Talents:viewGlyphs(spec.id))
         local tooltip = function(tooltip)
             tooltip:printTitle(L["Glyphs"])
@@ -85,7 +87,7 @@ function GearTab:printSpec(player, x, y, spec)
     local isActive = spec.id == player.activeSpec
     y = cell:printSectionTitle(sectionName, key, isActive and Colors.locked)
 
-    if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() then
+    if ICT.db.options.gear.showSpecs and player:isCurrentPlayer() and Expansion:isWOTLK() then
         local tooltip = function(tooltip)
             tooltip:printTitle(L["Spec"])
             :printValue(L["Click"], L["Spec Click"])
@@ -119,9 +121,11 @@ function GearTab:printSpec(player, x, y, spec)
         end
     end
     y = self.cells:hideRows(x, y, padding)
-    y = self.cells(x, y):hide()
 
-    y = self:printGlyphs(player, spec, x, y)
+    if Expansion:isWOTLK() then
+        y = self.cells(x, y):hide()
+        y = self:printGlyphs(player, spec, x, y)
+    end
 
     -- Requires spec activation so short circuit.
     if not spec.items then
@@ -153,7 +157,12 @@ function GearTab:printSpec(player, x, y, spec)
         padding = self:getPadding(y, "enchants", spec.id)
         for _, item in ICT:fpairsByValue(spec.items, function(v) return v.shouldEnchant end) do
             local slot = ICT.ItemTypeToSlot[_G[select(9, GetItemInfo(item.link))]]
-            local enchant = ICT:getEnchant(item.enchantId, slot) or L["Missing"]
+            local spell
+            if item.enchantId then
+                spell = ICT:getSpellLink(LibTradeSkillRecipes:GetEnchantment(item.enchantId, slot))
+                _ = spell or log.error("Unknown enchantment: %s %s", item.enchantId, slot)
+            end
+            local enchant = spell or L["Missing"]
             cell = self.cells(x, y)
             y = cell:printValue(_G[item.invType], enchant)
             cell:attachHyperLink()

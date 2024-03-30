@@ -52,7 +52,7 @@ function ICT:getColoredItemLink(itemId, color)
 end
 
 function ICT:getSpellLink(spellId)
-    -- Remap glyph of vampiric blood because Blizard has the worng one.
+    -- Remap glyph of vampiric blood because Blizard has the wrong one.
     if spellId == 58676 then
         spellId = 58726
     end

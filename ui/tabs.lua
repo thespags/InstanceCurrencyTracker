@@ -66,7 +66,7 @@ function Tabs:add(parent, tab, name)
 	if parent.numTabs == 1 then
 		tabButton:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 4, 3)
 	else
-		tabButton:SetPoint("TOPLEFT", parent.tabs[parent.numTabs-1].button, "TOPRIGHT", -14, 0)
+		tabButton:SetPoint("TOPLEFT", parent.tabs[parent.numTabs-1].button, "TOPRIGHT", -18, 0)
 	end
 	return parent.numTabs
 end
