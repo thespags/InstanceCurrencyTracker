@@ -1,0 +1,6 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Script file="LibInstances.lua"/>
+  <Script file="instances\3\instances.lua"/>
+  <Script file="instances\4\instances.lua"/>
+  <Script file="instances\groups.lua"/>
+</Ui>

@@ -51,7 +51,7 @@ end
 
 -- Same as canQueue for now, but may be different if I support retail ever or if a season adds specs.
 local function canSpecSwap(player)
-    return player:isCurrentPlayer() and Expansion.isWOTLK()
+    return player:isCurrentPlayer() and Expansion.min(ICT.WOTLK)
 end
 
 function MainTab:printCharacterInfo(player, x, y)
@@ -231,7 +231,7 @@ function MainTab:printCharacterInfo(player, x, y)
 end
 
 local function canQueue(player)
-    return player:isCurrentPlayer() and Expansion.isWOTLK()
+    return player:isCurrentPlayer() and Expansion.min(ICT.WOTLK)
 end
 
 -- Prints all the instances with associated tooltips.
@@ -269,7 +269,7 @@ function MainTab:printAllInstances(player, x, y)
     local subSections =  { { name = L["Dungeons"], instances = Player.getDungeons }, { name = L["Raids"], instances = Player.getRaids },  }
 
     y = self.cells(x, y):hide()
-    if Expansion.isWOTLK() then
+    if Expansion.min(ICT.WOTLK) then
         if canQueue(player) then
             local cell = self.cells(x, y)
             y = cell:printLFDType(LFDQueueFrame.type)

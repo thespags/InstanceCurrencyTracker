@@ -41,8 +41,13 @@ for i, name in ICT:rspairs(ICT.Expansions) do
     end
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
-    -- For whatever reason in Spanish the list may be nil, it's not clear to me why so quick fix it to work but adding nil checks.
-    function(a, b) if not a then return false end if not b then return true end return a.isSecondary == b.isSecondary and L[a.name] < L[b.name] or b.isSecondary end,
+    -- For whatever reason in Spanish the list may be nil, it's not clear to me why so quick fix it to work by adding nil checks.
+    function(a, b)
+        if a and b then
+            return a.isSecondary == b.isSecondary and L[a.name] < L[b.name] or b.isSecondary
+        end
+        return not b
+    end,
     function(v) return v.hasRecipes end) do
     tinsert(Options.professions, { name = L[profession.name], key = "showProfession" .. i, defaultFalse = profession.isSecondary })
 end

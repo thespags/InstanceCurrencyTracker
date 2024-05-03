@@ -19,7 +19,9 @@ function Instance:new(instance, info, size)
 end
 
 function Instance:key(v, size)
-    return string.format("%s (%s)", v, size)
+    -- Cata and era currently do not have different sizes.
+    return v
+    -- return string.format("%s (%s)", v, size)
 end
 
 function Instance:getName()
@@ -27,9 +29,10 @@ function Instance:getName()
 end
 
 function Instance:localizeName()
-    local name = GetRealZoneText(self.id)
-    local sizes = ICT:size(self.info:getSizes())
-    self.name = sizes > 1 and self:key(name, self.size) or name
+    self.name = GetRealZoneText(self.id)
+    -- Cata and era currently do not have different sizes.
+    -- local sizes = ICT:size(self.info:getSizes())
+    -- self.name = sizes > 1 and self:key(name, self.size) or name
 end
 
 -- Lock the specified instance with the provided information.

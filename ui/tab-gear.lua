@@ -47,7 +47,7 @@ function GearTab:printGlyph(spec, type, typeName, x, y)
         local name = ICT:getSpellLink(glyph.spellId)
         local nameWithIcon = name and string.format("%s|T%s:%s|t", name, glyph.icon, UI.iconSize) or L["Missing"]
         local cell = self.cells(x, y)
-        y = cell:printValue(typeName .. " " .. index, nameWithIcon)
+        y = cell:printValue(typeName .. " " .. (glyph.index or index), nameWithIcon)
         cell:attachHyperLink()
     end
     return y
@@ -68,6 +68,7 @@ function GearTab:printGlyphs(player, spec, x, y)
 
     if self.cells:isSectionExpanded(L["Glyphs"]) then
         local padding = self:getPadding(y, "glyphs", spec.id)
+        y = self:printGlyph(spec, 3, L["Prime"], x, y)
         y = self:printGlyph(spec, 1, L["Major"], x, y)
         y = self:printGlyph(spec, 2, L["Minor"], x, y)
         y = self.cells:hideRows(x, y, padding)
@@ -76,7 +77,9 @@ function GearTab:printGlyphs(player, spec, x, y)
 end
 
 function GearTab:printSpec(player, x, y, spec)
-    if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec) or not Talents:isValidSpec(spec) then
+    if (not ICT.db.options.gear.showSpecs and spec.id ~= player.activeSpec)
+        -- This check is for when talents are reset, whatever we see as last active will have items and the other will not.
+        or (not spec.items and not Talents:isValidSpec(spec)) then
         return y
     end
     -- If we only show one spec, then use a single key otherwise a key per spec id.
@@ -122,7 +125,7 @@ function GearTab:printSpec(player, x, y, spec)
     end
     y = self.cells:hideRows(x, y, padding)
 
-    if Expansion:isWOTLK() then
+    if Expansion.hasGlyphs() then
         y = self.cells(x, y):hide()
         y = self:printGlyphs(player, spec, x, y)
     end
@@ -160,7 +163,7 @@ function GearTab:printSpec(player, x, y, spec)
             local spell
             if item.enchantId then
                 spell = ICT:getSpellLink(LibTradeSkillRecipes:GetEnchantment(item.enchantId, slot))
-                _ = spell or log.error("Unknown enchantment: %s %s", item.enchantId, slot)
+                -- _ = spell or log.error("Unknown enchantment: %s %s", item.enchantId or "nil", slot or "nil")
             end
             local enchant = spell or L["Missing"]
             cell = self.cells(x, y)

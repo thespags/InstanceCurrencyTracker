@@ -3,6 +3,7 @@ local _, ICT = ...
 
 local Currency = ICT.Currency
 
+ICT.JusticePoints = Currency:new(395, 4000)
 ICT.Frost = Currency:new(341)
 ICT.DefilersScourgeStone = Currency:new(2711)
 ICT.Triumph = Currency:new(301)
@@ -14,11 +15,12 @@ ICT.Heroism = Currency:new(101)
 ICT.Epicurean = Currency:new(81)
 ICT.JewelcraftersToken = Currency:new(61)
 ICT.StoneKeepersShard = Currency:new(161)
-ICT.HonorPoints = Currency:new(1901)
+ICT.HonorPoints = Currency:new(1901, 4000)
 -- Phase 3 dungeons grant conquest.
 ICT.DungeonEmblem = ICT.Triumph
 
-ICT.Currencies = {
+local ordered = {
+    ICT.JusticePoints,
     ICT.Frost,
     ICT.DefilersScourgeStone,
     ICT.Triumph,
@@ -32,11 +34,12 @@ ICT.Currencies = {
     ICT.StoneKeepersShard,
     ICT.HonorPoints,
 }
+ICT.Currencies = {}
 
 -- Defines the sorting order based on the order above, as well as removing any currencies not available yet.
-for k, v in ipairs(ICT.Currencies) do
+for k, v in ipairs(ordered) do
     v.order = k
-    if not v:inExpansion() then
-       ICT.Currencies[k] = nil
+    if v:inExpansion() then
+        table.insert(ICT.Currencies, v)
     end
 end

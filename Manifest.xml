@@ -11,6 +11,6 @@
     <Include file="Libs\LibDeflate\LibDeflate.lua"/>
     <Include file="Libs\LibSerialize\LibSerialize.lua"/>
     <!-- My Libraries -->
-    <Include file="Libs\LibInstances\LibInstances.lua"/>
+    <Include file="Libs\LibInstances\lib.xml"/>
     <Include file="Libs\LibTradeSkillRecipes\lib.xml"/>
 </Ui>

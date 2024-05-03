@@ -85,14 +85,15 @@ end
 function Player:createInstances()
     self.instances = self.instances or {}
     for id, info in pairs(LibInstances:GetInfos()) do
-        for _, size in pairs(info:getSizes()) do
-            local key = Instance:key(id, size)
-            if Instances.inExpansion(info, size) and self:fromSeason(info, size) then
-                self.instances[key] = Instance:new(self.instances[key], info, size)
+        -- Size doesn't matter in cata anymore and currently era/sod does not have multiple sizes so ignore.
+        local size = info:getSizes()[1]
+        local key = Instance:key(id, size)
+        if size and Instances.inExpansion(info, size) and self:fromSeason(info, size) then
+            self.instances[key] = Instance:new(self.instances[key], info, size)
+            if not size then print(self.instances[key].name) end
             else
-                -- We have to remove they instance so we don't track it anymore.
-                self.instances[key] = nil
-            end
+            -- We have to remove they instance so we don't track it anymore.
+            self.instances[key] = nil
         end
     end
 end
@@ -121,8 +122,13 @@ function Player:weeklyReset()
 end
 
 function Player:resetInstances()
-    for _, instance in pairs(self.instances) do
-        instance:resetIfNecessary(GetServerTime())
+    for key, instance in pairs(self.instances) do
+        if instance.resetIfNecessary then
+            instance:resetIfNecessary(GetServerTime())
+        else
+            -- Instance or size no longer exists in cata.
+            self.instances[key] = nil
+        end
     end
 end
 
@@ -209,6 +215,7 @@ local worldBuffs = {
     [23735] = { type = 25, slot = 24 },
     [430947] = { slot = 26 },
     [438536] = { slot = 27 },
+    [446695] = { slot = 28 },
     -- Not boonable "world buffs".
     [430352] = {},
 }
@@ -381,7 +388,6 @@ function Player:updateGear()
     self.activeSpec = active
     self.specs = self.specs or { {}, {} }
     self.specs[active] = self.specs[active] or {}
-
     local items = {}
     for i=1,19 do
         local itemLink = GetInventoryItemLink("player", i)
@@ -409,7 +415,6 @@ function Player:updateGear()
             item.sockets = {}
             item.extraSocket = 0
             item.socketTotals = 0
-
             local mixin = Item:CreateFromItemLink(itemLink)
             mixin:ContinueOnItemLoad(function()
                 -- GetItemStats requites the item to be cached, so wait until the item is loaded.

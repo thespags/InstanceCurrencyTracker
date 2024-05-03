@@ -1,8 +1,0 @@
-## Interface: 30402
-## Title: Lib: Instances
-## Notes: Lib: Instances
-## Author: spags
-## X-Category: Library
-
-LibStub\LibStub.lua
-LibInstances.lua

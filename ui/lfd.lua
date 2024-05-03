@@ -82,7 +82,7 @@ function LFD:specificDropdown(parent, instance)
         for k, v in ICT:spairs(instance:activityIds(), sortActivityIds) do
             i = i + 1
             local cell = frame.cells(1, i)
-            local name = LibInstances:getGroupName(k)
+            local name = LibInstances:getGroup(k)
             local text = LFGConstructDeclinedMessage(v)
             local button = cell:attachCheckButton("ICT" .. v, text ~= "")
             if text == "" then

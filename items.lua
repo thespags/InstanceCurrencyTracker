@@ -13,7 +13,7 @@ ICT.CheckSlotEnchant = {
 	[INVSLOT_TABARD] = ICT:returnX(false),
 	[INVSLOT_WRIST] = ICT:returnX(true),
 	[INVSLOT_HAND] = ICT:returnX(true),
-	[INVSLOT_WAIST] = function(player) return Expansion.isWOTLK() and player:isEngineer() end,
+	[INVSLOT_WAIST] = function(player) return Expansion.min(ICT.WOTLK) and player:isEngineer() end,
 	[INVSLOT_LEGS] = ICT:returnX(true),
 	[INVSLOT_FEET] = ICT:returnX(true),
 	[INVSLOT_FINGER1] = function(player) return Expansion.active(ICT.TBC) and player:isEnchanter() end,
@@ -25,7 +25,7 @@ ICT.CheckSlotEnchant = {
 	[INVSLOT_OFFHAND] = function(_, classId, subClassId) return classId == 4 and subClassId == 6 end,
 }
 
-ICT.CheckSlotSocket = Expansion.isWOTLK() and {
+ICT.CheckSlotSocket = Expansion.min(ICT.WOTLK) and {
 	[INVSLOT_WRIST] = { check = Player.isBlacksmith, icon = 133273 },
 	[INVSLOT_HAND] = { check = Player.isBlacksmith, icon = 132984 },
 	[INVSLOT_WAIST] = { check = ICT:returnX(true), icon = 132525 },

@@ -3,8 +3,8 @@ local _, ICT = ...
 local Currency = {}
 ICT.Currency = Currency
 
-function Currency:new(id, unlimited)
-    local currency = { id = id, unlimited = unlimited }
+function Currency:new(id, max)
+    local currency = { id = id, max = max }
     setmetatable(currency, self)
     self.__index = self
     return currency
@@ -15,7 +15,12 @@ function Currency:showLimit()
     return false
 end
 
+local wotlkEmbelms = ICT:set(341, 301, 221, 102, 101)
+
 function Currency:inExpansion()
+    if wotlkEmbelms[self.id] then
+        return Expansion.isWOTLK()
+    end
     return C_CurrencyInfo.GetCurrencyInfo(self.id) ~= nil
 end
 

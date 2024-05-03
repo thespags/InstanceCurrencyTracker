@@ -3,10 +3,12 @@ local _, ICT = ...
 local LibInstances = LibStub("LibInstances")
 local log = ICT.log
 
+ICT.Cata = 3
 ICT.WOTLK = 2
 ICT.TBC = 1
 ICT.Vanilla = 0
 ICT.Expansions = {
+    [ICT.Cata] = "Cataclysm",
     [ICT.WOTLK] = "Wrath of the Lich King",
     [ICT.TBC] = "The Burning Crusade",
     [ICT.Vanilla] = "Vanilla"
@@ -25,6 +27,10 @@ function Expansion.isWOTLK()
     return ICT.WOTLK == Expansion.value
 end
 
+function Expansion.isCata()
+    return ICT.Cata == Expansion.value
+end
+
 -- Whether or not the value was released, e.g. false if value is Vanilla and current is WOTLK.
 function Expansion.active(value)
     return value and value <= Expansion.value
@@ -32,6 +38,10 @@ end
 
 function Expansion.max(value)
     return not value or Expansion.value <= value
+end
+
+function Expansion.min(value)
+    return not value or Expansion.value >= value
 end
 
 -- Whether the value is for the current expansion.
@@ -46,6 +56,11 @@ end
 function Expansion.isHardcore(player)
     return player.season == 3
 end
+
+function Expansion.hasGlyphs()
+    return Expansion.isWOTLK() or Expansion.isCata()
+end
+
 
 local function hasHardcoreLock(player)
     -- Locks go away at level 60.
@@ -66,7 +81,7 @@ function Expansion.init()
                 hasSod = true
             end
         end
-        Expansion.MaxLevel = C_Seasons.GetActiveSeason() == 2 and 40 or 60
+        Expansion.MaxLevel = C_Seasons.GetActiveSeason() == 2 and 50 or 60
         for id, info in pairs(LibInstances:GetInfos()) do
             info.seasons = {}
             -- Hack to handle hardcore
@@ -76,10 +91,16 @@ function Expansion.init()
                 info.seasons[5] = hasHardcoreLock
             end
             -- Hack to handle Season of Discovery.
-            if hasSod and (id == 48 or id == 90) then
-                tinsert(info.sizes, 10)
-                info.resets[10] = 3
-                info.seasons[10] = Expansion.isSod
+            if hasSod then
+                if (id == 48 or id == 90) then
+                    tinsert(info.sizes, 10)
+                    info.resets[10] = 3
+                    info.seasons[10] = Expansion.isSod
+                elseif (id == 109) then
+                    tinsert(info.sizes, 20)
+                    info.resets[20] = 7
+                    info.seasons[20] = Expansion.isSod
+                end
             end
         end
         pvpWeekend["Alterac Valley"] = 1704412800
@@ -95,9 +116,8 @@ function Expansion.init()
         pvpWeekend["Eye of the Storm"] = 1705622400
         pvpWeekend["Warsong Gulch"] = 1706227200
         pvpWeekend["Arathi Basin"] = 1706860800
-    else
-        Expansion.MaxLevel = 80
-        log.error("Expansion not configured for level cap %s", Expansion.value)
+    elseif Expansion.isCata() then
+        Expansion.MaxLevel = 85
     end
 
     function Expansion.pvpWeekend()
