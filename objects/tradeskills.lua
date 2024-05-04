@@ -30,7 +30,7 @@ function TradeSkills:openAndUpdate(player, skillLine)
     for _, p in pairs(player.professions or {}) do
         if p.skillLine == skillLine and p.spellId then
             CastSpellByID(p.spellId)
-            TradeSkills.updateSkill(player)
+            self:update(player)
             CloseTradeSkill()
             return
         end
