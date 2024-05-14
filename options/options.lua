@@ -37,7 +37,7 @@ Options.professions = {
 for i, name in ICT:rspairs(ICT.Expansions) do
     -- Don't show expansions if there's only one.
     if ICT.Vanilla < Expansion.value and Expansion.active(i) then
-        tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = not Expansion.current(i), })
+        tinsert(Options.professions, { name = name, key = "showExpansion" .. i, defaultFalse = not Expansion.current(i)})
     end
 end
 for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
@@ -59,7 +59,7 @@ Options.quests = {
 
 for k, v in pairs(ICT.Quests) do
     if ICT:size(v.currencies) == 0 then
-        tinsert(Options.quests, { name = L["Show " .. k], key = k})
+        tinsert(Options.quests, { name = L["Show " .. k], key = k, defaultFalse = not Expansion.current(v.expansion)})
     end
 end
 
@@ -113,7 +113,7 @@ function Options:setDefaultOptions(override)
 
     put(options, "currency", {})
     for _, v in ipairs(ICT.Currencies) do
-        put(options.currency, v.id, v <= ICT.HonorPoints)
+        put(options.currency, v.id, v <= ICT.ChefsAward)
     end
 
     -- Set all current expansion's instances on by default.

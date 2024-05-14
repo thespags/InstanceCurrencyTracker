@@ -18,6 +18,7 @@ Expansion = {}
 ICT.Expansion = Expansion
 
 Expansion.value = LE_EXPANSION_LEVEL_CURRENT
+Expansion.MaxLevel = GetMaxLevelForExpansionLevel(LE_EXPANSION_LEVEL_CURRENT)
 
 function Expansion.isVanilla()
     return ICT.Vanilla == Expansion.value
@@ -108,16 +109,13 @@ function Expansion.init()
         pvpWeekend["Arathi Basin"] = 1705622400
         pvpWeekend["None"] = 1706227200
     elseif ICT.TBC == Expansion.value then
-        Expansion.MaxLevel = 70
     elseif Expansion.isWOTLK() then
-        Expansion.MaxLevel = 80
         pvpWeekend["Strand of the Ancients"] = 1704412800
         pvpWeekend["Alterac Valley"] = 1705017600
         pvpWeekend["Eye of the Storm"] = 1705622400
         pvpWeekend["Warsong Gulch"] = 1706227200
         pvpWeekend["Arathi Basin"] = 1706860800
     elseif Expansion.isCata() then
-        Expansion.MaxLevel = 85
     end
 
     function Expansion.pvpWeekend()

@@ -39,18 +39,6 @@ local level25Sod = function(player)
     return Expansion.isSod(player) and player:isLevel(25)
 end
 
-local isJewelCrafter = function(player)
-    return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:isJewelCrafter(375)
-end
-
-local hasCooking = function(player)
-    return player:isLevel(65) and player:hasCooking(350)
-end
-
-local hasFishing = function(player)
-    return player:isLevel(70) and player:hasFishing()
-end
-
 -- All these quests appear to have the same name, but for fun or overkill, load the correct quest for the player.
 local tournamentQuestName = function(nonDeathKnightAllianceId, deathKnightAllianceId, deathKnightHordeId, nonDeathKnightHordeId)
     return function(player)
@@ -67,6 +55,28 @@ local tournamentQuestName = function(nonDeathKnightAllianceId, deathKnightAllian
 end
 
 ICT.Quests = {
+    ["Cata Jewelcrafting Daily"] = {
+        name = ICT:returnX("Cata Jewelcrafting Daily"),
+        ids = { 25154 },
+        expansion = ICT.Cata,
+        currencies = { [ICT.CataJewelcraftersToken] = 1 },
+        prereq = function(player) return player:isJewelCrafter(475) end,
+    },
+    ["Cata Cooking Daily"] = {
+        name = ICT:returnX("Cata Cooking Daily"),
+        ids = { 26227, 26190 },
+        expansion = ICT.Cata,
+        currencies = { [ICT.ChefsAward] = 2 },
+        prereq = function(player) return player:isLevel(10) and player:hasCooking() end,
+        weekly = true
+    },
+    ["Cata Fishing Daily"] = {
+        name = ICT:returnX("Cata Fishing Daily"),
+        ids = { 26488, 26588 },
+        expansion = ICT.Cata,
+        currencies = {},
+        prereq = function(player) return player:isLevel(10) and player:hasFishing() end,
+    },
     ["Raid Weekly"] = {
         name = ICT:returnX("Raid Weekly"),
         ids = { 24579 },
@@ -106,27 +116,27 @@ ICT.Quests = {
         currencies = { [ICT.JusticePoints] = 23 },
         prereq = level80,
     },
-    ["Jewelcrafting Daily"] = {
-        name = ICT:returnX("Jewelcrafting Daily"),
+    ["Wotlk Jewelcrafting Daily"] = {
+        name = ICT:returnX("Wotlk Jewelcrafting Daily"),
         ids = { 12958, 12959, 12960, 12961, 12962, 12963, },
         expansion = ICT.WOTLK,
-        currencies = { [ICT.JewelcraftersToken] = 1 },
-        prereq = isJewelCrafter,
+        currencies = { [ICT.WotlkJewelcraftersToken] = 1 },
+        prereq = function(player) return C_QuestLog.IsQuestFlaggedCompleted(13041) and player:isJewelCrafter(375) end,
     },
-    ["Cooking Daily"] = {
-        name = ICT:returnX("Cooking Daily"),
+    ["WOWotlkTLK Cooking Daily"] = {
+        name = ICT:returnX("Wotlk Cooking Daily"),
         ids = { 13112, 13113, 13114, 13115, 13116, 13100, 13101, 13103, 13102, 13107},
         expansion = ICT.WOTLK,
         -- Mustard Dogs drops 2, but that requires the ability to detect the active daily.
         currencies = { [ICT.Epicurean] = 1 },
-        prereq = hasCooking,
+        prereq = function(player) return player:isLevel(65) and player:hasCooking(350) end,
     },
-    ["Fishing Daily"] = {
-        name = ICT:returnX("Fishing Daily"),
+    ["Wotlk Fishing Daily"] = {
+        name = ICT:returnX("Wotlk Fishing Daily"),
         ids = { 13830, 13832, 13833, 13834, 13836 },
         expansion = ICT.WOTLK,
         currencies = {},
-        prereq = hasFishing,
+        prereq = function(player) return player:isLevel(70) and player:hasFishing() end,
     },
     -- List of the Horde or Alliance quest and class if necessary (e.g. DeathKnights have separate quests in some cases).
     ["Threat From Above"] = {
