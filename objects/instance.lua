@@ -81,22 +81,22 @@ function Instance:isEncounterKilled(index)
 end
 
 function Instance:hasCurrency(currency)
-    local info = ICT.Instances.currency[self.id]
+    local info = ICT.Instances.getCurrencyInfo(self)
     return info and info.currencies[currency] or false
 end
 
 function Instance:currencies()
-    local info = ICT.Instances.currency[self.id]
+    local info = ICT.Instances.getCurrencyInfo(self)
     return info and info.currencies or {}
 end
 
 function Instance:availableCurrency(currency)
-    local info = ICT.Instances.currency[self.id]
+    local info =  ICT.Instances.getCurrencyInfo(self)
     return info and info.availableCurrency(self, currency) or 0
 end
 
 function Instance:maxCurrency(currency)
-    local info = ICT.Instances.currency[self.id]
+    local info = ICT.Instances.getCurrencyInfo(self)
     return info and info.maxCurrency(self, currency) or 0
 end
 

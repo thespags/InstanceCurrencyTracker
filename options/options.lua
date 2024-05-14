@@ -107,14 +107,13 @@ function Options:setDefaultOptions(override)
     local put = override and ICT.put or ICT.putIfAbsent
     put(options, "multiPlayerView", true)
 
-    -- Display heroism and lower by default. (i.e. recent currency as new ones are added to the front of the table).
     if not options.currency or override then
         options.currency = {}
     end
 
     put(options, "currency", {})
     for _, v in ipairs(ICT.Currencies) do
-        put(options.currency, v.id, v <= ICT.Heroism)
+        put(options.currency, v.id, v <= ICT.HonorPoints)
     end
 
     -- Set all current expansion's instances on by default.

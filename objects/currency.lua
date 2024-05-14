@@ -128,3 +128,7 @@ end
 function Currency:__lt(other)
     return self.order < other.order
 end
+
+function Currency:__tostring()
+    return self:getName()
+end
