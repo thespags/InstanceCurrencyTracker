@@ -98,7 +98,7 @@ function ProfessionsTab:printProfession(player, profession, x, y)
     self.cells:startSection(1)
     if self.cells:isSectionExpanded(profession.name) then
         if skills and ICT:size(skills) > 0 then
-            local expansion, section
+            local expansion, section, oldY
             for _, info in ICT:spairsByValue(LibTradeSkillRecipes:GetCategorySpells(skillLine), sort, infoFilter) do
                 if Expansion.isVanilla() then
                     local skill = skills[info.spellId]
@@ -114,11 +114,15 @@ function ProfessionsTab:printProfession(player, profession, x, y)
                     end
                 else
                     if expansion ~= info.expansionId then
+                        if expansion and oldY == y and not options.professions.showUnknown then
+                            y = self.cells(x, y):printLine(L["NoSkillsKnown"], Colors.text)
+                        end
                         y = expansion and self.cells:endSection(x, y + 1) or y
                         expansion = info.expansionId
                         section = skillLine .. ":" .. expansion
                         y = self.cells(x, y):printSectionTitle(ICT.Expansions[expansion], section)
                         self.cells:startSection(2)
+                        oldY = y
                     end
                     if self.cells:isSectionExpanded(section) then
                         local skill = skills[info.spellId]
