@@ -68,7 +68,7 @@ function Tooltips:specTooltip(spec)
             tooltip:printSection(L["Items"])
             local text = item.level .. " " .. ICT:addGems(k, item)
             -- This may have to be relocalized, but that's true for some other info (e.g. bags), so just use the link.
-            local color = Colors:getItemScoreHex(item.link)
+            local color = Colors:getItemScoreHex(item.level)
             tooltip:printValue(string.format("|T%s:14|t%s", item.icon, item.link), text, nil, color)
         end
 

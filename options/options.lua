@@ -21,14 +21,15 @@ Options.player = {
     { name = L["Show Bags"], key = "showBags", },
     { name = L["Show Bank Bags"], key = "showBankBags", },
     { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = L["ShowGearScoresTooltip"], },
+    -- Historically keep this as showGearScores but display as iLvl.
+    { name = L["Show iLvl"], key = "showGearScores", },
     { name = L["Show Professions"], key = "showProfessions", },
     { name = L["Show Cooldowns"], key = "showCooldowns", },
 }
 
 Options.gear = {
     { name = L["Show Specs"], key = "showSpecs", },
-    { name = L["Show Gear Scores"], key = "showGearScores", tooltip = L["ShowGearScoresTooltip"], },
+    { name = L["Show iLvl"], key = "showGearScores", },
 }
 
 Options.professions = {

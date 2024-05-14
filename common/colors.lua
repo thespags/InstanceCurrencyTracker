@@ -58,13 +58,31 @@ function Colors:flipHex(hex)
     return self:rgbInteger2hex(flipInteger(r), flipInteger(g), flipInteger(b))
 end
 
-function Colors:getItemScoreHex(itemLink)
-    if TT_GS then
-        local _, _, r, g, b = TT_GS:GetItemScore(itemLink)
-        return self:rgbPercentage2hex(r, g, b)
-    end
-    return nil
+function Colors:getItemScoreHex(level)
+    local r, g, b = self:getColorForLevel(level)
+    return self:rgbPercentage2hex(r, g, b)
 end
+
+function Colors:getColorForLevel(level)
+    local percentile = level / Expansion.ilvlMax * 100
+
+    if percentile >= 100 then
+        return 0.90, 0.80, 0.50  -- Gold
+    elseif percentile >= 99 then
+        return 0.89, 0.47, 0.65  -- Pink
+    elseif percentile >= 95 then
+        return 1.00, 0.50, 0.00  -- Orange
+    elseif percentile >= 75 then
+        return 0.63, 0.21, 0.93  -- Purple
+    elseif percentile >= 50 then
+        return 0.00, 0.44, 1.00  -- Blue
+    elseif percentile >= 25 then
+        return 0.12, 1.00, 0.00  -- Green
+    else
+        return 0.40, 0.40, 0.40  -- Grey
+    end
+end
+
 
 function Colors:inverseSrgbCompanding(color)
     local r, g, b = self:hex2rgbPercentage(color)
@@ -87,17 +105,19 @@ function Colors:srgbCompanding(r, g, b)
 end
 
 function Colors:gradient(color1, color2, mix)
-   local r1, g1, b1 = self:inverseSrgbCompanding(color1)
-   local r2, g2, b2 = self:inverseSrgbCompanding(color2)
-
-   local r3 = r1 * mix + r2 * (1 - mix)
-   local g3 = g1 * mix + g2 * (1 - mix)
-   local b3 = b1 * mix + b2 * (1 - mix)
-
-   return self:srgbCompanding(r3, g3, b3)
+    local r1, g1, b1 = self:inverseSrgbCompanding(color1)
+    local r2, g2, b2 = self:inverseSrgbCompanding(color2)
+    return self:rgbGradient(r1, g1, b1, r2, g2, b2, mix)
 end
 
-function Colors:naiveGradient(color1, color2, value) 
+function Colors:rgbGradient(r1, g1, b1, r2, g2, b2, mix)
+    local r3 = r1 * mix + r2 * (1 - mix)
+    local g3 = g1 * mix + g2 * (1 - mix)
+    local b3 = b1 * mix + b2 * (1 - mix)
+    return self:srgbCompanding(r3, g3, b3)
+ end
+
+function Colors:naiveGradient(color1, color2, value)
     local r1, g1, b1 = self:hex2rgbInteger(color1)
     local r2, g2, b2 = self:hex2rgbInteger(color2)
     local r3 = r2 + (r1 - r2) * value

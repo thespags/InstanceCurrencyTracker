@@ -431,10 +431,8 @@ function Player:updateGear()
         end
     end
     self.specs[active].items = items
-
-    if TT_GS then
-        self.specs[active].gearScore, self.specs[active].ilvlScore = TT_GS:GetScore(self.guid)
-    end
+    local _, ilvlScore, _ = GetAverageItemLevel()
+    self.specs[active].ilvlScore = string.format("%.2f", ilvlScore)
 end
 
 -- If we decide to work on other versions than WOTLK.

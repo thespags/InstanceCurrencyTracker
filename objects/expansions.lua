@@ -108,14 +108,19 @@ function Expansion.init()
         pvpWeekend["Warsong Gulch"] = 1705017600
         pvpWeekend["Arathi Basin"] = 1705622400
         pvpWeekend["None"] = 1706227200
+        Expansion.ilvlMax = 92
     elseif ICT.TBC == Expansion.value then
+        Expansion.ilvlMax = 164
     elseif Expansion.isWOTLK() then
         pvpWeekend["Strand of the Ancients"] = 1704412800
         pvpWeekend["Alterac Valley"] = 1705017600
         pvpWeekend["Eye of the Storm"] = 1705622400
         pvpWeekend["Warsong Gulch"] = 1706227200
         pvpWeekend["Arathi Basin"] = 1706860800
+        Expansion.ilvlMax = 277
+        --284 is highest but go one down.
     elseif Expansion.isCata() then
+        Expansion.ilvlMax = 410
     end
 
     function Expansion.pvpWeekend()

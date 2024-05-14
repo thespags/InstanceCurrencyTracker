@@ -15,13 +15,10 @@ function UI:setBackdrop(frame, r, g, b)
 end
 
 function UI:printGearScore(tab, spec, tooltip, x, y)
-    if TT_GS and tab:showGearScores() then
-        local scoreColor = spec.gearScore and Colors:rgbPercentage2hex(TT_GS:GetQuality(spec.gearScore)) or nil
+    if tab:showGearScores() and spec.ilvlScore then
         local cell = tab.cells(x, y)
-        y = cell:printValue(L["GearScore"], spec.gearScore, nil, scoreColor)
-        tooltip:attach(cell)
-        cell = tab.cells(x, y)
-        y = cell:printValue(L["iLvl"], spec.ilvlScore, nil, scoreColor)
+        local color = Colors:getItemScoreHex(spec.ilvlScore)
+        y = cell:printValue(L["iLvl"], spec.ilvlScore, nil, color)
         tooltip:attach(cell)
     end
     return y

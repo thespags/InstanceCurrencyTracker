@@ -132,8 +132,7 @@ L["Show Resting State"] = "Show Resting State"
 L["Show Bags"] = "Show Bags"
 L["Show Bank Bags"] = "Show Bank Bags"
 L["Show Specs"] = "Show Specs"
-L["Show Gear Scores"] = "Show Gear Scores"
-L["ShowGearScoresTooltip"] = "If TacoTip is available, this will display gear scores for each spec respectively."
+L["Show iLvl"] = "Show iLvl"
 L["Show Professions"] = "Show Professions"
 
 -- Filter Options

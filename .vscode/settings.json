@@ -22,7 +22,6 @@
         "GetSavedInstanceEncounterInfo",
         "UIParent",
         "GetClassColor",
-        "TT_GS",
         "C_Timer",
         "UnitName",
         "UnitGUID",
@@ -209,6 +208,7 @@
         "C_Engraving",
         "tInvert",
         "WEAPON",
-        "GetMaxLevelForExpansionLevel"
+        "GetMaxLevelForExpansionLevel",
+        "GetAverageItemLevel"
     ],
 }
