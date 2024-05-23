@@ -103,21 +103,23 @@ end
 
 function DropdownOptions:addOptions(options, group, level)
     for _, v in pairs(options) do
-        local info = createInfo(v.name)
-        info.checked = ICT.db.options[group][v.key]
-        info.func = function(self)
-            ICT.db.options[group][v.key] = not ICT.db.options[group][v.key]
-            if v.func then
-                v.func()
+        if v.predicate == nil or v.predicate() then
+            local info = createInfo(v.name)
+            info.checked = ICT.db.options[group][v.key]
+            info.func = function(self)
+                ICT.db.options[group][v.key] = not ICT.db.options[group][v.key]
+                if v.func then
+                    v.func()
+                end
+                UI:PrintPlayers()
             end
-            UI:PrintPlayers()
+            if v.tooltip then
+                info.tooltipTitle = v.name
+                info.tooltipOnButton = true
+                info.tooltipText = v.tooltip
+            end
+            DDM:UIDropDownMenu_AddButton(info, level)
         end
-        if v.tooltip then
-            info.tooltipTitle = v.name
-            info.tooltipOnButton = true
-            info.tooltipText = v.tooltip
-        end
-        DDM:UIDropDownMenu_AddButton(info, level)
     end
 end
 
