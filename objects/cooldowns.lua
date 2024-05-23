@@ -66,13 +66,23 @@ local spells = {
     56001, -- Moonshroud
     56002, -- Ebonweave
     56003, -- Spellweave
-    56005,  -- Glacial Bag
+    56005, -- Glacial Bag
     60893, -- Northrend Alchemy Research
     61288, -- Minor Inscription Research
     61177, -- Major Inscription Research
     62242, -- Icy Prism
     55208, -- Smelt Titansteel
-    -- End WOTLK
+    -- End WOTLK/Start Cata
+    78866, -- Transmute: Living Elements
+    80243, -- Transmute: Truegold
+    80244, -- Transmute: Pyrium Bar
+    73478, -- Fire Prism
+    75141, -- Dream of Skywall
+    75142, -- Dream of Deepholm
+    75144, -- Dream of Hyjal
+    75145, -- Dream of Ragnaros
+    75146, -- Dream of Azshara
+    -- End Cata
 }
 local items = {
     -- Start Vanilla
@@ -82,7 +92,7 @@ local items = {
     [40768] = { toy = true }, -- MollE
     [48933] = { toy = true }, -- Wormhole
     [49040] = {}, -- Jeeves
-    [39878] = { skillLine = 0, expansion = 2 }, -- Mysterious Egg, doesn't work because it's a tooltip.
+    -- [39878] = { skillLine = 0, expansion = 2 }, -- Mysterious Egg, doesn't work because it's a tooltip.
     -- [43499] = { skillLine = 0, expansion = 2 }, -- Iron Boot Flask
     -- End WOTLK
 }

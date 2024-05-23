@@ -77,7 +77,7 @@ function Comms:mismatchVersion(sender, data)
 end
 
 function Comms:pingPlayers()
-    log.info("Pinging other accounts.")
+    log.debug("Pinging other accounts.")
     local allowed = ICT.db.options.comms.players or {}
     local seen = {}
 
