@@ -34,7 +34,10 @@ function MainTab:calculatePadding()
         and ICT:max(db.players, function(player) return ICT:sum(player.cooldowns, ICT:returnX(1), ICT.Cooldown.isVisible) end, Player.isEnabled)
         or 0
     self.paddings.specs = ICT.WOTLK <= Expansion.value and 2 or 1
-    self.paddings.quests = ICT:max(db.players, function(player) return ICT:sum(ICT.Quests, ICT:returnX(1), player:isQuestVisible()) end, Player.isEnabled)
+    -- self.paddings.quests = {}
+    -- for _, group in ipairs(ICT.QuestGroups) do
+    --     self.paddings.quests[group] = ICT:max(db.players, function(player) return ICT:sum(ICT.Quests, ICT:returnX(1), function(quest) return quest.group == group and player:isQuestVisible() end) end, Player.isEnabled)
+    -- end
     self.paddings.worldBuffs = ICT:max(db.players, function(player) return ICT:size(player.worldBuffs) + ICT:size(player.consumes) end, Player.isEnabled)
 end
 
@@ -110,7 +113,7 @@ function MainTab:printCharacterInfo(player, x, y)
 
             for id, _ in ICT:nspairs(player.consumes or {}) do
                 -- I think I have to lock this variable so it doesn't change when on item load is called.
-                local cell = self.cells(x, y)
+                cell = self.cells(x, y)
                 local item = Item:CreateFromItemID(id)
                 y = y + 1
                 item:ContinueOnItemLoad(function()
@@ -333,23 +336,32 @@ function MainTab:printCurrency(player, x, y)
 end
 
 function MainTab:printQuests(player, x, y)
-    if ICT.db.options.quests.show and ICT:size(ICT.Quests, player:isQuestVisible()) > 0 then
+    if ICT:sumNonNil(ICT.db.options.quests) > 0 then
         local cell = self.cells(x, y)
         y = cell:printSectionTitle(L["Quests"])
         Tooltips:questSectionTooltip():attach(cell)
         if self.cells:isSectionExpanded(L["Quests"]) then
             self.cells:startSection(1)
-            local padding = self:getPadding(y, "quests")
-            for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player), player:isQuestVisible()) do
-                local color = Colors:getQuestColor(player, quest)
-                local name = quest.name(player)
-                cell = self.cells(x, y)
-                y = cell:printLine(name, color)
-                Tooltips:questTooltip(name, quest):attach(cell)
+            for key, group in ICT:nspairs(ICT.QuestGroups) do
+                if ICT.db.options.quests[key] then
+                    y = self.cells(x, y):printSectionTitle(group.name, key)
+                    self.cells:startSection(2)
+                    if self.cells:isSectionExpanded(key) then
+                        for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player), function(quest) return quest.group == key and (quest.faction == nil or quest.faction == player.faction) end) do
+                            local color = Colors:getQuestColor(player, quest)
+                            local name = quest.name(player)
+                            cell = self.cells(x, y)
+                            y = cell:printLine(name, color)
+                            Tooltips:questTooltip(name, quest):attach(cell)
+                        end
+                    end
+                    y = self.cells:endSection(x, y, y + 1)
+                end
             end
-            y = self.cells:endSection(x, y, padding)
+            y = self.cells:endSection(x, y, y)
+        else
+            y = self.cells(x, y):hide()
         end
-        y = self.cells(x, y):hide()
     end
     return y
 end

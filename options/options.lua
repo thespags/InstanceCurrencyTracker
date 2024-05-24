@@ -53,14 +53,12 @@ for i, profession in ICT:spairsByValue(LibTradeSkillRecipes:GetSkillLines(),
     tinsert(Options.professions, { name = L[profession.name], key = "showProfession" .. i, defaultFalse = profession.isSecondary })
 end
 
-Options.quests = {
-    { name = L["Hide Unavailable Quests"], key = "hideUnavailable", },
-    { name = L["Show Quests"], key = "show", },
-}
+Options.quests = {}
 
-for k, v in pairs(ICT.Quests) do
-    if ICT:size(v.currencies) == 0 then
-        tinsert(Options.quests, { name = L["Show " .. k], key = k, defaultFalse = not Expansion.current(v.expansion)})
+for key, v in ICT:nspairs(ICT.QuestGroups) do
+    local count = ICT:sum(ICT.Quests, ICT:returnX(1), function(quest) return quest.group == key end)
+    if count > 0 then
+        tinsert(Options.quests, { name = L["Show"] .. " " .. v.name, key = key, defaultFalse = key ~= "Justice Points"})
     end
 end
 

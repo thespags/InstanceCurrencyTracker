@@ -97,6 +97,7 @@ L["Missing Prerequesite"] = "Missing Prerequesite"
 
 -- Options
 L["Options"] = "Options"
+L["Show"] = "Show"
 L["Shown Info"] = "Shown Info"
 L["Multi Character View"] = "Multi Character View"
 L["MultiCharacterViewTooltip"] = "Displays all selected characters in the frame or a single character selected with the drop down list."

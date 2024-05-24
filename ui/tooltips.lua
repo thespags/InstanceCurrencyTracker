@@ -184,7 +184,9 @@ local function printInstancesForCurrency(tooltip, title, instances, currency)
 end
 
 local function printQuestsForCurrency(tooltip, player, currency)
-    if ICT.db.options.quests.show then
+    -- The quest check isn't as fine grain as it could be, but I'm too tired to right now to do the work.
+    -- I've added a group layer to quests so you'd have to check the currency for the group and not the quest.
+    if ICT:sumNonNil(ICT.db.options.quests) > 0 then
         tooltip.shouldPrintTitle = true
         for _, quest in ICT:spairsByValue(ICT.Quests, ICT.QuestSort(player)) do
             if currency:fromQuest()(quest) and player:isQuestVisible(quest) then
