@@ -10,8 +10,9 @@ function Cooldown:update(player)
             if spellKnown then
                 local start, duration = GetSpellCooldown(id)
                 player.cooldowns[id] = player.cooldowns[id] or Cooldown:new(v.info)
-                -- Check duration to filter out spell lock, wands and other CD triggers
-                player.cooldowns[id].expires = start ~= 0 and duration == v.info.duration and ICT:getTimeLeft(start, duration) or 0
+                -- Previously we were checking duration to filter out spell lock, wands and other CD triggers.
+                -- However, GetSpellBaseCooldown in Cata returns gibberish.
+                player.cooldowns[id].expires = start ~= 0 and duration > 0 and ICT:getTimeLeft(start, duration) or 0
             else
                 -- Handles case if spell was known and no longer is.
                 player.cooldowns[id] = nil
