@@ -209,6 +209,7 @@
         "tInvert",
         "WEAPON",
         "GetMaxLevelForExpansionLevel",
-        "GetAverageItemLevel"
+        "GetAverageItemLevel",
+        "C_Map"
     ],
 }

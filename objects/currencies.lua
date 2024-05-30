@@ -3,10 +3,12 @@ local _, ICT = ...
 
 local Currency = ICT.Currency
 
+ICT.ValorPoints = Currency:new(396)
 ICT.JusticePoints = Currency:new(395, 4000)
 ICT.HonorPoints = Currency:new(1901, 4000)
 ICT.CataJewelcraftersToken = Currency:new(361)
 ICT.ChefsAward = Currency:new(402)
+ICT.DarkmoonPrizeTicket = Currency:new(515)
 ICT.Frost = Currency:new(341)
 ICT.DefilersScourgeStone = Currency:new(2711)
 ICT.Triumph = Currency:new(301)
@@ -20,10 +22,12 @@ ICT.WotlkJewelcraftersToken = Currency:new(61)
 ICT.StoneKeepersShard = Currency:new(161)
 
 local ordered = {
+    ICT.ValorPoints,
     ICT.JusticePoints,
     ICT.HonorPoints,
     ICT.CataJewelcraftersToken,
     ICT.ChefsAward,
+    ICT.DarkmoonPrizeTicket,
     ICT.DefilersScourgeStone,
     ICT.SiderealEssence,
     ICT.ChampionsSeal,

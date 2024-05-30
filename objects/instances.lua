@@ -25,7 +25,7 @@ local dungeonEmblems = ICT:set(ICT.JusticePoints, ICT.SiderealEssence, ICT.Defil
 local totcEmblems = ICT:set(ICT.JusticePoints, ICT.SiderealEssence, ICT.DefilersScourgeStone, ICT.ChampionsSeal)
 local availableDungeonEmblems = function(instance, currency)
     if currency == ICT.JusticePoints then
-        return 16
+        return sameEmblemsPerBoss(16)(instance)
     elseif currency == ICT.SiderealEssence then
         return isLastBossKilled(instance) and 0 or 1
     elseif currency == ICT.ChampionsSeal then
@@ -36,7 +36,7 @@ local availableDungeonEmblems = function(instance, currency)
 end
 local maxDungeonEmblems = function(instance, currency)
     if currency == ICT.JusticePoints then
-        return 16
+        return instance:numOfEncounters() * 16
     elseif currency == ICT.SiderealEssence then
         return 1
     elseif currency == ICT.ChampionsSeal then
@@ -46,14 +46,20 @@ local maxDungeonEmblems = function(instance, currency)
     end
 end
 
-local CATA_DUNGEON =  { currencies = ICT:set(ICT.JusticePoints), availableCurrency = sameEmblemsPerBoss(70), maxCurrency = maxSameEmblemsPerBoss(70) }
+local CATA_DUNGEON =  { currencies = ICT:set(ICT.JusticePoints), availableCurrency = sameEmblemsPerBoss(82.5), maxCurrency = maxSameEmblemsPerBoss(82.5) }
+local CATA_RAID =  { currencies = ICT:set(ICT.ValorPoints), availableCurrency = sameEmblemsPerBoss(100), maxCurrency = maxSameEmblemsPerBoss(100) }
 local WOTLK_RAID = { currencies = ICT:set(ICT.JusticePoints), availableCurrency = sameEmblemsPerBoss(24), maxCurrency = maxSameEmblemsPerBoss(24) }
 local WOTLK_DUNGEON = { currencies = dungeonEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems }
 local WOTLK_TOTC = { currencies = totcEmblems, availableCurrency = availableDungeonEmblems, maxCurrency = maxDungeonEmblems }
+local TBC_RAID = { currencies = ICT:set(ICT.JusticePoints), availableCurrency = sameEmblemsPerBoss(10), maxCurrency = maxSameEmblemsPerBoss(10) }
 
 function Instances.getCurrencyInfo(instance)
     if instance.expansion == ICT.Cata then
-        return CATA_DUNGEON
+        if instance:isRaid() then
+            return CATA_RAID
+        else
+            return CATA_DUNGEON
+        end
     elseif instance.expansion == ICT.WOTLK then
         if instance:isRaid() then
             return WOTLK_RAID
@@ -61,6 +67,10 @@ function Instances.getCurrencyInfo(instance)
             return WOTLK_TOTC
         else
             return WOTLK_DUNGEON
+        end
+    elseif instance.expansion == ICT.TBC then
+        if instance:isRaid() then
+            return TBC_RAID
         end
     end
     return nil

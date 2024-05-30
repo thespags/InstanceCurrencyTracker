@@ -296,6 +296,5 @@ ICT.Quests = {
 for k, v in pairs(ICT.Quests) do
     v.key = k
     local quest = ICT.Quest:new(v)
-    print(k .. " " .. tostring(quest:inExpansion()))
     ICT.Quests[k] = quest:inExpansion() and quest or nil
 end

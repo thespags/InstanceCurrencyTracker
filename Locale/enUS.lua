@@ -2,7 +2,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("AltAnon", "enUS", true, true)
 
 L["AddOnName"] = "Alt Anon (Instance Currency Tracker)"
 L["Welcome"] = "Initialized Alt Anon (Instance Currency Tracker): %s..."
-L["Discord"] = "For feedback, bugs, help, or emblem amounts reach out on discord: https://discord.gg/yY6Q6EgNRu"
+L["Discord"] = "For feedback, bugs, help, or to say hello drop by my discord: https://discord.gg/yY6Q6EgNRu"
 L["Creating player: %s"] = "Creating player: %s"
 L["%s reset, updating info."] = "%s reset, updating info."
 L["No Currency"] = "No Currency"
