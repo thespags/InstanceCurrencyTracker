@@ -199,7 +199,7 @@ function UI:updateFrameSizes(frame, x, y)
     local newWidth = self:calculateWidth(x) + 5
     frame.hScrollBox:SetHeight(newHeight)
     frame.content:SetSize(newWidth, newHeight)
-    frame.headerScrollBox:SetHeight( self:getCellHeight())
+    frame.headerScrollBox:SetHeight(self:getCellHeight())
     frame.header:SetSize(newWidth, self:getCellHeight())
     frame.headerScrollBox:FullUpdate()
     frame.hScrollBox:FullUpdate()
@@ -226,6 +226,7 @@ function UI:PrintPlayers()
             local x = 0
             local y = 0
             tab.cells:hide()
+            tab.header:hide()
             _ = tab.prePrint and tab:prePrint()
             if ICT.db.options.frame.multiPlayerView then
                 for _, player in ICT:spairsByValue(ICT.db.players, Players.getSort(), ICT.Player.isEnabled) do
