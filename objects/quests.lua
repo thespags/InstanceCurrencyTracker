@@ -68,15 +68,16 @@ local dailyCataQuest = function(group ,questId, prereqId, faction)
 end
 
 ICT.QuestGroups = {
-    ["Hyjal"] = { name = C_Map.GetMapInfo(198).name, expansion = ICT.Cata },
-    ["Deepholm"] = { name = C_Map.GetMapInfo(207).name, expansion = ICT.Cata },
-    ["Uldum"] = { name = C_Map.GetMapInfo(249).name, expansion = ICT.Cata },
-    ["Twilight Highlands"] = { name = C_Map.GetMapInfo(241).name, expansion = ICT.Cata },
+    ["Hyjal"] = { name = C_Map.GetMapInfo(198) and C_Map.GetMapInfo(198).name, expansion = ICT.Cata },
+    ["Deepholm"] = { name = C_Map.GetMapInfo(207) and C_Map.GetMapInfo(207).name, expansion = ICT.Cata },
+    ["Uldum"] = { name = C_Map.GetMapInfo(249) and C_Map.GetMapInfo(249).name, expansion = ICT.Cata },
+    ["Twilight Highlands"] = { name = C_Map.GetMapInfo(241) and C_Map.GetMapInfo(241).name, expansion = ICT.Cata },
     ["Jewelcrafting"] = { name = L["Jewelcrafting"], expansion = ICT.Cata },
     ["Cooking"] = { name = L["Cooking"], expansion = ICT.Cata },
     ["Fishing"] = { name = L["Fishing"], expansion = ICT.Cata },
-    ["Justice Points"] = { name = C_CurrencyInfo.GetCurrencyInfo(395).name, expansion = ICT.Cata },
+    ["Justice Points"] = { name = C_CurrencyInfo.GetCurrencyInfo(395) and C_CurrencyInfo.GetCurrencyInfo(395).name, expansion = ICT.Cata },
     ["Argent Tournament"] = { name = select(1, GetFactionInfoByID(1106)), expansion = ICT.WOTLK },
+    ["Vanilla"] = { name = "Vanilla", expansion = ICT.Vanilla },
 }
 
 ICT.Quests = {
@@ -282,7 +283,7 @@ ICT.Quests = {
     },
     -- Season of Discovery.
     ["Ashenvale Weekly"] = {
-        group = "SOD",
+        group = "Vanilla",
         name = factionQuestNameById(79098, 79090),
         ids = { 79098, 79090 },
         expansion = ICT.Vanilla,
