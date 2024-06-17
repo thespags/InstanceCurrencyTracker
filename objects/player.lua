@@ -560,7 +560,7 @@ function Player:updateReputation()
                 isHeader = isHeader
             }
         end
-        if isHeader then
+        if isHeader and parent then
             t.children = {}
             if isChild then
                 subParent = t
@@ -702,7 +702,7 @@ function Player:isJewelCrafter(level)
 end
 
 function Player:isLevel(level)
-    return self.level >= level
+    return (self.level or 1) >= level
 end
 
 function Player:isMaxLevel()
