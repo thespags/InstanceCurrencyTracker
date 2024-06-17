@@ -81,8 +81,7 @@ function Comms:pingPlayers()
     local allowed = ICT.db.options.comms.players or {}
     local seen = {}
 
-    local numFriends = BNGetNumFriends()
-    for i=1,numFriends do
+    for i=1,BNGetNumFriends() do
         local friend = C_BattleNet.GetFriendAccountInfo(i)
         if ICT.db.options.comms.players[friend.battleTag] then
             local info = friend.gameAccountInfo
@@ -91,6 +90,19 @@ function Comms:pingPlayers()
                 self:transmitPlayerMetadata(info.characterName)
             end
             seen[friend.battleTag] = true
+        end
+    end
+
+    C_FriendList.ShowFriends()
+    for i=1,C_FriendList.GetNumFriends() do
+        local friend = C_FriendList.GetFriendInfoByIndex(i)
+        if friend then
+            local key = ICT:friendKey(friend)
+            if ICT.db.options.comms.players[key] then
+                log.info("Pinging: %s", friend.name)
+                self:transmitPlayerMetadata(friend.name)
+                seen[key] = true
+            end
         end
     end
     for _, v in pairs(allowed) do

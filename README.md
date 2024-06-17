@@ -54,6 +54,8 @@ doesn't allow addon's to communicate across realms or faction.
 + Weapon Skills
 
 ## Options
+There's a lot of options, click the cogwheel in the upper lef.t
+
 + Show Realm Name  
 _Enables `[Realm] Player` versus `Player` for name fields._
 + Multi Player View  

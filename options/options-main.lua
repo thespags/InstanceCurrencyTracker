@@ -34,8 +34,8 @@ local function createLinkList(parent)
     createSectionTitle(frame, 10, 10, L["Link Accounts"])
 
     return function()
-        local numFriends = BNGetNumFriends()
-        for i=1,numFriends do
+        local bnetFriends = BNGetNumFriends()
+        for i=1,bnetFriends do
             local friend = C_BattleNet.GetFriendAccountInfo(i)
             local cell = cells(1, i)
             local color = Colors:getSelectedColor(ICT.db.options.comms.players[friend.battleTag])
@@ -56,6 +56,26 @@ local function createLinkList(parent)
             end
             Tooltips:new(friend.accountName, table.concat(info, "\n")):attach(cell)
         end
+        C_FriendList.ShowFriends()
+        local serverFriends = 0
+        for i=1,C_FriendList.GetNumFriends() do
+            local friend = C_FriendList.GetFriendInfoByIndex(i)
+            if friend then
+                local key = ICT:friendKey(friend)
+                serverFriends = serverFriends + 1
+                local cell = cells(1, bnetFriends + i)
+                local color = Colors:getSelectedColor(ICT.db.options.comms.players[key])
+                cell:printLine(friend.name, color)
+                cell:attachClick(
+                    function()
+                        ICT.db.options.comms.players[key] = not ICT.db.options.comms.players[key]
+                        color = Colors:getSelectedColor(ICT.db.options.comms.players[key])
+                        cell:printLine(friend.name, color)
+                    end
+                )
+            end
+        end
+        local numFriends = serverFriends + bnetFriends
         cells(1, numFriends + 1):printLine("") -- Adds a dummy line for view, because the following line doesn't seem to work as I thought.
         scroll.content:SetSize(scrollWidth, (numFriends + 1) * scrollHeight)
         scroll.vScrollBox:FullUpdate()

@@ -41,6 +41,11 @@ function ICT:enchantLinkSplit(link)
     return ICT:linkSplit(link, "enchant")
 end
 
+function ICT:friendKey(friend)
+    local faction = select(1, UnitFactionGroup("Player"))
+    return GetRealmName() .. "-" .. faction .. "-" .. friend.name
+end
+
 function ICT:getColoredSpellLink(spellId, color)
     local name = select(1, GetSpellInfo(spellId))
     return name and string.format("|c%s|Henchant:%s|h[%s]|h|r", color, spellId, name)
