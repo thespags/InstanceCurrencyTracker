@@ -82,17 +82,25 @@ function Player:fromSeason(info, size)
     return f(self)
 end
 
+-- Adds meta table values to the saved instance, or for an update: adds new instnaces or removes old instances.
+-- Or populates instances for a new character.
 function Player:createInstances()
     self.instances = self.instances or {}
+    local seen = {}
+
     for id, info in pairs(LibInstances:GetInfos()) do
         -- Size doesn't matter in cata anymore and currently era/sod does not have multiple sizes so ignore.
         local size = info:getSizes()[1]
         local key = Instance:key(id, size)
         if size and Instances.inExpansion(info, size) and self:fromSeason(info, size) then
             self.instances[key] = Instance:new(self.instances[key], info, size)
-            if not size then print(self.instances[key].name) end
-            else
-            -- We have to remove they instance so we don't track it anymore.
+            seen[key] = true
+        end
+    end
+
+    -- We have to remove they instance so we don't track it anymore.
+    for key, _ in pairs(self.instances) do
+        if not seen[key] then
             self.instances[key] = nil
         end
     end
