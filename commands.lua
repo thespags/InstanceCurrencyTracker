@@ -40,6 +40,27 @@ SlashCmdList.InstanceCurrencyTracker = function(msg)
     elseif command == "message" then
         local name = rest
         ICT.Comms:transmitPlayerMetadata(name)
+    elseif command == "reset" then
+        local name = rest
+        if name == "options" then
+            ICT.Options:setDefaultOptions(true)
+            ICT:print("Options reset.")
+        elseif name == "frame" then
+            ICT.UI:resetFrame()
+            ICT:print("Frame reset.")
+        else
+            ICT:print("Invalid reset, either { options | frame }.")
+        end
+        ICT:UpdateDisplay()
+    elseif command == "help" then
+        ICT:print("\n/ict help \n  - display help message"
+            .. "\n/ct wipe \n  - wipes current player"
+            .. "\n/ict wipe player { player } \n  - wipes player in the form '[{realm name}] {player name}]'"
+            .. "\n/ict wipe realm { realm } \n  - wipes all player on realm or if not provided the current realm"
+            .. "\n/ict wipe all \n  - wipes all players on all realms"
+            .. "\n/ict font { number } \n  - sets the font size"
+            .. "\n/ict reset { options | frame } \n  - resets the options or frame to the deafult settings"
+        )
     elseif rest == "" then
         ICT.flipFrame()
     end

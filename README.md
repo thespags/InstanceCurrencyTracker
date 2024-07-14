@@ -50,8 +50,9 @@ doesn't allow addon's to communicate across realms or faction.
     + Quests are viewed by currency unless no currency associated.
 + Reputation
 + Professions
-+ Runes
-+ Weapon Skills
++ Era/Sod Only
+    + Runes
+    + Weapon Skills
 
 ## Options
 There's a lot of options, click the cogwheel in the upper lef.t
@@ -110,5 +111,7 @@ _Controls the characters visible based on level._
 `/ict wipe realm {REALM_NAME}`  
 \# all players  
 `/ict wipe all`
-\# change font (recommended values 10-24)ß
-`/ict font {number}
+\# change font (recommended values 10-24)
+`/ict font {number}`
+\# reset frame or options
+`/ict reset {frame | options}`

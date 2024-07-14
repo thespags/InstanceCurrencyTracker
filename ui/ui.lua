@@ -171,26 +171,28 @@ function UI:resetFrameButton()
     button:SetNormalTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Up")
     button:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
     button:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
-    button:SetScript("OnClick", function()
-        -- Prevents us from making the window go off the screen.
-        local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
-        local screenHeight = GetScreenHeight() * UIParent:GetEffectiveScale()
-        local maxWidth = math.min(self:calculateWidth(self.maxX) + 50, screenWidth)
-        local maxHeight = math.min(self:calculateHeight(self.maxY), screenHeight)
-        local x = self.defaultX
-        -- Adjust so we maximize space if the window is drawn that large.
-        -- The x formula seems slightly off but it's fine for now.
-        if self.defaultX + maxWidth > screenWidth then
-            x = (GetScreenWidth() - screenWidth) / 2
-        end
-        local y = self.defaultY
-        if self.defaultY + maxHeight > screenHeight then
-            y = GetScreenHeight() - (GetScreenHeight() - screenHeight) / 2
-        end
-        self:drawFrame(x, y, maxWidth, maxHeight)
-    end)
+    button:SetScript("OnClick", function () self:resetFrame() end)
     ICT.Tooltips:new("Reset size and position"):attachFrame(button)
     return button
+end
+
+function UI:resetFrame()
+    -- Prevents us from making the window go off the screen.
+    local screenWidth = GetScreenWidth()
+    local screenHeight = GetScreenHeight()
+    local maxWidth = math.min(self:calculateWidth(self.maxX) + 50, screenWidth)
+    local maxHeight = math.min(self:calculateHeight(self.maxY), screenHeight)
+    local x = self.defaultX
+    -- Adjust so we maximize space if the window is drawn that large.
+    -- The x formula seems slightly off but it's fine for now.
+    if self.defaultX + maxWidth > screenWidth then
+        x = (GetScreenWidth() - screenWidth) / 2
+    end
+    local y = self.defaultY
+    if self.defaultY + maxHeight > screenHeight then
+        y = GetScreenHeight() - (GetScreenHeight() - screenHeight) / 2
+    end
+    self:drawFrame(x, y, maxWidth, maxHeight)
 end
 
 function UI:updateFrameSizes(frame, x, y)
