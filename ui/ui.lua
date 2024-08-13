@@ -178,8 +178,8 @@ end
 
 function UI:resetFrame()
     -- Prevents us from making the window go off the screen.
-    local screenWidth = GetScreenWidth()
-    local screenHeight = GetScreenHeight()
+    local screenWidth = GetScreenWidth() * 2
+    local screenHeight = GetScreenHeight() * 2
     local maxWidth = math.min(self:calculateWidth(self.maxX) + 50, screenWidth)
     local maxHeight = math.min(self:calculateHeight(self.maxY), screenHeight)
     local x = self.defaultX
