@@ -20,10 +20,19 @@ ICT.Heroism = Currency:new(101)
 ICT.Epicurean = Currency:new(81)
 ICT.WotlkJewelcraftersToken = Currency:new(61)
 ICT.StoneKeepersShard = Currency:new(161)
+ICT.ObsidianFragment = Currency:new(3281, 160)
+ICT.FissureStoneFragment = Currency:new(3148, 160)
+ICT.MoteofDarkness = Currency:new(614)
+ICT.EssenceofCorruptedDeathwing = Currency:new(615)
+
 
 local ordered = {
     ICT.ValorPoints,
-    ICT.JusticePoints,
+    ICT.JusticePoints,    
+    ICT.ObsidianFragment,
+    ICT.FissureStoneFragment,
+    ICT.EssenceofCorruptedDeathwing,
+    ICT.MoteofDarkness,
     ICT.HonorPoints,
     ICT.CataJewelcraftersToken,
     ICT.ChefsAward,
